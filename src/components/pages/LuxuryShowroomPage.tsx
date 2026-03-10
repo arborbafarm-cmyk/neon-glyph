@@ -89,40 +89,17 @@ export default function LuxuryShowroomPage() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [npcLookingAt, setNpcLookingAt] = useState<'camera' | 'idle'>('idle');
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const playerName = member?.profile?.nickname || member?.contact?.firstName || 'Visitante';
 
   useEffect(() => {
-    // Show welcome message after a brief delay
     const timer = setTimeout(() => {
       setShowWelcome(true);
-      setNpcLookingAt('camera');
-      // Reset NPC gaze after 3 seconds
-      setTimeout(() => {
-        setNpcLookingAt('idle');
-      }, 3000);
     }, 500);
 
     return () => clearTimeout(timer);
   }, []);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const npcArea = document.getElementById('npc-area');
-    if (npcArea) {
-      const rect = npcArea.getBoundingClientRect();
-      const distance = Math.sqrt(
-        Math.pow(e.clientX - (rect.left + rect.width / 2), 2) +
-        Math.pow(e.clientY - (rect.top + rect.height / 2), 2)
-      );
-      if (distance < 300) {
-        setNpcLookingAt('camera');
-      } else {
-        setNpcLookingAt('idle');
-      }
-    }
-  };
 
   const toggleMusic = () => {
     if (audioRef.current) {
@@ -139,10 +116,7 @@ export default function LuxuryShowroomPage() {
   const bottomItems = showroomItems.filter((item) => item.level === 'bottom');
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black"
-      onMouseMove={handleMouseMove}
-    >
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black">
       <Header />
 
       {/* Welcome Message */}
@@ -150,11 +124,10 @@ export default function LuxuryShowroomPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
           className="fixed top-24 left-1/2 transform -translate-x-1/2 z-40 pointer-events-none"
         >
           <div className="text-center">
-            <p className="font-heading text-2xl md:text-3xl text-amber-100 drop-shadow-lg">
+            <p className="font-heading text-2xl md:text-3xl text-amber-100">
               Bem-vindo à Sua Vitrine Exclusiva,{' '}
               <span className="text-amber-300 font-bold">{playerName}</span>
             </p>
@@ -166,39 +139,49 @@ export default function LuxuryShowroomPage() {
       )}
 
       {/* Main Content */}
-      <main className="relative w-full max-w-[120rem] mx-auto px-4 md:px-8 py-12 md:py-20">
-        {/* Showroom Container */}
-        <div className="relative">
-          {/* Background Elements */}
+      <main className="relative w-full max-w-[120rem] mx-auto px-4 md:px-8 py-8 md:py-16">
+        {/* Showroom Container - Centered with NPC in foreground */}
+        <div className="relative flex items-center justify-center min-h-[600px] md:min-h-[700px]">
+          {/* Background Curtains & Lighting */}
           <div className="absolute inset-0 pointer-events-none">
-            {/* Wood texture background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-950/20 via-transparent to-amber-950/20 rounded-lg" />
-            {/* Lighting effect */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-amber-600/5 rounded-full blur-3xl" />
+            {/* Vertical curtain lines */}
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-800/30 via-transparent to-slate-800/30" />
+            {/* Top lighting */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-64 bg-gradient-to-b from-amber-600/10 to-transparent blur-3xl" />
+            {/* Ambient glow */}
+            <div className="absolute inset-0 bg-radial-gradient from-amber-900/5 to-transparent" />
           </div>
 
-          {/* Showroom Glass Shelves */}
-          <div className="relative z-10">
+          {/* Vitrines Container - Behind NPC */}
+          <div className="relative z-0 w-full">
             {/* Top Level Shelf */}
-            <div className="mb-16 md:mb-24">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-                {topItems.map((item) => (
+            <div className="mb-12 md:mb-20">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 px-4 md:px-12">
+                {topItems.map((item, index) => (
                   <motion.div
                     key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
                     className="group relative"
                     onMouseEnter={() => setHoveredItem(item.id)}
                     onMouseLeave={() => setHoveredItem(null)}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.3 }}
                   >
-                    {/* Item Container */}
-                    <div className="relative bg-gradient-to-br from-slate-900 to-black rounded-lg overflow-hidden border border-amber-900/30 shadow-2xl">
+                    {/* Glass Shelf Container */}
+                    <div className="relative bg-gradient-to-br from-slate-800/40 to-slate-900/60 rounded-lg overflow-hidden border border-amber-700/40 shadow-2xl backdrop-blur-sm">
                       {/* Glass shine effect */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent pointer-events-none" />
+
+                      {/* Shelf lighting */}
+                      <div className="absolute -top-1 inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
 
                       {/* Image */}
-                      <div className="aspect-square overflow-hidden bg-black">
-                        <Image src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="aspect-square overflow-hidden bg-black/50">
+                        <Image 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                        />
                       </div>
 
                       {/* Hover Overlay */}
@@ -206,7 +189,7 @@ export default function LuxuryShowroomPage() {
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4"
+                          className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4"
                         >
                           <p className="text-amber-100 text-xs md:text-sm font-paragraph">
                             {item.description}
@@ -219,47 +202,52 @@ export default function LuxuryShowroomPage() {
 
                       {/* Glow effect on hover */}
                       {hoveredItem === item.id && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/15 to-transparent pointer-events-none" />
                       )}
                     </div>
 
-                    {/* Label */}
-                    <div className="mt-3 text-center">
-                      <p className="font-heading text-xs md:text-sm text-amber-200 tracking-widest">
+                    {/* Label - Below shelf */}
+                    <div className="mt-2 text-center">
+                      <p className="font-heading text-xs md:text-sm text-gray-300 tracking-widest uppercase">
                         {item.label}
-                      </p>
-                      <p className="font-paragraph text-xs text-amber-100/60 mt-1">
-                        {item.name}
                       </p>
                     </div>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Shelf divider */}
-              <div className="h-px bg-gradient-to-r from-transparent via-amber-700/30 to-transparent my-12 md:my-16" />
+              {/* Shelf divider line */}
+              <div className="h-px bg-gradient-to-r from-transparent via-amber-700/40 to-transparent my-10 md:my-16 mx-4 md:mx-12" />
             </div>
 
             {/* Bottom Level Shelf */}
             <div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                {bottomItems.map((item) => (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 px-4 md:px-12">
+                {bottomItems.map((item, index) => (
                   <motion.div
                     key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: (index + 4) * 0.1 }}
                     className="group relative"
                     onMouseEnter={() => setHoveredItem(item.id)}
                     onMouseLeave={() => setHoveredItem(null)}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.3 }}
                   >
-                    {/* Item Container */}
-                    <div className="relative bg-gradient-to-br from-slate-900 to-black rounded-lg overflow-hidden border border-amber-900/30 shadow-2xl">
+                    {/* Glass Shelf Container */}
+                    <div className="relative bg-gradient-to-br from-slate-800/40 to-slate-900/60 rounded-lg overflow-hidden border border-amber-700/40 shadow-2xl backdrop-blur-sm">
                       {/* Glass shine effect */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/8 to-transparent pointer-events-none" />
+
+                      {/* Shelf lighting */}
+                      <div className="absolute -top-1 inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
 
                       {/* Image */}
-                      <div className="aspect-square overflow-hidden bg-black">
-                        <Image src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="aspect-square overflow-hidden bg-black/50">
+                        <Image 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                        />
                       </div>
 
                       {/* Hover Overlay */}
@@ -267,7 +255,7 @@ export default function LuxuryShowroomPage() {
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4"
+                          className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4"
                         >
                           <p className="text-amber-100 text-xs md:text-sm font-paragraph">
                             {item.description}
@@ -280,17 +268,14 @@ export default function LuxuryShowroomPage() {
 
                       {/* Glow effect on hover */}
                       {hoveredItem === item.id && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/15 to-transparent pointer-events-none" />
                       )}
                     </div>
 
-                    {/* Label */}
-                    <div className="mt-3 text-center">
-                      <p className="font-heading text-xs md:text-sm text-amber-200 tracking-widest">
+                    {/* Label - Below shelf */}
+                    <div className="mt-2 text-center">
+                      <p className="font-heading text-xs md:text-sm text-gray-300 tracking-widest uppercase">
                         {item.label}
-                      </p>
-                      <p className="font-paragraph text-xs text-amber-100/60 mt-1">
-                        {item.name}
                       </p>
                     </div>
                   </motion.div>
@@ -299,23 +284,38 @@ export default function LuxuryShowroomPage() {
             </div>
           </div>
 
-          {/* NPC Area - Positioned behind items */}
-          <div
-            id="npc-area"
-            className="absolute bottom-0 right-0 w-full md:w-1/3 h-96 md:h-full pointer-events-none z-0"
-          >
+          {/* NPC Area - Centered in foreground */}
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
             <motion.div
-              animate={{
-                opacity: npcLookingAt === 'camera' ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.5 }}
-              className="relative w-full h-full flex items-end justify-end"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="relative w-32 md:w-48 h-64 md:h-96"
             >
-              {/* NPC Placeholder - Elegant background element */}
-              <div className="absolute bottom-0 right-0 w-full h-full bg-gradient-to-l from-amber-900/10 via-transparent to-transparent rounded-lg" />
+              {/* NPC Figure - Elegant silhouette */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Dress silhouette */}
+                <div className="relative w-24 md:w-32 h-56 md:h-80">
+                  {/* Head */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-6 md:w-8 h-6 md:h-8 bg-gradient-to-b from-amber-200 to-amber-300 rounded-full shadow-lg" />
+                  
+                  {/* Hair */}
+                  <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-7 md:w-9 h-8 md:h-10 bg-gradient-to-b from-slate-900 to-slate-800 rounded-full shadow-lg" />
+                  
+                  {/* Dress body - Red gradient */}
+                  <div className="absolute top-8 md:top-12 left-1/2 transform -translate-x-1/2 w-20 md:w-28 h-40 md:h-56 bg-gradient-to-b from-red-700 via-red-600 to-red-800 rounded-b-3xl shadow-2xl">
+                    {/* Dress shine */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/5 rounded-b-3xl" />
+                  </div>
 
-              {/* Decorative elements around NPC area */}
-              <div className="absolute bottom-8 right-8 w-24 h-32 bg-gradient-to-t from-amber-700/20 to-transparent rounded-lg border border-amber-700/30" />
+                  {/* Arms */}
+                  <div className="absolute top-10 md:top-14 left-0 w-3 md:w-4 h-32 md:h-44 bg-gradient-to-b from-amber-200 to-amber-300 rounded-full shadow-lg transform -rotate-12" />
+                  <div className="absolute top-10 md:top-14 right-0 w-3 md:w-4 h-32 md:h-44 bg-gradient-to-b from-amber-200 to-amber-300 rounded-full shadow-lg transform rotate-12" />
+                </div>
+              </div>
+
+              {/* Glow effect around NPC */}
+              <div className="absolute inset-0 bg-gradient-to-t from-red-600/20 via-transparent to-transparent rounded-full blur-2xl" />
             </motion.div>
           </div>
         </div>
