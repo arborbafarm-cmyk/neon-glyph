@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Settings, Crown } from 'lucide-react';
 import { Image } from '@/components/ui/image';
+import { useGameStore } from '@/store/gameStore';
 
 export default function Header() {
+  const { dirtMoney } = useGameStore();
   const [playerName, setPlayerName] = useState('');
   const [customPlayerName, setCustomPlayerName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('https://static.wixstatic.com/media/50f4bf_a888df3d639f415b853110e459edba8c~mv2.png?originWidth=128&originHeight=128');
@@ -170,6 +172,17 @@ export default function Header() {
 
         {/* Right Area - Player Name & Icons */}
         <div className="flex items-center gap-6">
+          {/* Dirty Money Display */}
+          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-logo-gradient-start/20 to-logo-gradient-end/20 rounded-lg border-2 border-logo-gradient-start" style={{
+            filter: 'drop-shadow(0 0 10px rgba(255,69,0,0.5))'
+          }}>
+            <span className="text-2xl">💰</span>
+            <div className="flex flex-col">
+              <span className="text-xs text-logo-gradient-start font-heading">DINHEIRO SUJO</span>
+              <span className="text-lg font-bold text-white font-heading">R$ {dirtMoney.toLocaleString('pt-BR')}</span>
+            </div>
+          </div>
+
           {/* Player Names */}
           <div className="flex flex-col items-start gap-1">
             {/* Main Player Name */}
