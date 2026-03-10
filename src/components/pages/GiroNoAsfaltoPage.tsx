@@ -15,9 +15,9 @@ export default function GiroNoAsfaltoPage() {
           height={1920}
           className="w-full h-full object-cover"
         />
-        {/* Empty container positioned inside the slot machine screen */}
+        {/* Empty container positioned inside the slot machine screen - TV display area */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-full h-full bg-transparent border border-transparent" />
+          <div className="w-[280px] h-[180px] bg-transparent border-2 border-[#00eaff] rounded-lg" />
         </div>
       </div>
       <Footer />
