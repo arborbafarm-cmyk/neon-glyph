@@ -1,7 +1,7 @@
 // HPI 1.7-V
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Bell, Settings, Edit2, Check, ShieldAlert } from 'lucide-react';
+import { Crown, Bell, Settings, Edit2, Check, ShieldAlert, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 
 // --- Types & Interfaces ---
@@ -18,6 +18,17 @@ const STORAGE_KEY_NAME = "@dominio_comando/player_name";
 
 // --- Components ---
 
+interface ContainerPosition {
+  x: number;
+  y: number;
+}
+
+interface ContainerElement {
+  id: string;
+  position: ContainerPosition;
+  isDragging: boolean;
+}
+
 const GameHeader: React.FC = () => {
   // State
   const [avatarUrl, setAvatarUrl] = useState<string>(DEFAULT_AVATAR);
@@ -25,10 +36,19 @@ const GameHeader: React.FC = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [showInspector, setShowInspector] = useState(false);
+  const [containers, setContainers] = useState<Record<string, ContainerElement>>({
+    left: { id: 'left', position: { x: 0, y: 0 }, isDragging: false },
+    center: { id: 'center', position: { x: 0, y: 0 }, isDragging: false },
+    right: { id: 'right', position: { x: 0, y: 0 }, isDragging: false },
+  });
+  const [selectedContainer, setSelectedContainer] = useState<string>('left');
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const containerRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Hydration & LocalStorage Load
   useEffect(() => {
@@ -88,11 +108,80 @@ const GameHeader: React.FC = () => {
     if (e.key === 'Escape') setIsEditingName(false);
   };
 
+  // Drag handlers for containers
+  const handleMouseDown = (e: React.MouseEvent, containerId: string) => {
+    if (showInspector) {
+      setSelectedContainer(containerId);
+      const container = containerRefs.current[containerId];
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        setDragOffset({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        });
+        setContainers(prev => ({
+          ...prev,
+          [containerId]: { ...prev[containerId], isDragging: true }
+        }));
+      }
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (showInspector) {
+      Object.entries(containers).forEach(([id, container]) => {
+        if (container.isDragging) {
+          const headerElement = e.currentTarget as HTMLElement;
+          const rect = headerElement.getBoundingClientRect();
+          const newX = e.clientX - rect.left - dragOffset.x;
+          const newY = e.clientY - rect.top - dragOffset.y;
+          
+          setContainers(prev => ({
+            ...prev,
+            [id]: {
+              ...prev[id],
+              position: { x: Math.max(0, newX), y: Math.max(0, newY) }
+            }
+          }));
+        }
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setContainers(prev => ({
+      ...prev,
+      ...Object.keys(prev).reduce((acc, id) => ({
+        ...acc,
+        [id]: { ...prev[id], isDragging: false }
+      }), {})
+    }));
+  };
+
+  const handleInputChange = (containerId: string, axis: 'x' | 'y', value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setContainers(prev => ({
+      ...prev,
+      [containerId]: {
+        ...prev[containerId],
+        position: {
+          ...prev[containerId].position,
+          [axis]: numValue
+        }
+      }
+    }));
+  };
+
   // Prevent hydration mismatch rendering
   if (!isMounted) return null;
 
   return (
-    <header className="fixed top-0 left-0 w-full h-[110px] z-50 select-none">
+    <header 
+      className="fixed top-0 left-0 w-full h-[110px] z-50 select-none"
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
       {/* Background Panel with Blur and HUD styling */}
       <div className="absolute inset-0 bg-[rgba(15,20,30,0.85)] backdrop-blur-md border-b-2 border-[#00eaff] shadow-[0_4px_20px_rgba(0,234,255,0.15)] overflow-hidden">
         {/* Subtle HUD Scanlines */}
@@ -111,7 +200,16 @@ const GameHeader: React.FC = () => {
       <div className="relative h-full w-full max-w-[120rem] mx-auto px-4 md:px-8 flex items-center justify-between">
 
         {/* LEFT AREA: Logo & Title */}
-        <div className="flex items-center gap-4 z-10 w-1/3 min-w-[250px]">
+        <div 
+          ref={(el) => { if (el) containerRefs.current['left'] = el; }}
+          onMouseDown={(e) => handleMouseDown(e, 'left')}
+          className={`absolute flex items-center gap-4 z-10 w-1/3 min-w-[250px] ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'left' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
+          style={{
+            left: `${containers.left.position.x}px`,
+            top: `${containers.left.position.y}px`,
+            transition: containers.left.isDragging ? 'none' : 'none'
+          }}
+        >
           {/* Icon/Crest */}
           <div className="relative hidden sm:flex items-center justify-center w-14 h-14 rounded-lg bg-black/40 border border-[#FF4500]/30 shadow-[0_0_15px_rgba(255,69,0,0.2)]">
             <Crown className="w-8 h-8 text-[#FF4500] drop-shadow-[0_0_8px_rgba(255,69,0,0.8)]" />
@@ -143,7 +241,17 @@ const GameHeader: React.FC = () => {
         </div>
 
         {/* CENTER AREA: Interactive Avatar */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center">
+        <div 
+          ref={(el) => { if (el) containerRefs.current['center'] = el; }}
+          onMouseDown={(e) => handleMouseDown(e, 'center')}
+          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'center' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
+          style={{
+            left: `calc(50% + ${containers.center.position.x}px)`,
+            top: `calc(50% + ${containers.center.position.y}px)`,
+            transform: 'translate(-50%, -50%)',
+            transition: containers.center.isDragging ? 'none' : 'none'
+          }}
+        >
           {/* Decorative HUD Ring behind avatar */}
           <motion.div
             animate={{ rotate: 360 }}
@@ -186,7 +294,16 @@ const GameHeader: React.FC = () => {
         </div>
 
         {/* RIGHT AREA: Player Info & Controls */}
-        <div className="flex items-center justify-end gap-4 sm:gap-6 z-10 w-1/3 min-w-[200px]">
+        <div 
+          ref={(el) => { if (el) containerRefs.current['right'] = el; }}
+          onMouseDown={(e) => handleMouseDown(e, 'right')}
+          className={`absolute right-0 flex items-center justify-end gap-4 sm:gap-6 z-10 w-1/3 min-w-[200px] ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'right' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
+          style={{
+            right: `calc(0px - ${containers.right.position.x}px)`,
+            top: `${containers.right.position.y}px`,
+            transition: containers.right.isDragging ? 'none' : 'none'
+          }}
+        >
 
           {/* Player Name Display/Edit */}
           <div className="hidden sm:flex flex-col items-end">
@@ -250,14 +367,67 @@ const GameHeader: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
-              className="p-2 text-white/80 hover:text-white transition-all duration-300 group"
+              onClick={() => setShowInspector(!showInspector)}
+              className={`p-2 transition-all duration-300 group ${showInspector ? 'text-yellow-400' : 'text-white/80 hover:text-white'}`}
             >
-              <Settings className="w-5 h-5 group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]" />
+              <Settings className={`w-5 h-5 ${showInspector ? 'drop-shadow-[0_0_8px_rgba(255,193,7,0.8)]' : 'group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]'}`} />
             </motion.button>
           </div>
         </div>
 
       </div>
+
+      {/* Inspector Panel */}
+      {showInspector && (
+        <div className="fixed bottom-4 right-4 bg-black/95 border-2 border-yellow-400 rounded-lg p-4 w-80 max-h-96 overflow-y-auto z-[100] shadow-[0_0_20px_rgba(255,193,7,0.3)]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-heading font-bold text-yellow-400 text-sm">INSPECTOR - POSICIONAMENTO ABSOLUTO</h3>
+            <button onClick={() => setShowInspector(false)} className="text-yellow-400 hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {Object.entries(containers).map(([id, container]) => (
+              <div key={id} className={`p-3 border rounded ${selectedContainer === id ? 'border-yellow-400 bg-yellow-400/10' : 'border-yellow-400/50 bg-black/50'}`}>
+                <h4 className="font-heading font-bold text-yellow-300 text-xs uppercase mb-2 capitalize">{id} Container</h4>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-xs text-yellow-400/70 block mb-1">Posição X (px)</label>
+                    <input
+                      type="number"
+                      value={Math.round(container.position.x)}
+                      onChange={(e) => handleInputChange(id, 'x', e.target.value)}
+                      onClick={() => setSelectedContainer(id)}
+                      className="w-full bg-black border border-yellow-400/50 text-yellow-300 px-2 py-1 rounded text-xs focus:outline-none focus:border-yellow-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-yellow-400/70 block mb-1">Posição Y (px)</label>
+                    <input
+                      type="number"
+                      value={Math.round(container.position.y)}
+                      onChange={(e) => handleInputChange(id, 'y', e.target.value)}
+                      onClick={() => setSelectedContainer(id)}
+                      className="w-full bg-black border border-yellow-400/50 text-yellow-300 px-2 py-1 rounded text-xs focus:outline-none focus:border-yellow-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 p-3 bg-yellow-400/10 border border-yellow-400/50 rounded text-xs text-yellow-300">
+            <p className="font-heading font-bold mb-1">Modo Inspector Ativo:</p>
+            <ul className="text-yellow-400/70 space-y-1">
+              <li>• Arraste containers para mover livremente</li>
+              <li>• Edite X e Y manualmente</li>
+              <li>• Sem snap-to-grid ou alinhamento automático</li>
+              <li>• Sem âncoras fixas</li>
+            </ul>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
