@@ -153,7 +153,7 @@ export default function SlotMachine() {
                 alt={SLOT_ITEMS[slotIndex].name}
                 width={60}
                 height={60}
-                className="object-contain"
+                className="object-contain mix-blend-hard-light shadow-[inset_10px_10px_4px_0px_#bfbfbf] opacity-[1] border-[#0f141ed9] rounded-none border border-none m-0"
               />
             </motion.div>
           ))}
@@ -169,16 +169,13 @@ export default function SlotMachine() {
         {/* Game Stats */}
         <div className="flex justify-center gap-8 mt-4 text-white font-paragraph text-sm">
           <div className="text-center">
-            <div className="text-xs text-secondary">GIROS</div>
-            <div className="text-lg font-bold">{spins}</div>
+
           </div>
           <div className="text-center">
-            <div className="text-xs text-secondary">MULTIPLICADOR</div>
-            <div className="text-lg font-bold">{multiplier}x</div>
+
           </div>
         </div>
       </div>
-      {/* Controls Container */}
       <div className="w-full max-w-2xl pt-6 px-6 md:px-12 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900/70 to-black/70 border-secondary rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/50 border border-none">
         <div className="absolute inset-0 bg-secondary opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none rounded-3xl"></div>
         <div className="relative z-10 w-full text-center">
@@ -220,6 +217,7 @@ export default function SlotMachine() {
           </div>
         )}
       </div>
+      {/* Controls Container */}
       {/* Prison Modal */}
       {showPrisonModal && (
         <motion.div

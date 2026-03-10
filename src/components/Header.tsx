@@ -110,7 +110,6 @@ export default function Header() {
         <div className="absolute top-[30px] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-hud-line-blue/20 to-transparent" />
         <div className="absolute bottom-[30px] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-hud-line-blue/20 to-transparent" />
       </div>
-
       <div className="h-full max-w-[120rem] mx-auto px-6 flex items-center justify-between">
         {/* Left Area - Logo */}
         <div className="flex items-center gap-3">
@@ -173,45 +172,11 @@ export default function Header() {
         {/* Right Area - Player Name & Icons */}
         <div className="flex items-center gap-6">
           {/* Dirty Money Display */}
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-logo-gradient-start/20 to-logo-gradient-end/20 rounded-lg border-2 border-logo-gradient-start" style={{
-            filter: 'drop-shadow(0 0 10px rgba(255,69,0,0.5))'
-          }}>
-            <span className="text-2xl">💰</span>
-            <div className="flex flex-col">
-              <span className="text-xs text-logo-gradient-start font-heading">DINHEIRO SUJO</span>
-              <span className="text-lg font-bold text-white font-heading">R$ {dirtMoney.toLocaleString('pt-BR')}</span>
-            </div>
-          </div>
-
           {/* Player Names */}
           <div className="flex flex-col items-start gap-1">
             {/* Main Player Name */}
             <div className="flex items-center">
-              {isEditingName ? (
-                <input
-                  type="text"
-                  value={tempName}
-                  onChange={(e) => setTempName(e.target.value)}
-                  onBlur={handleNameSave}
-                  onKeyDown={handleNameKeyPress}
-                  className="bg-transparent border-b-2 border-subtitle-neon-blue text-white font-paragraph text-lg md:text-xl font-medium uppercase tracking-wider outline-none px-2"
-                  style={{
-                    textShadow: '0 0 10px rgba(0,234,255,0.8)'
-                  }}
-                  autoFocus
-                  maxLength={20}
-                />
-              ) : (
-                <button
-                  onClick={handleNameClick}
-                  className="text-white font-paragraph text-lg md:text-xl font-medium uppercase tracking-wider hover:text-subtitle-neon-blue transition-colors duration-300"
-                  style={{
-                    textShadow: '0 0 10px rgba(0,234,255,0.8)'
-                  }}
-                >
-                  {playerName}
-                </button>
-              )}
+
             </div>
 
             {/* Custom Player Name */}
@@ -245,6 +210,16 @@ export default function Header() {
             </div>
           </div>
 
+          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-logo-gradient-start/20 to-logo-gradient-end/20 rounded-lg border-2 border-logo-gradient-start" style={{
+            filter: 'drop-shadow(0 0 10px rgba(255,69,0,0.5))'
+          }}>
+            <span className="text-2xl">💰</span>
+            <div className="flex flex-col">
+              <span className="text-xs text-logo-gradient-start font-heading">DINHEIRO SUJO</span>
+              <span className="text-lg font-bold text-white font-heading">R$ {dirtMoney.toLocaleString('pt-BR')}</span>
+            </div>
+          </div>
+
           {/* Icons */}
           <div className="flex items-center gap-4">
             <button
@@ -254,7 +229,7 @@ export default function Header() {
               }}
               aria-label="Notificações"
             >
-              <Bell className="w-6 h-6" />
+
             </button>
             <button
               className="text-white hover:text-subtitle-neon-blue transition-all duration-300 hover:brightness-150"
@@ -263,7 +238,7 @@ export default function Header() {
               }}
               aria-label="Configurações"
             >
-              <Settings className="w-6 h-6" />
+
             </button>
           </div>
         </div>
