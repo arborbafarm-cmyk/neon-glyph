@@ -43,26 +43,20 @@ export default function DraggableContainer({
     if (!dragRef.current) return;
     
     setIsDragging(true);
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (rect) {
-      setOffset({
-        x: e.clientX - rect.left - position.x,
-        y: e.clientY - rect.top - position.y
-      });
-    }
+    setOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
   };
 
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = containerRef.current?.parentElement?.getBoundingClientRect();
-      if (rect) {
-        setPosition({
-          x: e.clientX - rect.left - offset.x,
-          y: e.clientY - rect.top - offset.y
-        });
-      }
+      setPosition({
+        x: e.clientX - offset.x,
+        y: e.clientY - offset.y
+      });
     };
 
     const handleMouseUp = () => {
@@ -81,10 +75,11 @@ export default function DraggableContainer({
   return (
     <motion.div
       ref={containerRef}
-      className={`relative ${className}`}
+      className={`fixed ${className}`}
       style={{
         x: position.x,
         y: position.y,
+        zIndex: isDragging ? 1000 : 10,
       }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}

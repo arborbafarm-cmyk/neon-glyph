@@ -32,7 +32,7 @@ export default function GiroNoAsfaltoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0d14] flex flex-col relative">
+    <div className="w-full h-screen bg-[#0a0d14] overflow-hidden">
       {/* Edit Mode Controls */}
       <div className="fixed top-4 right-4 z-[100] flex items-center gap-2 bg-black/80 border border-[#00eaff]/50 rounded px-4 py-2 backdrop-blur-sm">
         <button
@@ -76,58 +76,56 @@ export default function GiroNoAsfaltoPage() {
       )}
 
       {/* Draggable Containers */}
-      <div className="relative w-full flex-1">
-        {containers.find(c => c.id === 'header')?.isVisible && (
-          <DraggableContainer
-            id="header"
-            title="Header"
-            onRemove={removeContainer}
-            onEdit={handleEdit}
-            className="w-full"
-          >
-            <Header />
-          </DraggableContainer>
-        )}
+      {containers.find(c => c.id === 'header')?.isVisible && (
+        <DraggableContainer
+          id="header"
+          title="Header"
+          onRemove={removeContainer}
+          onEdit={handleEdit}
+          className="w-full"
+        >
+          <Header />
+        </DraggableContainer>
+      )}
 
-        {/* Slot Machine Illustration Section */}
-        {containers.find(c => c.id === 'slot-machine')?.isVisible && (
-          <DraggableContainer
-            id="slot-machine"
-            title="Slot Machine"
-            onRemove={removeContainer}
-            onEdit={handleEdit}
-            className="w-full"
-          >
-            <div className="flex-1 w-full relative overflow-hidden bg-gradient-to-b from-[#0a0d14] to-[#0f1419] flex items-center justify-center min-h-screen">
-              <Image
-                src="https://static.wixstatic.com/media/50f4bf_f0f13bffd67f4487bbad4fec560e36e5~mv2.png?originWidth=1024&originHeight=1920"
-                alt="Ultra-realistic cinematic slot machine arcade cabinet viewed straight from the front, facing the player directly, with empty blank display panel, bright LED neon panel displaying GIRO NO ASFALTO with glowing neon effect, in a Brazilian community bar with immersive atmosphere"
-                width={1024}
-                height={1920}
-                className="w-full h-full object-cover"
-              />
-              {/* Slot Machine Component positioned inside the slot machine screen - TV display area */}
-              <div className="absolute" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                <div className="bg-transparent flex items-center justify-center">
-                  <SlotMachine />
-                </div>
+      {/* Slot Machine Illustration Section */}
+      {containers.find(c => c.id === 'slot-machine')?.isVisible && (
+        <DraggableContainer
+          id="slot-machine"
+          title="Slot Machine"
+          onRemove={removeContainer}
+          onEdit={handleEdit}
+          className="w-screen h-screen"
+        >
+          <div className="w-full h-full relative overflow-hidden bg-gradient-to-b from-[#0a0d14] to-[#0f1419] flex items-center justify-center">
+            <Image
+              src="https://static.wixstatic.com/media/50f4bf_f0f13bffd67f4487bbad4fec560e36e5~mv2.png?originWidth=1024&originHeight=1920"
+              alt="Ultra-realistic cinematic slot machine arcade cabinet viewed straight from the front, facing the player directly, with empty blank display panel, bright LED neon panel displaying GIRO NO ASFALTO with glowing neon effect, in a Brazilian community bar with immersive atmosphere"
+              width={1024}
+              height={1920}
+              className="w-full h-full object-cover"
+            />
+            {/* Slot Machine Component positioned inside the slot machine screen - TV display area */}
+            <div className="absolute" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+              <div className="bg-transparent flex items-center justify-center">
+                <SlotMachine />
               </div>
             </div>
-          </DraggableContainer>
-        )}
+          </div>
+        </DraggableContainer>
+      )}
 
-        {containers.find(c => c.id === 'footer')?.isVisible && (
-          <DraggableContainer
-            id="footer"
-            title="Footer"
-            onRemove={removeContainer}
-            onEdit={handleEdit}
-            className="w-full"
-          >
-            <Footer />
-          </DraggableContainer>
-        )}
-      </div>
+      {containers.find(c => c.id === 'footer')?.isVisible && (
+        <DraggableContainer
+          id="footer"
+          title="Footer"
+          onRemove={removeContainer}
+          onEdit={handleEdit}
+          className="w-full"
+        >
+          <Footer />
+        </DraggableContainer>
+      )}
     </div>
   );
 }
