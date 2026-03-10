@@ -36,7 +36,7 @@ const SLOT_ITEMS = [
   }
 ];
 
-const MULTIPLIERS = [2, 5, 10, 100, 250, 1000];
+const MULTIPLIERS = [1, 2, 5, 10, 100, 250, 1000];
 
 export default function SlotMachine() {
   const { spins, dirtMoney, multiplier, isSpinning, hasInitialized, setSpins, setDirtMoney, setMultiplier, setHasInitialized, setIsSpinning, addDirtMoney, subtractSpins } = useGameStore();
@@ -128,7 +128,7 @@ export default function SlotMachine() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6">
+    <div className="flex flex-col items-center justify-center gap-2">
       {/* Slot Machine Container */}
       <div className="from-gray-900 to-black border-secondary rounded-lg p-3 shadow-2xl border border-none bg-transparent">
         {/* Slot Display - 3 slots centered */}
@@ -179,7 +179,7 @@ export default function SlotMachine() {
         </div>
       </div>
       {/* Controls Container */}
-      <div className="w-full max-w-2xl pt-24 px-6 md:px-12 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900/70 to-black/70 border-secondary rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/50 border border-none">
+      <div className="w-full max-w-2xl pt-6 px-6 md:px-12 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900/70 to-black/70 border-secondary rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/50 border border-none">
         <div className="absolute inset-0 bg-secondary opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none rounded-3xl"></div>
         <div className="relative z-10 w-full text-center">
           <button
@@ -194,9 +194,9 @@ export default function SlotMachine() {
           </button>
         </div>
 
-        <div className="relative z-10 w-full mb-8">
+        <div className="relative z-10 w-full mb-8 mt-4">
 
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 p-2 bg-black/30 rounded-xl border border-secondary/30 backdrop-blur-sm">
+          <div className="grid grid-cols-3 md:grid-cols-7 gap-3 md:gap-4 p-2 bg-black/30 rounded-xl border border-secondary/30 backdrop-blur-sm">
             {MULTIPLIERS.map((mult) => (
               <button
                 key={mult}
