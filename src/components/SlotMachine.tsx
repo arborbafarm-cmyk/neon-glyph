@@ -35,9 +35,17 @@ export default function SlotMachine() {
   return (
     <div className="flex flex-col items-center justify-center gap-2">
       {/* Slot Machine Container */}
-      <div className="bg-gradient-to-b from-gray-900 to-black border-2 border-secondary rounded-lg p-3 shadow-2xl">
+      <div className="from-gray-900 to-black border-secondary rounded-lg p-3 shadow-2xl border border-none bg-transparent">
         {/* Slot Display - 3 slots centered */}
-        <div className="flex gap-2 justify-center items-center">
+        {/* Slot Item Labels */}
+        <div className="flex gap-2 justify-center mt-2 text-secondary text-xs font-heading">
+          {slots.map((slotIndex, position) => (
+            <div key={position} className="w-20 text-center truncate text-[10px]">
+              {SLOT_ITEMS[slotIndex].name}
+            </div>
+          ))}
+        </div>
+      <div className="flex gap-2 justify-center items-center">
           {slots.map((slotIndex, position) => (
             <div
               key={position}
@@ -54,15 +62,7 @@ export default function SlotMachine() {
           ))}
         </div>
 
-        {/* Slot Item Labels */}
-        <div className="flex gap-2 justify-center mt-2 text-secondary text-xs font-heading">
-          {slots.map((slotIndex, position) => (
-            <div key={position} className="w-20 text-center truncate text-[10px]">
-              {SLOT_ITEMS[slotIndex].name}
-            </div>
-          ))}
         </div>
-      </div>
     </div>
   );
 }
