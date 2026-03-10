@@ -27,7 +27,7 @@ export default function GiroNoAsfaltoPage() {
           src="https://static.wixstatic.com/media/50f4bf_6ae61b811ca7476295ad2671cf3c098b~mv2.png"
           alt="Ultra-realistic slot machine with empty screen, Brazilian organized crime theme, money scattered around"
           width={1920}
-          height={1080}
+          height={1920}
           className="w-full h-auto object-cover"
         />
         
