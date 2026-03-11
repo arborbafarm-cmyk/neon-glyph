@@ -107,7 +107,7 @@ export default function GiroNoAsfaltoPage() {
                 className="w-full h-full object-cover"
               />
               {/* Slot Machine Component positioned inside the slot machine screen - TV display area */}
-              <div className="absolute" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-end pb-20">
                 <div className="bg-transparent flex items-center justify-center">
                   <SlotMachine />
                 </div>
