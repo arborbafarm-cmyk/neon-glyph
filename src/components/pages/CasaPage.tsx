@@ -21,7 +21,7 @@ const LEVEL_TO_MONEY: Record<number, number> = {
 export default function CasaPage() {
   const { level, setLevel } = usePlayerStore();
   const { removeDirtyMoney, dirtyMoney } = useDirtyMoneyStore();
-  const [backgroundImage, setBackgroundImage] = useState('https://static.wixstatic.com/media/50f4bf_c6c96e5e7b0c4b8b963f4138fdc7a35c~mv2.png');
+  const [backgroundImage, setBackgroundImage] = useState('https://static.wixstatic.com/media/50f4bf_33be6b8d7dcf42169f78328d168a8ec4~mv2.png');
 
   const getMoneyForLevel = (playerLevel: number): number => {
     // Find the appropriate amount based on player level
