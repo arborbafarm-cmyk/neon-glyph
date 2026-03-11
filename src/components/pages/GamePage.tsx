@@ -22,7 +22,7 @@ const initialPoints: Point[] = [
   { id: '7', name: 'Viatura', x: 70, y: 70 },
   { id: '8', name: 'Policial', x: 45, y: 80 },
   { id: '9', name: 'Delegacia', x: 60, y: 45 },
-  { id: '10', name: 'Prefeitura', x: 20, y: 40 },
+  { id: '10', name: 'Prefeitura', x: 20, y: 40, link: '/giro-no-asfalto' },
   { id: '11', name: 'Tribunal de justiça', x: 80, y: 65 },
   { id: '12', name: 'Governo do Estado', x: 35, y: 50 },
   { id: '13', name: 'Ministério', x: 55, y: 15 },
