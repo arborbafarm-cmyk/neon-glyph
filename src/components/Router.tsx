@@ -5,6 +5,7 @@ import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 import HomePage from '@/components/pages/HomePage';
 import GiroNoAsfaltoPage from '@/components/pages/GiroNoAsfaltoPage';
 import LuxuryShowroomPage from '@/components/pages/LuxuryShowroomPage';
+import Luxo1Page from '@/components/pages/Luxo1Page';
 
 // Layout component that includes ScrollToTop
 function Layout() {
@@ -41,6 +42,13 @@ const router = createBrowserRouter([
         element: <LuxuryShowroomPage />,
         routeMetadata: {
           pageIdentifier: 'luxury-showroom',
+        },
+      },
+      {
+        path: "luxo-1",
+        element: <Luxo1Page />,
+        routeMetadata: {
+          pageIdentifier: 'luxo-1',
         },
       },
       {
