@@ -19,7 +19,7 @@ const LEVEL_TO_MONEY: Record<number, number> = {
 
 export default function CasaPage() {
   const { level } = usePlayerStore();
-  const { addDirtyMoney } = useDirtyMoneyStore();
+  const { removeDirtyMoney, dirtyMoney } = useDirtyMoneyStore();
 
   const getMoneyForLevel = (playerLevel: number): number => {
     // Find the appropriate amount based on player level
@@ -37,13 +37,17 @@ export default function CasaPage() {
   };
 
   const handleButtonClick = () => {
-    const moneyToAdd = getMoneyForLevel(level);
+    const moneyToRemove = getMoneyForLevel(level);
     
-    if (moneyToAdd > 0) {
-      addDirtyMoney(moneyToAdd);
-      alert(`Nível ${level}: R$ ${moneyToAdd.toLocaleString('pt-BR')} adicionado ao cofre!`);
+    if (moneyToRemove > 0) {
+      if (dirtyMoney >= moneyToRemove) {
+        removeDirtyMoney(moneyToRemove);
+        alert(`Nível ${level}: R$ ${moneyToRemove.toLocaleString('pt-BR')} retirado do cofre!`);
+      } else {
+        alert(`Nível ${level}: Você não tem dinheiro suficiente no cofre. Disponível: R$ ${dirtyMoney.toLocaleString('pt-BR')}`);
+      }
     } else {
-      alert(`Nível ${level}: Você precisa atingir o nível 9 para adicionar dinheiro sujo.`);
+      alert(`Nível ${level}: Você precisa atingir o nível 9 para retirar dinheiro sujo.`);
     }
   };
 
