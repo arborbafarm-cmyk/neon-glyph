@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,9 @@ const LEVEL_TO_MONEY: Record<number, number> = {
 };
 
 export default function CasaPage() {
-  const { level } = usePlayerStore();
+  const { level, setLevel } = usePlayerStore();
   const { removeDirtyMoney, dirtyMoney } = useDirtyMoneyStore();
+  const [backgroundImage, setBackgroundImage] = useState('https://static.wixstatic.com/media/50f4bf_c6c96e5e7b0c4b8b963f4138fdc7a35c~mv2.png');
 
   const getMoneyForLevel = (playerLevel: number): number => {
     // Find the appropriate amount based on player level
@@ -42,7 +44,15 @@ export default function CasaPage() {
     if (moneyToRemove > 0) {
       if (dirtyMoney >= moneyToRemove) {
         removeDirtyMoney(moneyToRemove);
-        alert(`Nível ${level}: R$ ${moneyToRemove.toLocaleString('pt-BR')} retirado do cofre!`);
+        
+        // If player is level 9, upgrade to level 10 and change background
+        if (level === 9) {
+          setLevel(10);
+          setBackgroundImage('https://static.wixstatic.com/media/50f4bf_d78defb80b9247beb0e9c91a333507bc~mv2.png');
+          alert(`Parabéns! Você atingiu o nível 10! R$ ${moneyToRemove.toLocaleString('pt-BR')} retirado do cofre!`);
+        } else {
+          alert(`Nível ${level}: R$ ${moneyToRemove.toLocaleString('pt-BR')} retirado do cofre!`);
+        }
       } else {
         alert(`Nível ${level}: Você não tem dinheiro suficiente no cofre. Disponível: R$ ${dirtyMoney.toLocaleString('pt-BR')}`);
       }
@@ -53,9 +63,9 @@ export default function CasaPage() {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col"
+      className="min-h-screen w-full flex flex-col transition-all duration-500"
       style={{
-        backgroundImage: 'url(https://static.wixstatic.com/media/50f4bf_c6c96e5e7b0c4b8b963f4138fdc7a35c~mv2.png)',
+        backgroundImage: `url(${backgroundImage})`,
         backgroundSize: '120%',
         backgroundPosition: 'center 40%',
         backgroundAttachment: 'fixed',
