@@ -1,10 +1,50 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { usePlayerStore } from '@/store/playerStore';
+import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
+
+// Level to dirty money mapping
+const LEVEL_TO_MONEY: Record<number, number> = {
+  9: 10000,
+  19: 50000,
+  29: 60000,
+  39: 70000,
+  49: 100000,
+  59: 500000,
+  69: 1000000,
+  79: 2000000,
+  89: 20000000,
+};
 
 export default function CasaPage() {
+  const { level } = usePlayerStore();
+  const { addDirtyMoney } = useDirtyMoneyStore();
+
+  const getMoneyForLevel = (playerLevel: number): number => {
+    // Find the appropriate amount based on player level
+    const sortedLevels = Object.keys(LEVEL_TO_MONEY)
+      .map(Number)
+      .sort((a, b) => a - b);
+
+    for (const levelThreshold of sortedLevels) {
+      if (playerLevel >= levelThreshold) {
+        return LEVEL_TO_MONEY[levelThreshold];
+      }
+    }
+
+    return 0; // No money for levels below 9
+  };
+
   const handleButtonClick = () => {
-    alert('Botão clicado!');
+    const moneyToAdd = getMoneyForLevel(level);
+    
+    if (moneyToAdd > 0) {
+      addDirtyMoney(moneyToAdd);
+      alert(`Nível ${level}: R$ ${moneyToAdd.toLocaleString('pt-BR')} adicionado ao cofre!`);
+    } else {
+      alert(`Nível ${level}: Você precisa atingir o nível 9 para adicionar dinheiro sujo.`);
+    }
   };
 
   return (
