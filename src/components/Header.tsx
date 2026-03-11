@@ -34,7 +34,7 @@ export default function Header() {
     if (savedAvatar) {
       setAvatarUrl(savedAvatar);
     }
-  }, [setPlayerName]);
+  }, []);
 
   // Handle avatar click to open file picker
   const handleAvatarClick = () => {
@@ -176,8 +176,34 @@ export default function Header() {
           {/* Player Names */}
           <div className="flex flex-col items-start gap-1">
             {/* Main Player Name */}
-            <div className="flex items-center">
-
+            <div className="flex items-center gap-2">
+              {isEditingName ? (
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  onBlur={handleNameSave}
+                  onKeyDown={handleNameKeyPress}
+                  className="bg-transparent border-b-2 border-subtitle-neon-blue text-subtitle-neon-blue font-paragraph text-sm md:text-base font-medium tracking-wider outline-none px-2\""
+                  style={{
+                    textShadow: '0 0 8px rgba(0,234,255,0.6)'
+                  }}
+                  autoFocus
+                  maxLength={30}
+                  placeholder="Digite o nome..."
+                />
+              ) : (
+                <button
+                  onClick={handleNameClick}
+                  className="px-3 py-1 rounded border-2 border-subtitle-neon-blue text-subtitle-neon-blue font-paragraph text-sm md:text-base font-medium tracking-wider hover:bg-subtitle-neon-blue/10 hover:brightness-150 transition-all duration-300 group flex items-center gap-2"
+                  style={{
+                    textShadow: '0 0 8px rgba(0,234,255,0.6)'
+                  }}
+                >
+                  {playerName}
+                  <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">✎</span>
+                </button>
+              )}
             </div>
 
             {/* Custom Player Name */}

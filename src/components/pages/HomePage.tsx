@@ -58,9 +58,14 @@ const GameHeader: React.FC = () => {
   useEffect(() => {
     setIsMounted(true);
     const savedAvatar = localStorage.getItem(STORAGE_KEY_AVATAR);
+    const savedName = localStorage.getItem(STORAGE_KEY_NAME);
     const savedPlayerId = localStorage.getItem('playerId');
 
     if (savedAvatar) setAvatarUrl(savedAvatar);
+    if (savedName) {
+      const { setPlayerName } = usePlayerStore.getState();
+      setPlayerName(savedName);
+    }
     
     // Show login modal if no player ID exists
     if (!savedPlayerId && !playerId) {
@@ -106,7 +111,10 @@ const GameHeader: React.FC = () => {
 
   const saveName = () => {
     const finalName = tempName.trim() || DEFAULT_NAME;
-    // Update store through playerStore if needed
+    // Update store through playerStore
+    const { setPlayerName } = usePlayerStore.getState();
+    setPlayerName(finalName);
+    localStorage.setItem(STORAGE_KEY_NAME, finalName);
     setIsEditingName(false);
   };
 
