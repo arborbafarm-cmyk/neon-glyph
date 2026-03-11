@@ -18,7 +18,7 @@ export default function CasaPage() {
       }}
     >
       <Header />
-      <div className="w-full flex justify-center pt-8">
+      <div className="w-full flex justify-center pt-32">
         <Button onClick={handleButtonClick} className="px-8 py-3 text-lg">
           Clique aqui
         </Button>
