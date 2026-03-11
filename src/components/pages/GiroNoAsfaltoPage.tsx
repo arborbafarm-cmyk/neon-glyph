@@ -89,31 +89,23 @@ export default function GiroNoAsfaltoPage() {
           </DraggableContainer>
         )}
 
-        {/* Slot Machine Illustration Section */}
+        {/* Slot Machine Illustration Section - Fixed Background */}
         {containers.find(c => c.id === 'slot-machine')?.isVisible && (
-          <DraggableContainer
-            id="slot-machine"
-            title="Slot Machine"
-            onRemove={removeContainer}
-            onEdit={handleEdit}
-            className="w-full"
-          >
-            <div className="flex-1 w-full relative overflow-hidden bg-gradient-to-b from-[#0a0d14] to-[#0f1419] flex items-center justify-center min-h-screen">
-              <Image
-                src="https://static.wixstatic.com/media/50f4bf_f0f13bffd67f4487bbad4fec560e36e5~mv2.png?originWidth=1024&originHeight=1920"
-                alt="Ultra-realistic cinematic slot machine arcade cabinet viewed straight from the front, facing the player directly, with empty blank display panel, bright LED neon panel displaying GIRO NO ASFALTO with glowing neon effect, in a Brazilian community bar with immersive atmosphere"
-                width={1024}
-                height={1920}
-                className="w-full h-full object-cover"
-              />
-              {/* Slot Machine Component positioned inside the slot machine screen - TV display area */}
-              <div className="absolute inset-0 flex flex-col items-center justify-end pb-20">
-                <div className="bg-transparent flex items-center justify-center">
-                  <SlotMachine />
-                </div>
+          <div className="w-full relative overflow-hidden bg-gradient-to-b from-[#0a0d14] to-[#0f1419] flex items-center justify-center min-h-screen bg-fixed">
+            <Image
+              src="https://static.wixstatic.com/media/50f4bf_f0f13bffd67f4487bbad4fec560e36e5~mv2.png?originWidth=1024&originHeight=1920"
+              alt="Ultra-realistic cinematic slot machine arcade cabinet viewed straight from the front, facing the player directly, with empty blank display panel, bright LED neon panel displaying GIRO NO ASFALTO with glowing neon effect, in a Brazilian community bar with immersive atmosphere"
+              width={1024}
+              height={1920}
+              className="w-full h-full object-cover fixed top-0 left-0"
+            />
+            {/* Slot Machine Component positioned inside the slot machine screen - TV display area */}
+            <div className="absolute inset-0 flex flex-col items-center justify-end pb-20 relative z-10">
+              <div className="bg-transparent flex items-center justify-center">
+                <SlotMachine />
               </div>
             </div>
-          </DraggableContainer>
+          </div>
         )}
 
         {containers.find(c => c.id === 'footer')?.isVisible && (
