@@ -9,6 +9,7 @@ export default function Luxo1Page() {
   const [showPaymentAnimation, setShowPaymentAnimation] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const playerName = useGameStore((state) => state.playerName);
+  const playerLevel = useGameStore((state) => state.playerLevel);
 
   const handleBuyClick = () => {
     setShowPaymentAnimation(true);
@@ -33,9 +34,9 @@ export default function Luxo1Page() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="relative w-full flex-1 overflow-hidden">
-        {/* Background Image */}
+        {/* Background Image - Changes based on player level */}
         <Image
-          src="https://static.wixstatic.com/media/50f4bf_ee701d9f8c20484698e5df1171cc5c37~mv2.png"
+          src={playerLevel === 2 ? "https://static.wixstatic.com/media/50f4bf_71a570651cb443828086ee0c7c5a437e~mv2.png?originWidth=1920&originHeight=1024" : "https://static.wixstatic.com/media/50f4bf_ee701d9f8c20484698e5df1171cc5c37~mv2.png"}
           alt="Luxo 1 Background"
           className="absolute inset-0 w-full h-full object-cover"
           width={1920}
@@ -60,16 +61,36 @@ export default function Luxo1Page() {
               Adquira este item exclusivo
             </p>
 
-            {/* Buy Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleBuyClick}
-              disabled={showPaymentAnimation}
-              className="px-8 py-4 bg-primary hover:bg-orange-600 text-white font-heading text-xl md:text-2xl rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Comprar por R$100,00
-            </motion.button>
+            {/* Buy Button and Player Level Box Container */}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+              {/* Buy Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleBuyClick}
+                disabled={showPaymentAnimation}
+                className="px-8 py-4 bg-primary hover:bg-orange-600 text-white font-heading text-xl md:text-2xl rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Comprar por R$150,00
+              </motion.button>
+
+              {/* Player Level Box */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="px-6 py-4 bg-gradient-to-br from-secondary/20 to-secondary/10 border-2 border-secondary rounded-lg backdrop-blur-sm"
+              >
+                <div className="flex flex-col items-center">
+                  <span className="font-paragraph text-sm text-secondary/80 uppercase tracking-wide mb-1">
+                    Nível do Jogador
+                  </span>
+                  <span className="font-heading text-4xl text-secondary font-bold">
+                    {playerLevel}
+                  </span>
+                </div>
+              </motion.div>
+            </div>
           </motion.div>
         </div>
 
