@@ -13,14 +13,13 @@ export default function LuxuryShowroomPage() {
         className="relative flex-1 w-full flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: 'url(https://static.wixstatic.com/media/50f4bf_def07b5c61e349e690e31dcd9acd4861~mv2.png)',
-          backgroundSize: 'cover',
+          backgroundSize: 'contain',
           backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: '#0f141e',
           minHeight: 'calc(100vh - 80px)'
         }}
       >
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/20"></div>
 
         {/* Content centered on image */}
         <motion.div
