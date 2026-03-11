@@ -8,8 +8,11 @@ import Footer from '@/components/Footer';
 export default function Luxo1Page() {
   const [showPaymentAnimation, setShowPaymentAnimation] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
+  const [isEditingLevel, setIsEditingLevel] = useState(false);
+  const [editLevelValue, setEditLevelValue] = useState('');
   const playerName = useGameStore((state) => state.playerName);
   const playerLevel = useGameStore((state) => state.playerLevel);
+  const setPlayerLevel = useGameStore((state) => state.setPlayerLevel);
 
   const handleBuyClick = () => {
     setShowPaymentAnimation(true);
@@ -28,6 +31,24 @@ export default function Luxo1Page() {
   const handleCloseAnimation = () => {
     setShowPaymentAnimation(false);
     setPaymentComplete(false);
+  };
+
+  const handleEditLevel = () => {
+    setEditLevelValue(playerLevel.toString());
+    setIsEditingLevel(true);
+  };
+
+  const handleSaveLevel = () => {
+    const newLevel = parseInt(editLevelValue, 10);
+    if (!isNaN(newLevel) && newLevel > 0) {
+      setPlayerLevel(newLevel);
+      setIsEditingLevel(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingLevel(false);
+    setEditLevelValue('');
   };
 
   return (
@@ -79,7 +100,8 @@ export default function Luxo1Page() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="px-6 py-4 bg-gradient-to-br from-secondary/20 to-secondary/10 border-2 border-secondary rounded-lg backdrop-blur-sm"
+                className="px-6 py-4 bg-gradient-to-br from-secondary/20 to-secondary/10 border-2 border-secondary rounded-lg backdrop-blur-sm cursor-pointer hover:border-secondary/80 transition-colors"
+                onClick={handleEditLevel}
               >
                 <div className="flex flex-col items-center">
                   <span className="font-paragraph text-sm text-secondary/80 uppercase tracking-wide mb-1">
@@ -87,6 +109,9 @@ export default function Luxo1Page() {
                   </span>
                   <span className="font-heading text-4xl text-secondary font-bold">
                     {playerLevel}
+                  </span>
+                  <span className="font-paragraph text-xs text-secondary/60 mt-2">
+                    Clique para editar
                   </span>
                 </div>
               </motion.div>
@@ -104,6 +129,7 @@ export default function Luxo1Page() {
               className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
               onClick={handleCloseAnimation}
             >
+              {/* ... keep existing code (card machine and payment animation) ... */}
               <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                 {/* Card Machine */}
                 <motion.div
@@ -212,6 +238,54 @@ export default function Luxo1Page() {
                   </motion.button>
                 )}
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Level Edit Modal */}
+        <AnimatePresence>
+          {isEditingLevel && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+              onClick={handleCancelEdit}
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-secondary rounded-lg p-8 max-w-sm w-full mx-4"
+              >
+                <h2 className="font-heading text-2xl text-secondary mb-6 text-center">
+                  Editar Nível
+                </h2>
+                <input
+                  type="number"
+                  value={editLevelValue}
+                  onChange={(e) => setEditLevelValue(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-700 border-2 border-secondary rounded-lg text-white font-heading text-xl text-center mb-6 focus:outline-none focus:border-secondary/80"
+                  placeholder="Digite o novo nível"
+                  autoFocus
+                  min="1"
+                />
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleSaveLevel}
+                    className="flex-1 px-4 py-3 bg-primary hover:bg-orange-600 text-white font-heading rounded-lg transition-all"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-heading rounded-lg transition-all border border-secondary/30"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
