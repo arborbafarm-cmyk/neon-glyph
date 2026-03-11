@@ -22,7 +22,7 @@ interface PlayerState {
 export const usePlayerStore = create<PlayerState>((set) => ({
   playerId: null,
   playerName: 'COMANDANTE',
-  level: 1,
+  level: 9,
   progress: 0,
   isGuest: false,
   profilePicture: null,
