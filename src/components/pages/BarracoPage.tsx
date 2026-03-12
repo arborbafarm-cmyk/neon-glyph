@@ -5,6 +5,7 @@ import { Image } from '@/components/ui/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
+import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 
 const BARRACO_LEVELS = [
   { level: 10, milestone: 'Casa de Alvenaria' },
@@ -27,6 +28,7 @@ export default function BarracoPage() {
   const [evolving, setEvolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allItemsAtLevel, setAllItemsAtLevel] = useState(false);
+  const { dirtyMoney, removeDirtyMoney } = useDirtyMoneyStore();
 
   // Get player ID from localStorage or URL
   const getPlayerId = () => {
@@ -104,9 +106,20 @@ export default function BarracoPage() {
       return;
     }
 
+    const evolutionCost = calculateEvolutionCost(player.level || 1);
+
+    // Check if player has enough dirty money
+    if (dirtyMoney < evolutionCost) {
+      setError(`Dinheiro limpo insuficiente. Necessário: R$ ${evolutionCost.toLocaleString('pt-BR')}, Disponível: R$ ${dirtyMoney.toLocaleString('pt-BR')}`);
+      return;
+    }
+
     try {
       setEvolving(true);
       setError(null);
+
+      // Deduct the cost from dirty money vault
+      removeDirtyMoney(evolutionCost);
 
       // Update player level
       await BaseCrudService.update<Players>('players', {
@@ -260,6 +273,12 @@ export default function BarracoPage() {
                     <span>Custo:</span>
                     <span className="font-bold text-logo-gradient-end">
                       R$ {evolutionCost.toLocaleString('pt-BR')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-foreground">
+                    <span>Dinheiro Limpo Disponível:</span>
+                    <span className={`font-bold ${dirtyMoney >= evolutionCost ? 'text-green-400' : 'text-red-400'}`}>
+                      R$ {dirtyMoney.toLocaleString('pt-BR')}
                     </span>
                   </div>
                   {!allItemsAtLevel && (
