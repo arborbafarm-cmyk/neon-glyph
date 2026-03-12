@@ -75,7 +75,6 @@ export default function HomePage() {
           className="object-contain"
         />
       </div>
-
       {/* Login Section - Center of screen */}
       <div className="w-full flex-1 flex flex-col items-center justify-center gap-8 px-6">
         <div className="text-center mb-4">
@@ -94,7 +93,7 @@ export default function HomePage() {
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          <div className="flex flex-col gap-4 w-full max-w-sm">
+          <div className="flex flex-col gap-4 w-full max-w-sm shadow-[inset_0px_0px_4px_0px_#bfbfbf]">
             {/* Google Login Button */}
             <button
               onClick={handleGoogleLogin}
