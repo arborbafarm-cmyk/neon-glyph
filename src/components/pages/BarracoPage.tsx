@@ -17,7 +17,7 @@ const BARRACO_LEVELS = [
   { level: 60, milestone: 'Triplex com piscina borda infinita no rooftop' },
   { level: 70, milestone: 'Mansão do Complexo' },
   { level: 80, milestone: 'Mansão Luxuosa Blindada' },
-  { level: 90, milestone: null },
+  { level: 90, milestone: 'Mansão Blindada com Heliporto' },
   { level: 100, milestone: null },
 ];
 const BASE_EVOLUTION_COST = 500;
@@ -92,6 +92,10 @@ export default function BarracoPage() {
   };
 
   const getBarracoImage = (level: number): string => {
+    // Return the Mansão Blindada com Heliporto image for level 90 and above
+    if (level >= 90) {
+      return 'https://static.wixstatic.com/media/50f4bf_da783ae93ec64132b05ae2a62020e090~mv2.png';
+    }
     // Return the Mansão Luxuosa Blindada image for level 80 and above
     if (level >= 80) {
       return 'https://static.wixstatic.com/media/50f4bf_8a605af9fc4646fd84c89e99c6acc4eb~mv2.png';
