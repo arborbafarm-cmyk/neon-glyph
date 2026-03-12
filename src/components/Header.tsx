@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 import { usePlayerStore } from '@/store/playerStore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Header() {
   const { dirtMoney } = useGameStore();
@@ -14,6 +15,7 @@ export default function Header() {
   const level = usePlayerStore((state) => state.level);
   const setPlayerName = usePlayerStore((state) => state.setPlayerName);
   const setLevel = usePlayerStore((state) => state.setLevel);
+  const { toast } = useToast();
   const [customPlayerName, setCustomPlayerName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('https://static.wixstatic.com/media/50f4bf_a888df3d639f415b853110e459edba8c~mv2.png?originWidth=128&originHeight=128');
   const [isEditingName, setIsEditingName] = useState(false);
@@ -82,6 +84,10 @@ export default function Header() {
       const newName = tempName.trim().toUpperCase();
       setPlayerName(newName);
       localStorage.setItem('playerName', newName);
+      toast({
+        title: 'Nome salvo!',
+        description: `Seu nome foi atualizado para ${newName}`,
+      });
     }
     setIsEditingName(false);
   };
@@ -104,6 +110,10 @@ export default function Header() {
     if (tempCustomName.trim()) {
       setCustomPlayerName(tempCustomName.trim());
       localStorage.setItem('customPlayerName', tempCustomName.trim());
+      toast({
+        title: 'Nome gamer salvo!',
+        description: `Seu nome gamer foi atualizado para ${tempCustomName.trim()}`,
+      });
     }
     setIsEditingCustomName(false);
   };

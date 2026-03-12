@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-rou
 import { lazy, Suspense } from 'react';
 import { ScrollToTop } from '@/lib/scroll-to-top';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Toaster } from '@/components/ui/toaster';
 import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 
 // Lazy load all page components to avoid circular dependencies
@@ -23,11 +24,12 @@ function PageLoader() {
   );
 }
 
-// Layout component that includes ScrollToTop
+// Layout component that includes ScrollToTop and Toaster
 function Layout() {
   return (
     <>
       <ScrollToTop />
+      <Toaster />
       <Outlet />
     </>
   );
