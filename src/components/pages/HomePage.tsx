@@ -202,7 +202,7 @@ const GameHeader: React.FC = () => {
 
   return (
     <header 
-      className="fixed top-0 left-0 w-full h-[110px] z-50 select-none"
+      className="w-full h-auto py-4 md:py-6 z-50 select-none"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
@@ -223,32 +223,32 @@ const GameHeader: React.FC = () => {
       </div>
       {/* Main Content Container */}
       <PositioningCanvas isInspectorMode={showInspector}>
-        <div className="relative h-full w-full max-w-[120rem] mx-auto px-4 md:px-8 flex items-center justify-between">
+        <div className="relative w-full max-w-[100rem] mx-auto px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
 
           {/* LEFT AREA: Logo & Title */}
           <div 
             ref={(el) => { if (el) containerRefs.current['left'] = el; }}
             onMouseDown={(e) => handleMouseDown(e, 'left')}
             data-positionable="left-container"
-            className={`flex items-center gap-4 z-10 w-1/3 min-w-[250px] ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'left' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
+            className={`flex items-center gap-3 md:gap-4 z-10 flex-1 ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'left' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
             style={{
               transition: containers.left.isDragging ? 'none' : 'none'
             }}
           >
           {/* Icon/Crest */}
-          <div className="relative hidden sm:flex items-center justify-center w-14 h-14 rounded-lg bg-black/40 border border-[#FF4500]/30 shadow-[0_0_15px_rgba(255,69,0,0.2)]">
-            <Crown className="w-8 h-8 text-[#FF4500] drop-shadow-[0_0_8px_rgba(255,69,0,0.8)]" />
+          <div className="relative hidden sm:flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-lg bg-black/40 border border-[#FF4500]/30 shadow-[0_0_15px_rgba(255,69,0,0.2)] flex-shrink-0">
+            <Crown className="w-6 h-6 md:w-8 md:h-8 text-[#FF4500] drop-shadow-[0_0_8px_rgba(255,69,0,0.8)]" />
             {/* Abstract Wings using CSS shapes */}
             <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-2 h-6 border-l-2 border-t-2 border-[#FF4500]/50 rounded-tl-md" />
             <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-2 h-6 border-r-2 border-t-2 border-[#FF4500]/50 rounded-tr-md" />
           </div>
 
           {/* Typography */}
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col justify-center min-w-0">
             <div className="flex items-center gap-2 mb-[-4px]">
-              <ShieldAlert className="w-4 h-4 text-[#FF4500] sm:hidden" />
+              <ShieldAlert className="w-4 h-4 text-[#FF4500] sm:hidden flex-shrink-0" />
               <h1
-                className="font-heading font-black text-xl sm:text-2xl md:text-3xl tracking-[2px] uppercase m-0 leading-none"
+                className="font-heading font-black text-lg sm:text-xl md:text-2xl tracking-[1px] md:tracking-[2px] uppercase m-0 leading-none truncate"
                 style={{
                   background: 'linear-gradient(90deg, #FF4500 0%, #FF0000 100%)',
                   WebkitBackgroundClip: 'text',
@@ -259,7 +259,7 @@ const GameHeader: React.FC = () => {
                 DOMÍNIO DO COMANDO
               </h1>
             </div>
-            <span className="font-heading font-bold text-xs sm:text-sm tracking-[3px] uppercase text-[#00eaff] drop-shadow-[0_0_5px_rgba(0,234,255,0.8)]">
+            <span className="font-heading font-bold text-xs tracking-[2px] md:tracking-[3px] uppercase text-[#00eaff] drop-shadow-[0_0_5px_rgba(0,234,255,0.8)] truncate">
               GIRO NO ASFALTO
             </span>
           </div>
@@ -279,14 +279,14 @@ const GameHeader: React.FC = () => {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute w-[86px] h-[86px] rounded-full border border-[#00eaff]/30 border-dashed pointer-events-none"
+            className="absolute w-[70px] h-[70px] md:w-[86px] md:h-[86px] rounded-full border border-[#00eaff]/30 border-dashed pointer-events-none"
           />
 
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleAvatarClick}
-            className="relative w-[70px] h-[70px] rounded-full cursor-pointer group"
+            className="relative w-[60px] h-[60px] md:w-[70px] md:h-[70px] rounded-full cursor-pointer group"
           >
             {/* Neon Border & Glow */}
             <div className="absolute inset-0 rounded-full border-[3px] border-[#00eaff] shadow-[0_0_15px_rgba(0,234,255,0.6),inset_0_0_10px_rgba(0,234,255,0.4)] z-10 transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(0,234,255,0.8),inset_0_0_15px_rgba(0,234,255,0.6)]" />
@@ -296,7 +296,7 @@ const GameHeader: React.FC = () => {
 
             {/* Hover Overlay */}
             <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center">
-              <Edit2 className="w-5 h-5 text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" />
+              <Edit2 className="w-4 h-4 md:w-5 md:h-5 text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" />
             </div>
           </motion.div>
 
@@ -310,7 +310,7 @@ const GameHeader: React.FC = () => {
           />
 
           {/* Small decorative bracket below avatar */}
-          <div className="mt-4 w-24 h-1 bg-gradient-to-r from-[#00eaff] to-transparent relative overflow-hidden rounded-full shadow-[0_0_10px_rgba(0,234,255,0.6)]">
+          <div className="mt-3 md:mt-4 w-20 md:w-24 h-1 bg-gradient-to-r from-[#00eaff] to-transparent relative overflow-hidden rounded-full shadow-[0_0_10px_rgba(0,234,255,0.6)]">
             <div className="absolute inset-y-0 left-0 w-1/3 bg-[#00eaff] animate-pulse rounded-full" />
             <div className="absolute inset-y-0 right-0 w-1/3 bg-[#00eaff] animate-pulse rounded-full" />
           </div>
@@ -321,14 +321,14 @@ const GameHeader: React.FC = () => {
           ref={(el) => { if (el) containerRefs.current['right'] = el; }}
           onMouseDown={(e) => handleMouseDown(e, 'right')}
           data-positionable="right-container"
-          className={`flex items-center justify-end gap-4 sm:gap-6 z-10 w-1/3 min-w-[200px] ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'right' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
+          className={`flex items-center justify-end gap-3 md:gap-6 z-10 flex-1 ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'right' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
           style={{
             transition: containers.right.isDragging ? 'none' : 'none'
           }}
         >
 
           {/* Player Name Display/Edit */}
-          <div className="hidden sm:flex flex-col items-end">
+          <div className="hidden sm:flex flex-col items-end min-w-0">
             <span className="text-[10px] text-[#00eaff]/70 font-paragraph tracking-widest uppercase mb-1">
               Status: Online
             </span>
@@ -352,7 +352,7 @@ const GameHeader: React.FC = () => {
                     maxLength={20}
                     className="bg-transparent text-white font-heading font-bold tracking-wider outline-none w-32 text-right text-sm"
                   />
-                  <button onClick={saveName} className="text-[#00eaff] hover:text-white transition-colors">
+                  <button onClick={saveName} className="text-[#00eaff] hover:text-white transition-colors flex-shrink-0">
                     <Check className="w-4 h-4" />
                   </button>
                 </motion.div>
@@ -362,26 +362,26 @@ const GameHeader: React.FC = () => {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
-                  className="flex items-center gap-2 group cursor-pointer"
+                  className="flex items-center gap-2 group cursor-pointer min-w-0"
                   onClick={startEditingName}
                 >
-                  <span className="font-heading font-bold text-sm lg:text-base text-white tracking-wider drop-shadow-[0_0_5px_rgba(0,234,255,0.5)] group-hover:text-[#00eaff] transition-colors truncate max-w-[150px] lg:max-w-[200px]">
+                  <span className="font-heading font-bold text-sm lg:text-base text-white tracking-wider drop-shadow-[0_0_5px_rgba(0,234,255,0.5)] group-hover:text-[#00eaff] transition-colors truncate max-w-[120px] lg:max-w-[200px]">
                     {playerName}
                   </span>
-                  <Edit2 className="w-3 h-3 text-white/30 group-hover:text-[#00eaff] transition-colors opacity-0 group-hover:opacity-100" />
+                  <Edit2 className="w-3 h-3 text-white/30 group-hover:text-[#00eaff] transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0" />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
           {/* Utility Icons */}
-          <div className="flex items-center gap-3 border-l border-white/10 pl-4 sm:pl-6">
+          <div className="flex items-center gap-2 md:gap-3 border-l border-white/10 pl-3 md:pl-4 lg:pl-6">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="relative p-2 text-white/80 hover:text-white transition-colors group"
+              className="relative p-2 text-white/80 hover:text-white transition-colors group flex-shrink-0"
             >
-              <Bell className="w-5 h-5 group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]" />
+              <Bell className="w-4 h-4 md:w-5 md:h-5 group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]" />
               {/* Notification Dot */}
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF4500] rounded-full shadow-[0_0_5px_rgba(255,69,0,0.8)]" />
             </motion.button>
@@ -390,9 +390,9 @@ const GameHeader: React.FC = () => {
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowInspector(!showInspector)}
-              className={`p-2 transition-all duration-300 group ${showInspector ? 'text-yellow-400' : 'text-white/80 hover:text-white'}`}
+              className={`p-2 transition-all duration-300 group flex-shrink-0 ${showInspector ? 'text-yellow-400' : 'text-white/80 hover:text-white'}`}
             >
-              <Settings className={`w-5 h-5 ${showInspector ? 'drop-shadow-[0_0_8px_rgba(255,193,7,0.8)]' : 'group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]'}`} />
+              <Settings className={`w-4 h-4 md:w-5 md:h-5 ${showInspector ? 'drop-shadow-[0_0_8px_rgba(255,193,7,0.8)]' : 'group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]'}`} />
             </motion.button>
           </div>
         </div>
