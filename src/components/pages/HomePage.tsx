@@ -6,7 +6,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { BaseCrudService } from '@/integrations';
 import { useNavigate } from 'react-router-dom';
 
-const LOGO_URL = "https://static.wixstatic.com/media/50f4bf_fda705d9cabd430cb14b2281f9cfe089~mv2.png";
+const LOGO_URL = "https://static.wixstatic.com/media/50f4bf_fac0d7f0761d402eafa36cad60823f5b~mv2.png";
 
 export default function HomePage() {
   const navigate = useNavigate();
