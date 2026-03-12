@@ -9,8 +9,8 @@ import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 
 const BARRACO_LEVELS = [
   { level: 10, milestone: 'Casa de Alvenaria' },
-  { level: 20, milestone: null },
-  { level: 30, milestone: null },
+  { level: 20, milestone: 'Sobrado' },
+  { level: 30, milestone: 'Sobrado com Piscina' },
   { level: 40, milestone: null },
   { level: 50, milestone: null },
   { level: 60, milestone: null },
@@ -85,6 +85,10 @@ export default function BarracoPage() {
   };
 
   const getBarracoImage = (level: number): string => {
+    // Return the Sobrado com Piscina image for level 30 and above
+    if (level >= 30) {
+      return 'https://static.wixstatic.com/media/50f4bf_b538b42955634d7190d28507d4b05023~mv2.png';
+    }
     // Return the Sobrado image for level 20 and above
     if (level >= 20) {
       return 'https://static.wixstatic.com/media/50f4bf_b23aee963b00465fa534f7705505b5b9~mv2.png';
