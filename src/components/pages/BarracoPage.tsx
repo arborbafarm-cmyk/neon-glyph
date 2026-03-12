@@ -12,7 +12,7 @@ const BARRACO_LEVELS = [
   { level: 10, milestone: 'Casa de Alvenaria' },
   { level: 20, milestone: 'Sobrado' },
   { level: 30, milestone: 'Sobrado com Piscina' },
-  { level: 40, milestone: null },
+  { level: 40, milestone: 'Sobrado de Luxo' },
   { level: 50, milestone: null },
   { level: 60, milestone: null },
   { level: 70, milestone: null },
@@ -92,6 +92,10 @@ export default function BarracoPage() {
   };
 
   const getBarracoImage = (level: number): string => {
+    // Return the Sobrado de Luxo image for level 40 and above
+    if (level >= 40) {
+      return 'https://static.wixstatic.com/media/50f4bf_86c3183c0550490fab41c5a8a8f6184b~mv2.png';
+    }
     // Return the Sobrado com Piscina image for level 30 and above
     if (level >= 30) {
       return 'https://static.wixstatic.com/media/50f4bf_b538b42955634d7190d28507d4b05023~mv2.png';
