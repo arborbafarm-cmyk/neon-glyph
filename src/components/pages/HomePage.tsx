@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Bell, Settings, Edit2, Check, ShieldAlert, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Image } from '@/components/ui/image';
 import PositioningCanvas from '@/components/PositioningCanvas';
 import LoginModal from '@/components/LoginModal';
@@ -455,13 +456,24 @@ const GameHeader: React.FC = () => {
 };
 
 export default function HomePage() {
+  const { playerId } = usePlayerStore();
+  const navigate = useNavigate();
+  
+  // Redirect to game if already logged in
+  useEffect(() => {
+    if (playerId) {
+      navigate('/game');
+    }
+  }, [playerId, navigate]);
+
   return (
-    <div className="min-h-screen" style={{
+    <div className="min-h-screen flex items-center justify-center" style={{
       backgroundImage: 'url(https://static.wixstatic.com/media/50f4bf_1e5ca7c3774d48e6b010a1a723fd4c9f~mv2.png)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
     }}>
+      <LoginModal isOpen={true} onClose={() => {}} />
     </div>
   );
 }
