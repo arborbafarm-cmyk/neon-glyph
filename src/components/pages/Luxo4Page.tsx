@@ -56,7 +56,7 @@ export default function Luxo4Page() {
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col min-h-screen"
       style={{
         backgroundImage: `url('${backgroundImage}')`,
