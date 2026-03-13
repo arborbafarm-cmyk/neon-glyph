@@ -4,6 +4,33 @@
  */
 
 /**
+ * Collection ID: personagens
+ * Interface for Characters
+ */
+export interface Characters {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  characterName?: string;
+  /** @wixFieldType number */
+  startLevel?: number;
+  /** @wixFieldType number */
+  endLevel?: number;
+  /** @wixFieldType text */
+  mainDialogue?: string;
+  /** @wixFieldType text */
+  acceptOptionText?: string;
+  /** @wixFieldType text */
+  denounceOptionText?: string;
+  /** @wixFieldType number */
+  baseBribeValue?: number;
+  /** @wixFieldType image - Contains image URL, render with <Image> component, NOT as text */
+  characterImage?: string;
+}
+
+
+/**
  * Collection ID: players
  * Interface for Players
  */

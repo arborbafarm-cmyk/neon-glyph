@@ -24,6 +24,15 @@ interface CharacterConfig {
 }
 
 const characterConfigs: Record<number, CharacterConfig> = {
+  1: {
+    name: 'Guarda de Rua',
+    emoji: '👮',
+    levelRange: '1 a 9',
+    initialDialog: 'Olha só… achei meio suspeito esse movimento aí no seu território. Mas relaxa… a rua é cheia de buracos e eu posso acabar olhando pro lado errado se alguém ajudar a lubrificar a engrenagem.',
+    acceptDialog: 'Boa decisão. A rua continua tranquila… e eu continuo distraído. ...nos veremos em breve.',
+    denyDialog: 'Interessante… resolveu bancar o cidadão exemplar? Vamos ver se a cidade gosta de gente assim.',
+    denyResponse: 'Interessante… resolveu bancar o cidadão exemplar? Vamos ver se a cidade gosta de gente assim.',
+  },
   10: {
     name: 'Investigador',
     emoji: '🔍',
@@ -127,7 +136,7 @@ function getCharacterConfig(level: number): CharacterConfig {
   if (level >= 30) return characterConfigs[30];
   if (level >= 20) return characterConfigs[20];
   if (level >= 10) return characterConfigs[10];
-  return characterConfigs[10];
+  return characterConfigs[1];
 }
 
 export default function BriberyGuardPage() {
