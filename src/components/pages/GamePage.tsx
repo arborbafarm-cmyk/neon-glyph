@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import OnlinePlayersList from '@/components/OnlinePlayersList';
 import { motion } from 'framer-motion';
+import { useMember } from '@/integrations';
+import { playerService } from '@/services/playerService';
 
 interface Point {
   id: string;
@@ -34,6 +37,28 @@ export default function GamePage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { member, isAuthenticated } = useMember();
+
+  // Update player status when component mounts
+  useEffect(() => {
+    if (isAuthenticated && member?.loginEmail) {
+      const playerName = member.contact?.firstName || member.profile?.nickname || 'Player';
+      const nickname = member.profile?.nickname || member.contact?.firstName || 'Anonymous';
+      
+      playerService.registerPlayer(member.loginEmail, playerName, nickname).catch(error => {
+        console.error('Error registering player:', error);
+      });
+    }
+
+    // Cleanup: mark player as offline when leaving
+    return () => {
+      if (isAuthenticated && member?.loginEmail) {
+        playerService.setPlayerOffline(member.loginEmail).catch(error => {
+          console.error('Error setting player offline:', error);
+        });
+      }
+    };
+  }, [isAuthenticated, member]);
 
   const handleMouseDown = (e: React.MouseEvent, pointId: string) => {
     e.preventDefault();
@@ -210,6 +235,11 @@ export default function GamePage() {
               <span>Passe o mouse sobre um ponto para ver seu nome</span>
             </li>
           </ul>
+        </div>
+
+        {/* Online Players Section */}
+        <div className="mt-8">
+          <OnlinePlayersList />
         </div>
       </main>
 
