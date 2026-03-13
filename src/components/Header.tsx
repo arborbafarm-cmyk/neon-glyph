@@ -131,10 +131,22 @@ export default function Header() {
         {/* Left Area - Logo */}
         <div className="flex items-center gap-3 md:flex-1">
           <div className="relative">
-
+            <Image
+              src="https://static.wixstatic.com/media/50f4bf_fda705d9cabd430cb14b2281f9cfe089~mv2.png"
+              alt="Domínio do Comando Logo"
+              width={40}
+              className="w-8 h-8 md:w-10 md:h-10 object-contain"
+            />
           </div>
           <div className="flex flex-col">
-
+            <h1 className="font-heading font-bold text-sm md:text-lg text-white tracking-wider" style={{
+              background: 'linear-gradient(90deg, #FF4500 0%, #FF0000 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              DOMÍNIO
+            </h1>
+            <p className="font-heading text-xs text-subtitle-neon-blue tracking-wider">DO COMANDO</p>
           </div>
         </div>
 
@@ -177,7 +189,32 @@ export default function Header() {
           <div className="hidden md:flex flex-col items-start gap-1">
             {/* Main Player Name */}
             <div className="flex items-center gap-2">
-
+              {isEditingName ? (
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  onBlur={handleNameSave}
+                  onKeyDown={handleNameKeyPress}
+                  className="bg-transparent border-b-2 border-subtitle-neon-blue text-subtitle-neon-blue font-paragraph text-sm md:text-base font-medium tracking-wider outline-none px-2"
+                  style={{
+                    textShadow: '0 0 8px rgba(0,234,255,0.6)'
+                  }}
+                  autoFocus
+                  maxLength={30}
+                  placeholder="Digite seu nome..."
+                />
+              ) : (
+                <button
+                  onClick={handleNameClick}
+                  className="px-3 py-1 rounded border-2 border-subtitle-neon-blue text-subtitle-neon-blue font-paragraph text-sm md:text-base font-medium tracking-wider hover:bg-subtitle-neon-blue/10 hover:brightness-150 transition-all duration-300 whitespace-nowrap"
+                  style={{
+                    textShadow: '0 0 8px rgba(0,234,255,0.6)'
+                  }}
+                >
+                  {playerName || '+ Nome'}
+                </button>
+              )}
             </div>
 
             {/* Custom Player Name */}
