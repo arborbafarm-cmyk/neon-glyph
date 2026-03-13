@@ -6,7 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useBackgroundImage } from '@/config/backgroundImages';
 
-export Luxo4Pagen function Luxo4Page {
+export default function Luxo4Page() {
   const [showPaymentAnimation, setShowPaymentAnimation] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [isEditingLevel, setIsEditingLevel] = useState(false);

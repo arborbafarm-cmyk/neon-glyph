@@ -85,7 +85,12 @@ export const useBackgroundImage = (pageName: keyof typeof backgroundImages) => {
     const fetchBackground = async () => {
       setIsLoading(true);
       try {
-        const cmsImage = await backgroundService.getBackgroundImageUrl(pageName);
+        // Convert camelCase to kebab-case for CMS lookup
+        const normalizedPageName = pageName
+          .replace(/([a-z])([A-Z])/g, '$1-$2')
+          .toLowerCase();
+        
+        const cmsImage = await backgroundService.getBackgroundImageUrl(normalizedPageName);
         if (cmsImage) {
           setBackgroundImage(cmsImage);
         } else {

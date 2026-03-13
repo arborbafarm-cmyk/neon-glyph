@@ -50,7 +50,12 @@ export const backgroundService = {
   // Get background by page name
   async getBackgroundByPageName(pageName: string): Promise<Background | null> {
     try {
-      const cmsPageName = pageNameMap[pageName] || pageName;
+      // Normalize input: convert camelCase to kebab-case if needed
+      const normalizedPageName = pageName
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .toLowerCase();
+      
+      const cmsPageName = pageNameMap[pageName] || normalizedPageName;
       const result = await BaseCrudService.getAll<Background>(COLLECTION_ID);
       const background = result.items.find(
         (bg) => bg.pageName?.toLowerCase() === cmsPageName.toLowerCase()
