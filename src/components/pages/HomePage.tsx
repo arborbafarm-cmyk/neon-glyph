@@ -1,497 +1,287 @@
 // HPI 1.7-V
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Bell, Settings, Edit2, Check, ShieldAlert, X } from 'lucide-react';
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
+import { Button } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
-import PositioningCanvas from '@/components/PositioningCanvas';
-import LoginModal from '@/components/LoginModal';
-import { usePlayerStore } from '@/store/playerStore';
-
-// --- Types & Interfaces ---
-interface PlayerData {
-  name: string;
-  avatarUrl: string;
-}
-
-// --- Constants ---
-const DEFAULT_AVATAR = "https://static.wixstatic.com/media/50f4bf_4961bf11271c41cbba4e316b5143e24e~mv2.png?originWidth=128&originHeight=128";
-const DEFAULT_NAME = "COMANDANTE_LEO";
-const STORAGE_KEY_AVATAR = "@dominio_comando/avatar";
-const STORAGE_KEY_NAME = "@dominio_comando/player_name";
-
-// --- Components ---
-
-interface ContainerPosition {
-  x: number;
-  y: number;
-}
-
-interface ContainerElement {
-  id: string;
-  position: ContainerPosition;
-  isDragging: boolean;
-}
-
-const GameHeader: React.FC = () => {
-  // State
-  const { playerId, playerName, level } = usePlayerStore();
-  const [avatarUrl, setAvatarUrl] = useState<string>(DEFAULT_AVATAR);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [tempName, setTempName] = useState("");
-  const [isMounted, setIsMounted] = useState(false);
-  const [showInspector, setShowInspector] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [containers, setContainers] = useState<Record<string, ContainerElement>>({
-    left: { id: 'left', position: { x: 0, y: 0 }, isDragging: false },
-    center: { id: 'center', position: { x: 0, y: 0 }, isDragging: false },
-    right: { id: 'right', position: { x: 0, y: 0 }, isDragging: false },
-  });
-  const [selectedContainer, setSelectedContainer] = useState<string>('left');
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-  // Refs
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-  const containerRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  // Hydration & LocalStorage Load
-  useEffect(() => {
-    setIsMounted(true);
-    const savedAvatar = localStorage.getItem(STORAGE_KEY_AVATAR);
-    const savedName = localStorage.getItem(STORAGE_KEY_NAME);
-    const savedPlayerId = localStorage.getItem('playerId');
-
-    if (savedAvatar) setAvatarUrl(savedAvatar);
-    if (savedName) {
-      const { setPlayerName } = usePlayerStore.getState();
-      setPlayerName(savedName);
-    }
-  }, []);
-
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditingName && nameInputRef.current) {
-      nameInputRef.current.focus();
-    }
-  }, [isEditingName]);
-
-  // Handlers
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Basic validation
-      if (!file.type.startsWith('image/')) {
-        alert('Por favor, selecione uma imagem válida.');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setAvatarUrl(base64String);
-        localStorage.setItem(STORAGE_KEY_AVATAR, base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const startEditingName = () => {
-    setTempName(playerName);
-    setIsEditingName(true);
-  };
-
-  const saveName = () => {
-    const finalName = tempName.trim() || DEFAULT_NAME;
-    // Update store through playerStore
-    const { setPlayerName } = usePlayerStore.getState();
-    setPlayerName(finalName);
-    localStorage.setItem(STORAGE_KEY_NAME, finalName);
-    setIsEditingName(false);
-  };
-
-  const handleNameKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') saveName();
-    if (e.key === 'Escape') setIsEditingName(false);
-  };
-
-  // Drag handlers for containers
-  const handleMouseDown = (e: React.MouseEvent, containerId: string) => {
-    if (showInspector) {
-      setSelectedContainer(containerId);
-      const container = containerRefs.current[containerId];
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        setDragOffset({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        });
-        setContainers(prev => ({
-          ...prev,
-          [containerId]: { ...prev[containerId], isDragging: true }
-        }));
-      }
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (showInspector) {
-      Object.entries(containers).forEach(([id, container]) => {
-        if (container.isDragging) {
-          const headerElement = e.currentTarget as HTMLElement;
-          const rect = headerElement.getBoundingClientRect();
-          const newX = e.clientX - rect.left - dragOffset.x;
-          const newY = e.clientY - rect.top - dragOffset.y;
-          
-          setContainers(prev => ({
-            ...prev,
-            [id]: {
-              ...prev[id],
-              position: { x: Math.max(0, newX), y: Math.max(0, newY) }
-            }
-          }));
-        }
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setContainers(prev => ({
-      ...prev,
-      ...Object.keys(prev).reduce((acc, id) => ({
-        ...acc,
-        [id]: { ...prev[id], isDragging: false }
-      }), {})
-    }));
-  };
-
-  const handleInputChange = (containerId: string, axis: 'x' | 'y', value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setContainers(prev => ({
-      ...prev,
-      [containerId]: {
-        ...prev[containerId],
-        position: {
-          ...prev[containerId].position,
-          [axis]: numValue
-        }
-      }
-    }));
-  };
-
-  // Prevent hydration mismatch rendering
-  if (!isMounted) return null;
-
-  return (
-    <header 
-      className="fixed top-0 left-0 w-full h-[110px] z-50 select-none"
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      {/* Background Panel with Blur and HUD styling */}
-      <div className="absolute inset-0 bg-[rgba(15,20,30,0.85)] backdrop-blur-md border-b-2 border-[#00eaff] shadow-[0_4px_20px_rgba(0,234,255,0.15)] overflow-hidden">
-        {/* Subtle HUD Scanlines */}
-        <div
-          className="absolute inset-0 opacity-20 pointer-events-none"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #00eaff 2px, #00eaff 3px)',
-            backgroundSize: '100% 4px'
-          }}
-        />
-        {/* Decorative Tech Accents */}
-        <div className="absolute top-0 left-0 w-32 h-[2px] bg-gradient-to-r from-[#FF4500] to-transparent" />
-        <div className="absolute bottom-0 right-0 w-48 h-[2px] bg-gradient-to-l from-[#00eaff] to-transparent" />
-      </div>
-      {/* Main Content Container */}
-      <PositioningCanvas isInspectorMode={showInspector}>
-        <div className="relative h-full w-full max-w-[120rem] mx-auto px-4 md:px-8 flex items-center justify-between">
-
-          {/* LEFT AREA: Logo & Title */}
-          <div 
-            ref={(el) => { if (el) containerRefs.current['left'] = el; }}
-            onMouseDown={(e) => handleMouseDown(e, 'left')}
-            data-positionable="left-container"
-            className={`flex items-center gap-4 z-10 w-1/3 min-w-[250px] ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'left' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
-            style={{
-              transition: containers.left.isDragging ? 'none' : 'none'
-            }}
-          >
-          {/* Icon/Crest */}
-          <div className="relative hidden sm:flex items-center justify-center w-14 h-14 rounded-lg bg-black/40 border border-[#FF4500]/30 shadow-[0_0_15px_rgba(255,69,0,0.2)]">
-            <Crown className="w-8 h-8 text-[#FF4500] drop-shadow-[0_0_8px_rgba(255,69,0,0.8)]" />
-            {/* Abstract Wings using CSS shapes */}
-            <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-2 h-6 border-l-2 border-t-2 border-[#FF4500]/50 rounded-tl-md" />
-            <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-2 h-6 border-r-2 border-t-2 border-[#FF4500]/50 rounded-tr-md" />
-          </div>
-
-          {/* Typography */}
-          <div className="flex flex-col justify-center">
-            <div className="flex items-center gap-2 mb-[-4px]">
-              <ShieldAlert className="w-4 h-4 text-[#FF4500] sm:hidden" />
-              <h1
-                className="font-heading font-black text-xl sm:text-2xl md:text-3xl tracking-[2px] uppercase m-0 leading-none"
-                style={{
-                  background: 'linear-gradient(90deg, #FF4500 0%, #FF0000 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0px 0px 8px rgba(255,69,0,0.6))'
-                }}
-              >
-                DOMÍNIO DO COMANDO
-              </h1>
-            </div>
-            <span className="font-heading font-bold text-xs sm:text-sm tracking-[3px] uppercase text-[#00eaff] drop-shadow-[0_0_5px_rgba(0,234,255,0.8)]">
-              GIRO NO ASFALTO
-            </span>
-          </div>
-        </div>
-
-        {/* CENTER AREA: Interactive Avatar */}
-        <div 
-          ref={(el) => { if (el) containerRefs.current['center'] = el; }}
-          onMouseDown={(e) => handleMouseDown(e, 'center')}
-          data-positionable="center-container"
-          className={`flex flex-col items-center justify-center z-20 ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'center' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
-          style={{
-            transition: containers.center.isDragging ? 'none' : 'none'
-          }}
-        >
-          {/* Decorative HUD Ring behind avatar */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute w-[86px] h-[86px] rounded-full border border-[#00eaff]/30 border-dashed pointer-events-none"
-          />
-
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleAvatarClick}
-            className="relative w-[70px] h-[70px] rounded-full cursor-pointer group"
-          >
-            {/* Neon Border & Glow */}
-            <div className="absolute inset-0 rounded-full border-[3px] border-[#00eaff] shadow-[0_0_15px_rgba(0,234,255,0.6),inset_0_0_10px_rgba(0,234,255,0.4)] z-10 transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(0,234,255,0.8),inset_0_0_15px_rgba(0,234,255,0.6)]" />
-
-            {/* Image */}
-            <Image src={avatarUrl} alt="Avatar do Jogador" className="w-full h-full object-cover rounded-full relative z-0" />
-
-            {/* Hover Overlay */}
-            <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center">
-              <Edit2 className="w-5 h-5 text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" />
-            </div>
-          </motion.div>
-
-          {/* Hidden File Input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            className="hidden"
-          />
-
-          {/* Small decorative bracket below avatar */}
-          <div className="mt-4 w-24 h-1 bg-gradient-to-r from-[#00eaff] to-transparent relative overflow-hidden rounded-full shadow-[0_0_10px_rgba(0,234,255,0.6)]">
-            <div className="absolute inset-y-0 left-0 w-1/3 bg-[#00eaff] animate-pulse rounded-full" />
-            <div className="absolute inset-y-0 right-0 w-1/3 bg-[#00eaff] animate-pulse rounded-full" />
-          </div>
-        </div>
-
-        {/* RIGHT AREA: Player Info & Controls */}
-        <div 
-          ref={(el) => { if (el) containerRefs.current['right'] = el; }}
-          onMouseDown={(e) => handleMouseDown(e, 'right')}
-          data-positionable="right-container"
-          className={`flex items-center justify-end gap-4 sm:gap-6 z-10 w-1/3 min-w-[200px] ${showInspector ? 'cursor-move border-2 border-yellow-400' : ''} ${selectedContainer === 'right' && showInspector ? 'ring-2 ring-yellow-300' : ''}`}
-          style={{
-            transition: containers.right.isDragging ? 'none' : 'none'
-          }}
-        >
-
-          {/* Player Name Display/Edit */}
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[10px] text-[#00eaff]/70 font-paragraph tracking-widest uppercase mb-1">
-              Status: Online
-            </span>
-
-            <AnimatePresence mode="wait">
-              {isEditingName ? (
-                <motion.div
-                  key="editing"
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 5 }}
-                  className="flex items-center gap-2 bg-black/40 border border-[#00eaff]/50 rounded px-2 py-1"
-                >
-                  <input
-                    ref={nameInputRef}
-                    type="text"
-                    value={tempName}
-                    onChange={(e) => setTempName(e.target.value)}
-                    onKeyDown={handleNameKeyDown}
-                    onBlur={saveName}
-                    maxLength={20}
-                    className="bg-transparent text-white font-heading font-bold tracking-wider outline-none w-32 text-right text-sm"
-                  />
-                  <button onClick={saveName} className="text-[#00eaff] hover:text-white transition-colors">
-                    <Check className="w-4 h-4" />
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="display"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="flex items-center gap-2 group cursor-pointer"
-                  onClick={startEditingName}
-                >
-                  <span className="font-heading font-bold text-sm lg:text-base text-white tracking-wider drop-shadow-[0_0_5px_rgba(0,234,255,0.5)] group-hover:text-[#00eaff] transition-colors truncate max-w-[150px] lg:max-w-[200px]">
-                    {playerName}
-                  </span>
-                  <Edit2 className="w-3 h-3 text-white/30 group-hover:text-[#00eaff] transition-colors opacity-0 group-hover:opacity-100" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Utility Icons */}
-          <div className="flex items-center gap-3 border-l border-white/10 pl-4 sm:pl-6">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="relative p-2 text-white/80 hover:text-white transition-colors group"
-            >
-              <Bell className="w-5 h-5 group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]" />
-              {/* Notification Dot */}
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF4500] rounded-full shadow-[0_0_5px_rgba(255,69,0,0.8)]" />
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowInspector(!showInspector)}
-              className={`p-2 transition-all duration-300 group ${showInspector ? 'text-yellow-400' : 'text-white/80 hover:text-white'}`}
-            >
-              <Settings className={`w-5 h-5 ${showInspector ? 'drop-shadow-[0_0_8px_rgba(255,193,7,0.8)]' : 'group-hover:drop-shadow-[0_0_8px_rgba(0,234,255,0.8)]'}`} />
-            </motion.button>
-          </div>
-        </div>
-        </div>
-
-      </PositioningCanvas>
-
-      {/* Inspector Panel */}
-      {showInspector && (
-        <div className="fixed bottom-4 right-4 bg-black/95 border-2 border-yellow-400 rounded-lg p-4 w-80 max-h-96 overflow-y-auto z-[100] shadow-[0_0_20px_rgba(255,193,7,0.3)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-heading font-bold text-yellow-400 text-sm">HEADER POSITIONING</h3>
-            <button onClick={() => setShowInspector(false)} className="text-yellow-400 hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {Object.entries(containers).map(([id, container]) => (
-              <div key={id} className={`p-3 border rounded ${selectedContainer === id ? 'border-yellow-400 bg-yellow-400/10' : 'border-yellow-400/50 bg-black/50'}`}>
-                <h4 className="font-heading font-bold text-yellow-300 text-xs uppercase mb-2 capitalize">{id} Container</h4>
-                <div className="space-y-2">
-                  <div>
-                    <label className="text-xs text-yellow-400/70 block mb-1">Posição X (px)</label>
-                    <input
-                      type="number"
-                      value={Math.round(container.position.x)}
-                      onChange={(e) => handleInputChange(id, 'x', e.target.value)}
-                      onClick={() => setSelectedContainer(id)}
-                      className="w-full bg-black border border-yellow-400/50 text-yellow-300 px-2 py-1 rounded text-xs focus:outline-none focus:border-yellow-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-yellow-400/70 block mb-1">Posição Y (px)</label>
-                    <input
-                      type="number"
-                      value={Math.round(container.position.y)}
-                      onChange={(e) => handleInputChange(id, 'y', e.target.value)}
-                      onClick={() => setSelectedContainer(id)}
-                      className="w-full bg-black border border-yellow-400/50 text-yellow-300 px-2 py-1 rounded text-xs focus:outline-none focus:border-yellow-400"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 p-3 bg-yellow-400/10 border border-yellow-400/50 rounded text-xs text-yellow-300">
-            <p className="font-heading font-bold mb-1">Modo Inspector Ativo:</p>
-            <ul className="text-yellow-400/70 space-y-1">
-              <li>• Arraste containers para mover livremente</li>
-              <li>• Edite X e Y manualmente</li>
-              <li>• Sem snap-to-grid ou alinhamento automático</li>
-              <li>• Sem âncoras fixas</li>
-            </ul>
-          </div>
-        </div>
-      )}
-    </header>
-  );
-};
+import { useMember } from '@/integrations';
+import { motion } from 'framer-motion';
+import { Chrome, Crosshair, Facebook, ShieldAlert, Terminal, UserCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function HomePage() {
+  const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [systemTime, setSystemTime] = useState<string>('');
+  const { actions } = useMember();
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setSystemTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')} BRT`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLogin = async (provider: string) => {
+    setIsLoading(provider);
+    try {
+      // Trigger actual authentication via Wix Members SDK
+      await actions.login();
+    } catch (error) {
+      console.error(`Login failed for ${provider}:`, error);
+      setIsLoading(null);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0d14] text-white overflow-x-hidden font-paragraph selection:bg-[#00eaff] selection:text-black">
+    <div className="min-h-screen relative bg-background overflow-clip selection:bg-primary selection:text-primary-foreground">
+      <style>
+        {`
+          .crt-scanlines {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.15));
+            background-size: 100% 4px;
+            pointer-events: none;
+          }
+          .vignette-heavy {
+            background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.8) 90%, #000 100%);
+          }
+          .glitch-hover:hover {
+            animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+          }
+          @keyframes glitch-skew {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(-2deg); }
+            40% { transform: skew(2deg); }
+            60% { transform: skew(-1deg); }
+            80% { transform: skew(1deg); }
+            100% { transform: skew(0deg); }
+          }
+          .hud-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: rgba(0, 255, 255, 0.3);
+            border-style: solid;
+          }
+        `}
+      </style>
 
-      <GameHeader />
-
-      {/* Main content area - Kept minimal as requested, acting as a canvas to showcase the header */}
-      <main className="pt-[110px] relative min-h-screen flex flex-col items-center justify-center">
-
-        {/* Atmospheric Background Elements */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#FF4500]/5 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#00eaff]/5 rounded-full blur-[150px]" />
-
-          {/* Grid Overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
-              backgroundSize: '50px 50px'
-            }}
+      {/* --- LAYER 0: ATMOSPHERE & ENVIRONMENT --- */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <motion.div
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 10, ease: "easeOut" }}
+          className="w-full h-full"
+        >
+          <Image
+            src="https://static.wixstatic.com/media/50f4bf_6d38f59b693c45f78b1d3c8d16ab413b~mv2.png"
+            alt="Favela noturna cinematográfica"
+            className="w-full h-full object-cover object-center"
+            width={1920}
           />
+        </motion.div>
+
+        {/* Environmental Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute inset-0 vignette-heavy" />
+        <div className="absolute inset-0 crt-scanlines opacity-50" />
+        <div className="absolute inset-0 bg-primary/5 mix-blend-overlay" />
+      </div>
+
+      {/* --- LAYER 1: TACTICAL HUD (Heads Up Display) --- */}
+      <div className="fixed inset-0 z-10 pointer-events-none p-6 flex flex-col justify-between">
+        {/* Top HUD */}
+        <div className="flex justify-between items-start font-paragraph text-xs text-secondary/70 tracking-widest uppercase">
+          <div className="flex flex-col gap-1">
+            <span className="flex items-center gap-2"><Terminal className="w-3 h-3" /> SYS.OP // SECURE</span>
+            <span>LOC // RIO_DE_JANEIRO</span>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span>{systemTime}</span>
+            <span className="text-primary animate-pulse">REC // ACTIVE</span>
+          </div>
         </div>
 
-        <div className="container mx-auto px-4 py-16 relative z-10 flex flex-col items-center text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <h2
-              className="text-5xl md:text-7xl font-heading font-black mb-6 tracking-tighter uppercase"
-              style={{
-                background: 'linear-gradient(135deg, #ffffff 0%, #a0a5b0 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+        {/* Corner Brackets */}
+        <div className="hud-corner top-6 left-6 border-t-2 border-l-2" />
+        <div className="hud-corner top-6 right-6 border-t-2 border-r-2" />
+        <div className="hud-corner bottom-6 left-6 border-b-2 border-l-2" />
+        <div className="hud-corner bottom-6 right-6 border-b-2 border-r-2" />
+
+        {/* Bottom HUD */}
+        <div className="flex justify-between items-end font-paragraph text-[10px] text-foreground/30 tracking-widest">
+          <span>V 2.4.1 // BUILD_8992</span>
+          <span className="flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> ENCRYPTED CONNECTION</span>
+        </div>
+      </div>
+
+      {/* --- LAYER 2: MAIN INTERFACE --- */}
+      <div className="relative z-20 flex flex-col min-h-screen">
+        <Header />
+
+        <main className="flex-grow flex items-center justify-center px-4 py-12 sm:py-20 pt-24">
+          <div className="w-full max-w-[500px] mx-auto relative">
+
+            {/* Decorative background glow for the whole block */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
+
+            {/* --- LOGO REVEAL --- */}
+            <motion.div
+              initial={{ opacity: 0, y: -40, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-8 sm:mb-12 flex justify-center relative z-30"
             >
-              A CIDADE AGUARDA
-            </h2>
-            <p className="text-xl md:text-2xl font-paragraph text-[#00eaff] max-w-2xl mx-auto font-light tracking-wide drop-shadow-[0_0_10px_rgba(0,234,255,0.3)]">
-              O painel de comando está ativo. Suas ordens definem o futuro das ruas.
-            </p>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-logo-gold/20 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <Image
+                  src="https://static.wixstatic.com/media/50f4bf_7c2f3e2a62cb49d19eb52f4920c201b6~mv2.png"
+                  alt="DOMÍNIO DO COMANDO Logo"
+                  className="w-full max-w-[400px] sm:max-w-[480px] h-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative z-10"
+                  width={500}
+                />
+              </div>
+            </motion.div>
 
-            <div className="mt-12 flex items-center justify-center gap-4">
-              <div className="h-[1px] w-16 bg-gradient-to-r from-transparent to-[#FF4500]" />
-              <span className="text-xs font-heading tracking-[0.3em] text-white/50 uppercase">Sistema Online</span>
-              <div className="h-[1px] w-16 bg-gradient-to-l from-transparent to-[#FF4500]" />
-            </div>
-          </motion.div>
-        </div>
-      </main>
+            {/* --- LOGIN DOSSIER (The Box) --- */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+              className="relative z-20"
+            >
+              {/* Box Styling: Glassmorphism + Tactical Borders */}
+              <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-8 sm:p-10 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+
+                {/* Top Accent Line */}
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-70" />
+
+                {/* Corner Accents inside the box */}
+                <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-primary/50" />
+                <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-primary/50" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-primary/50" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-primary/50" />
+
+                {/* Header Texts */}
+                <div className="text-center mb-10">
+                  <h1 className="font-heading text-3xl sm:text-4xl text-white uppercase tracking-tighter mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                    Acesso Restrito
+                  </h1>
+                  <div className="flex items-center justify-center gap-2 font-paragraph text-xs text-secondary uppercase tracking-widest">
+                    <Crosshair className="w-3 h-3" />
+                    <span>Identifique-se para prosseguir</span>
+                    <Crosshair className="w-3 h-3" />
+                  </div>
+                </div>
+
+                {/* --- ACTION BUTTONS --- */}
+                <div className="space-y-4">
+
+                  {/* Google Login */}
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-purple-600 rounded opacity-0 group-hover:opacity-100 transition duration-300 blur" />
+                    <Button
+                      onClick={() => handleLogin('google')}
+                      disabled={isLoading !== null}
+                      className="relative w-full h-14 bg-white hover:bg-gray-100 text-black font-heading text-base uppercase tracking-widest rounded-none border-0 transition-all duration-300 overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wNSkiLz48L3N2Zz4=')] opacity-50" />
+                      {isLoading === 'google' ? (
+                        <span className="flex items-center justify-center gap-3 relative z-10">
+                          <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                          Autenticando...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-3 relative z-10">
+                          <Chrome className="w-5 h-5" />
+                          Entrar com Google
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Facebook Login */}
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-secondary rounded opacity-0 group-hover:opacity-100 transition duration-300 blur" />
+                    <Button
+                      onClick={() => handleLogin('facebook')}
+                      disabled={isLoading !== null}
+                      className="relative w-full h-14 bg-[#1877F2] hover:bg-[#1877F2]/90 text-white font-heading text-base uppercase tracking-widest rounded-none border-0 transition-all duration-300"
+                    >
+                      {isLoading === 'facebook' ? (
+                        <span className="flex items-center justify-center gap-3">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Autenticando...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-3">
+                          <Facebook className="w-5 h-5" />
+                          Entrar com Facebook
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative py-6 flex items-center justify-center">
+                    <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                    <span className="relative bg-black px-4 font-paragraph text-[10px] text-white/40 uppercase tracking-widest border border-white/10">
+                      Protocolo Alternativo
+                    </span>
+                  </div>
+
+                  {/* Visitor Login */}
+                  <Button
+                    onClick={() => handleLogin('visitor')}
+                    disabled={isLoading !== null}
+                    variant="outline"
+                    className="w-full h-14 bg-transparent hover:bg-secondary/10 text-secondary border border-secondary/50 hover:border-secondary font-heading text-base uppercase tracking-widest rounded-none transition-all duration-300 glitch-hover"
+                  >
+                    {isLoading === 'visitor' ? (
+                      <span className="flex items-center justify-center gap-3">
+                        <div className="w-4 h-4 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
+                        Iniciando Sessão...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-3">
+                        <UserCircle className="w-5 h-5" />
+                        Acesso Visitante
+                      </span>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Warning message */}
+                <div className="mt-8 p-4 border border-destructive/30 bg-destructive/5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-destructive" />
+                  <p className="font-paragraph text-[10px] sm:text-xs text-foreground/70 leading-relaxed uppercase tracking-wider">
+                    <span className="text-destructive font-bold mr-2">AVISO:</span>
+                    Modo visitante não garante retenção de dados. Para salvar progresso e status no submundo, utilize autenticação oficial.
+                  </p>
+                </div>
+
+              </div>
+            </motion.div>
+
+            {/* Footer Links */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2, duration: 1 }}
+              className="mt-8 text-center relative z-20"
+            >
+              <p className="font-paragraph text-[10px] text-foreground/40 uppercase tracking-widest hover:text-foreground/80 transition-colors cursor-pointer">
+                Termos de Serviço // Política de Privacidade
+              </p>
+            </motion.div>
+
+          </div>
+        </main>
+
+        <Footer />
+      </div>
     </div>
   );
 }
