@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { MemberProvider } from '@/integrations';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { ScrollToTop } from '@/lib/scroll-to-top';
@@ -6,17 +6,17 @@ import { Toaster } from '@/components/ui/toaster';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 
-// Lazy load page components
-const HomePage = lazy(() => import('@/components/pages/HomePage'));
-const GiroNoAsfaltoPage = lazy(() => import('@/components/pages/GiroNoAsfaltoPage'));
-const LuxuryShowroomPage = lazy(() => import('@/components/pages/LuxuryShowroomPage'));
-const Luxo1Page = lazy(() => import('@/components/pages/Luxo1Page'));
-const GamePage = lazy(() => import('@/components/pages/GamePage'));
-const CasaPage = lazy(() => import('@/components/pages/CasaPage'));
-const BarracoPage = lazy(() => import('@/components/pages/BarracoPage'));
-const AboutPage = lazy(() => import('@/components/pages/AboutPage'));
-const ContactPage = lazy(() => import('@/components/pages/ContactPage'));
-const BriberyPage = lazy(() => import('@/components/pages/BriberyPage'));
+// Import page components directly (not lazy loaded)
+import HomePage from '@/components/pages/HomePage';
+import GiroNoAsfaltoPage from '@/components/pages/GiroNoAsfaltoPage';
+import LuxuryShowroomPage from '@/components/pages/LuxuryShowroomPage';
+import Luxo1Page from '@/components/pages/Luxo1Page';
+import GamePage from '@/components/pages/GamePage';
+import CasaPage from '@/components/pages/CasaPage';
+import BarracoPage from '@/components/pages/BarracoPage';
+import AboutPage from '@/components/pages/AboutPage';
+import ContactPage from '@/components/pages/ContactPage';
+import BriberyPage from '@/components/pages/BriberyPage';
 
 // Layout component that includes ScrollToTop and Toaster
 function Layout() {
@@ -39,110 +39,70 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <HomePage />
-          </Suspense>
-        ),
+        element: <HomePage />,
         routeMetadata: {
           pageIdentifier: 'home',
         },
       },
       {
         path: "giro-no-asfalto",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <GiroNoAsfaltoPage />
-          </Suspense>
-        ),
+        element: <GiroNoAsfaltoPage />,
         routeMetadata: {
           pageIdentifier: 'giro-no-asfalto',
         },
       },
       {
         path: "luxury-showroom",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <LuxuryShowroomPage />
-          </Suspense>
-        ),
+        element: <LuxuryShowroomPage />,
         routeMetadata: {
           pageIdentifier: 'luxury-showroom',
         },
       },
       {
         path: "luxo-1",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Luxo1Page />
-          </Suspense>
-        ),
+        element: <Luxo1Page />,
         routeMetadata: {
           pageIdentifier: 'luxo-1',
         },
       },
       {
         path: "game",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <GamePage />
-          </Suspense>
-        ),
+        element: <GamePage />,
         routeMetadata: {
           pageIdentifier: 'game',
         },
       },
       {
         path: "casa",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <CasaPage />
-          </Suspense>
-        ),
+        element: <CasaPage />,
         routeMetadata: {
           pageIdentifier: 'casa',
         },
       },
       {
         path: "barraco",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <BarracoPage />
-          </Suspense>
-        ),
+        element: <BarracoPage />,
         routeMetadata: {
           pageIdentifier: 'barraco',
         },
       },
       {
         path: "about",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <AboutPage />
-          </Suspense>
-        ),
+        element: <AboutPage />,
         routeMetadata: {
           pageIdentifier: 'about',
         },
       },
       {
         path: "contact",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ContactPage />
-          </Suspense>
-        ),
+        element: <ContactPage />,
         routeMetadata: {
           pageIdentifier: 'contact',
         },
       },
       {
         path: "bribery",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <BriberyPage />
-          </Suspense>
-        ),
+        element: <BriberyPage />,
         routeMetadata: {
           pageIdentifier: 'bribery',
         },
