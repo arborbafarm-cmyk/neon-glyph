@@ -7,11 +7,13 @@ import { useMember } from '@/integrations';
 import { motion } from 'framer-motion';
 import { Chrome, Crosshair, Facebook, ShieldAlert, Terminal, UserCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [systemTime, setSystemTime] = useState<string>('');
   const { actions } = useMember();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const updateTime = () => {
@@ -26,8 +28,13 @@ export default function HomePage() {
   const handleLogin = async (provider: string) => {
     setIsLoading(provider);
     try {
-      // Trigger actual authentication via Wix Members SDK
-      await actions.login();
+      if (provider === 'visitor') {
+        // For visitor access, navigate directly to the game without authentication
+        navigate('/game');
+      } else {
+        // Trigger actual authentication via Wix Members SDK for other providers
+        await actions.login();
+      }
     } catch (error) {
       console.error(`Login failed for ${provider}:`, error);
       setIsLoading(null);
