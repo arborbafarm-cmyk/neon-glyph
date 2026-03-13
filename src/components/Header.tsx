@@ -153,12 +153,12 @@ export default function Header() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild onClick={() => setIsMobileMenuOpen(false)}>
                   <Link to="/projects" className="cursor-pointer">
                     Projetos
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild onClick={() => setIsMobileMenuOpen(false)}>
                   <Link to="/game" className="cursor-pointer">
                     Jogar
                   </Link>
