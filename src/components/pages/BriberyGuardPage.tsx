@@ -150,10 +150,17 @@ export default function BriberyGuardPage() {
   const [consequence, setConsequence] = useState<BriberyConsequence | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [nivelBarraco, setNivelBarraco] = useState(playerLevel);
+  const [subornosRealizados, setSubornosRealizados] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    // Initialize barraco level from player level
+    setNivelBarraco(playerLevel);
+  }, [playerLevel]);
+
+  // REGRA: Só pode subornar se o nível do barraco for maior que os subornos já feitos
+  const podeSubornarAgora = nivelBarraco > subornosRealizados;
 
   const briberyAmount = getBriberyAmount(playerLevel);
   const nextBriberyAmount = getNextBriberyAmount(playerLevel);
@@ -184,6 +191,13 @@ export default function BriberyGuardPage() {
   const handleAccept = async () => {
     setIsProcessing(true);
     
+    // Check if can bribe based on barraco level
+    if (!podeSubornarAgora) {
+      setIsProcessing(false);
+      alert('Você precisa aumentar o nível do Barraco para fazer mais subornos!');
+      return;
+    }
+    
     if (dirtyMoney < briberyAmount) {
       setIsProcessing(false);
       alert('Você não tem dinheiro sujo suficiente!');
@@ -192,6 +206,9 @@ export default function BriberyGuardPage() {
 
     // Debit dirty money
     removeDirtyMoney(briberyAmount);
+    
+    // Increment bribes completed
+    setSubornosRealizados(prev => prev + 1);
 
     // Update level - progression from 1-9, then jump to 10
     if (playerLevel < 9) {
@@ -323,6 +340,36 @@ export default function BriberyGuardPage() {
                         <p className="font-paragraph text-sm text-white/70 mt-2">
                           Dinheiro Sujo Disponível: <span className="text-[#00eaff]">R$ {dirtyMoney.toLocaleString('pt-BR')}</span>
                         </p>
+                        
+                        {/* Barraco Level Dependency */}
+                        <div className="mt-4 pt-4 border-t border-[#FF4500]/30">
+                          <p className="font-paragraph text-sm text-white/80 mb-3">
+                            <span className="text-[#00eaff] font-bold">Nível de Corrupção Necessário:</span> {subornosRealizados + 1}/10
+                          </p>
+                          
+                          {/* LED Bar - Corruption Level */}
+                          <div className="flex gap-1 mb-3">
+                            {[...Array(10)].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`flex-1 h-2 rounded-full transition-all ${
+                                  i < subornosRealizados
+                                    ? 'bg-[#FF0000] shadow-[0_0_8px_rgba(255,0,0,0.8)]'
+                                    : 'bg-slate-700'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          
+                          <p className="font-paragraph text-xs text-white/60">
+                            Status do Barraco: <span className="text-[#00eaff] font-bold">Nível {nivelBarraco}</span>
+                          </p>
+                          <p className={`font-paragraph text-xs mt-1 ${podeSubornarAgora ? 'text-green-400' : 'text-yellow-400'}`}>
+                            {podeSubornarAgora 
+                              ? '✓ SUBORNO DISPONÍVEL' 
+                              : `⚠️ SUBA O BARRACO PARA NÍVEL ${subornosRealizados + 1} PARA LIBERAR`}
+                          </p>
+                        </div>
                       </div>
 
                       {/* Buttons */}
@@ -331,7 +378,7 @@ export default function BriberyGuardPage() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={handleAccept}
-                          disabled={isProcessing || dirtyMoney < briberyAmount}
+                          disabled={isProcessing || dirtyMoney < briberyAmount || !podeSubornarAgora}
                           className="flex-1 px-8 py-3 bg-gradient-to-r from-[#FF4500] to-[#FF0000] text-white font-heading font-bold text-lg tracking-wider rounded-lg border-2 border-[#FF4500] hover:shadow-[0_0_20px_rgba(255,69,0,0.8)] transition-all duration-300 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isProcessing ? 'Processando...' : 'Aceitar Suborno'}
