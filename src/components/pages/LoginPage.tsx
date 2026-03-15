@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useMember } from '@/integrations';
 import { useNavigate } from 'react-router-dom';
+import { useGameScreenStore } from '@/store/gameScreenStore';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
@@ -9,6 +10,15 @@ import { motion } from 'framer-motion';
 export default function LoginPage() {
   const { member, isAuthenticated } = useMember();
   const navigate = useNavigate();
+  const { setCurrentScreen } = useGameScreenStore();
+
+  useEffect(() => {
+    if (isAuthenticated && member) {
+      // Redirect to game map after successful login
+      setCurrentScreen('map');
+      navigate('/game');
+    }
+  }, [isAuthenticated, member, navigate, setCurrentScreen]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

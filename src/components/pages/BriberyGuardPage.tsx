@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 import { useBriberyStore, type BriberyConsequence } from '@/store/briberyStore';
 import { useGameStore } from '@/store/gameStore';
+import { useGameScreenStore } from '@/store/gameScreenStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
 import Header from '@/components/Header';
@@ -145,6 +146,7 @@ export default function BriberyGuardPage() {
   const { playerLevel, setPlayerLevel } = useGameStore();
   const { setLevel } = usePlayerStore();
   const { getBriberyAmount, getNextBriberyAmount, addConsequence } = useBriberyStore();
+  const { setCurrentScreen } = useGameScreenStore();
   
   const [dialogState, setDialogState] = useState<DialogState>('initial');
   const [consequence, setConsequence] = useState<BriberyConsequence | null>(null);
@@ -256,7 +258,8 @@ export default function BriberyGuardPage() {
   };
 
   const handleCloseConsequence = () => {
-    navigate('/');
+    setCurrentScreen('map');
+    navigate('/game');
   };
 
   const handleWhistleblowerConfirm = () => {
@@ -268,7 +271,8 @@ export default function BriberyGuardPage() {
     setTimeout(() => {
       setIsProcessing(false);
       setTimeout(() => {
-        navigate('/');
+        setCurrentScreen('map');
+        navigate('/game');
       }, 3000);
     }, 2000);
   };
