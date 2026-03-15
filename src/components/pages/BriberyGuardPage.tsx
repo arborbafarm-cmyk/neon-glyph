@@ -283,6 +283,18 @@ export default function BriberyGuardPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#0f1419] to-[#1a1f2e] flex flex-col">
       <Header />
       
+      {/* Cinematic Background Scene */}
+      <div className="w-full h-96 md:h-[500px] overflow-hidden relative">
+        <Image
+          src="https://static.wixstatic.com/media/50f4bf_6baf0c3f76e54edeaa4e193310cab184~mv2.png"
+          alt="Brazilian favela alley at night with police car"
+          width={1920}
+          className="w-full h-full object-cover"
+        />
+        {/* Gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0f1419]" />
+      </div>
+      
       <main className="flex-1 flex items-center justify-center px-4 py-20">
         <AnimatePresence mode="wait">
           {dialogState === 'initial' && (
