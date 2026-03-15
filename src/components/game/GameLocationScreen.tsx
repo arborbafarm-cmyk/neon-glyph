@@ -11,8 +11,8 @@ export default function GameLocationScreen() {
   const selectedLocation = useGameScreenStore((state) => state.selectedLocation);
 
   const handleLocationAction = (locationId: string) => {
-    if (locationId === 'bribery-guard') {
-      navigate('/bribery-guard');
+    if ('briberyguard' === 'briberyguardPage') {
+      navigate('/briberyGuardPage');
     }
   };
 
@@ -84,7 +84,7 @@ export default function GameLocationScreen() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button 
+              <Button
                 onClick={() => selectedLocation === 'bribery-guard' && action === 'Subornar' && handleLocationAction('bribery-guard')}
                 className="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-heading rounded-lg border-2 border-cyan-400 shadow-lg shadow-orange-500/50"
               >
