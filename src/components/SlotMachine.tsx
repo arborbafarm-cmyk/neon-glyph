@@ -44,13 +44,13 @@ function SpinButton() {
 
   const handleSpin = async () => {
     if (spins <= 0 || isSpinning) return;
-    
+
     setIsSpinning(true);
     subtractSpins(1);
-    
+
     // Emit custom event for slots to spin
     window.dispatchEvent(new CustomEvent('spinSlots', { detail: { multiplier: selectedMultiplier } }));
-    
+
     // Reset spinning state after animation
     setTimeout(() => {
       setIsSpinning(false);
@@ -69,7 +69,7 @@ function SpinButton() {
       >
         {isSpinning ? 'GIRANDO...' : 'GIRAR'}
       </button>
-      
+
       {spins <= 0 && (
         <div className="text-center text-red-500 font-heading font-bold text-lg md:text-xl animate-pulse">
           SEM GIROS DISPONÍVEIS
@@ -92,7 +92,7 @@ function SlotsDisplay() {
     const handleSpinEvent = (event: Event) => {
       const customEvent = event as CustomEvent;
       const multiplierValue = customEvent.detail?.multiplier || 1;
-      
+
       setSpinningIndices([true, true, true]);
       setResultMessage('');
 
@@ -108,7 +108,7 @@ function SlotsDisplay() {
 
       setTimeout(() => {
         clearInterval(spinInterval);
-        
+
         // Generate final result
         const finalSlots = [
           Math.floor(Math.random() * SLOT_ITEMS.length),
@@ -166,14 +166,6 @@ function SlotsDisplay() {
   return (
     <div className="from-gray-900 to-black border-secondary rounded-lg p-3 shadow-2xl border border-none bg-transparent">
       {/* Slot Item Labels */}
-      <div className="flex gap-3 justify-center mt-4 text-secondary text-sm font-heading">
-        {slots.map((slotIndex, position) => (
-          <div key={position} className="w-28 text-center truncate text-xs">
-            {SLOT_ITEMS[slotIndex].name}
-          </div>
-        ))}
-      </div>
-      
       {/* Slot Display */}
       <div className="flex gap-3 justify-center items-center">
         {slots.map((slotIndex, position) => (
@@ -193,14 +185,19 @@ function SlotsDisplay() {
           </motion.div>
         ))}
       </div>
-
+      <div className="flex gap-3 justify-center mt-4 text-secondary text-sm font-heading">
+        {slots.map((slotIndex, position) => (
+          <div key={position} className="w-28 text-center truncate text-xs">
+            {SLOT_ITEMS[slotIndex].name}
+          </div>
+        ))}
+      </div>
       {/* Result Message */}
       {resultMessage && (
         <div className="text-center mt-4 text-secondary font-heading text-sm">
           {resultMessage}
         </div>
       )}
-
       {/* Prison Modal */}
       {showPrisonModal && (
         <motion.div
