@@ -9,67 +9,72 @@ import GameMenuScreen from '@/components/game/GameMenuScreen'
 import GameStatusScreen from '@/components/game/GameStatusScreen'
 
 import CinematicSignboard from '@/components/CinematicSignboard'
-import Footer from '@/components/Footer'
 
 export default function GamePage() {
-  const currentScreen = useGameScreenStore((state) => state.currentScreen)
-  const setScreen = useGameScreenStore((state) => state.setScreen)
 
-  const [showCinematic, setShowCinematic] = useState(true)
+  const storeScreen = useGameScreenStore((state) => state.currentScreen)
+    const setScreen = useGameScreenStore((state) => state.setScreen)
 
-  useEffect(() => {
-    // define menu como tela inicial
-    setScreen('menu')
+      const currentScreen = storeScreen || 'menu'
 
-    // controla a intro cinematográfica
-    const timer = setTimeout(() => {
-      setShowCinematic(false)
+        const [showCinematic, setShowCinematic] = useState(true)
 
-      // garante que após a intro vá para o menu
-      setScreen('menu')
-    }, 5000)
+          useEffect(() => {
 
-    return () => clearTimeout(timer)
-  }, [])
+              const timer = setTimeout(() => {
 
-  // tela da intro
-  if (showCinematic) {
-    return (
-      <div className="w-screen h-screen bg-black overflow-hidden relative">
-        <CinematicSignboard />
-      </div>
-    )
-  }
+                    setShowCinematic(false)
+                          setScreen('menu')
 
-  // jogo
-  return (
-    <div className="flex flex-col min-h-screen bg-black">
-      <div className="flex-1 w-screen overflow-hidden relative">
-        {currentScreen === 'menu' && (
-          <GameMenuScreen />
-        )}
+                              }, 5000)
 
-        {currentScreen === 'map' && (
-          <GameMapScreen />
-        )}
+                                  return () => clearTimeout(timer)
 
-        {currentScreen === 'location' && (
-          <GameLocationScreen />
-        )}
+                                    }, [])
 
-        {currentScreen === 'character' && (
-          <GameCharacterScreen />
-        )}
+                                      const renderScreen = () => {
 
-        {currentScreen === 'inventory' && (
-          <GameInventoryScreen />
-        )}
+                                          switch (currentScreen) {
 
-        {currentScreen === 'status' && (
-          <GameStatusScreen />
-        )}
-      </div>
-      <Footer />
-    </div>
-  )
-}
+                                                case 'menu':
+                                                        return <GameMenuScreen />
+
+                                                              case 'map':
+                                                                      return <GameMapScreen />
+
+                                                                            case 'location':
+                                                                                    return <GameLocationScreen />
+
+                                                                                          case 'character':
+                                                                                                  return <GameCharacterScreen />
+
+                                                                                                        case 'inventory':
+                                                                                                                return <GameInventoryScreen />
+
+                                                                                                                      case 'status':
+                                                                                                                              return <GameStatusScreen />
+
+                                                                                                                                    default:
+                                                                                                                                            return <GameMenuScreen />
+
+                                                                                                                                                }
+
+                                                                                                                                                  }
+
+                                                                                                                                                    return (
+
+                                                                                                                                                        <div className="w-screen h-screen bg-black overflow-hidden relative">
+
+                                                                                                                                                              {showCinematic ? (
+                                                                                                                                                                      <div style={{pointerEvents:'none'}}>
+                                                                                                                                                                                <CinematicSignboard />
+                                                                                                                                                                                        </div>
+                                                                                                                                                                                              ) : (
+                                                                                                                                                                                                      renderScreen()
+                                                                                                                                                                                                            )}
+
+                                                                                                                                                                                                                </div>
+
+                                                                                                                                                                                                                  )
+
+                                                                                                                                                                                                                  }
