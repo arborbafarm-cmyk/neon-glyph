@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getSkinAtual } from '@/config/skinsQG';
 import { usePlayerStore } from '@/store/playerStore';
+import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function GameMap() {
   const mapContainer = useRef(null);
@@ -77,7 +77,7 @@ export default function GameMap() {
 
       // Get the current QG skin based on player level
       const imagemDoQG = getSkinAtual(level);
-      
+
       // Determine if police car giroflex should be active
       // (This would need to be connected to bribery completion state in a full implementation)
       const viaturaLigada = level > 0; // Placeholder logic
@@ -87,7 +87,7 @@ export default function GameMap() {
       addElemento('https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png', 130, 430, 80, 54, classeBlitz, 'BLITZ', () => {
         navigate('/bribery-guard');
       });
-      addElemento(imagemDoQG, 200, 290, 200, 220, '', 'MEU QG', () => {
+      addElemento(imagemDoQG, 200, 390, 200, 220, '', 'MEU QG', () => {
         navigate('/barraco');
       });
     };
