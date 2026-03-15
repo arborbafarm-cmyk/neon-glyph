@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 
 export default function GameMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<any>(null);
 
   useEffect(() => {
     // Dynamically load Leaflet CSS
@@ -14,23 +15,59 @@ export default function GameMap() {
     const style = document.createElement('style');
     style.innerHTML = `
       body, html { margin: 0; padding: 0; overflow: hidden; }
+      #map { margin: 0; padding: 0; }
+      .leaflet-container { background: #000 !important; }
+      .leaflet-marker-icon { 
+        border: none !important; 
+        background: none !important;
+        filter: drop-shadow(0 0 3px rgba(0, 255, 255, 0.5));
+      }
+      .leaflet-marker-icon.animacao-policia { 
+        animation: giroflex 0.6s infinite !important;
+      }
       .tooltip-neon {
-        background: rgba(10, 10, 15, 0.9) !important;
-        border: 1px solid #0ff !important;
-        color: #fff !important;
-        font-family: sans-serif;
+        background: rgba(10, 10, 15, 0.95) !important;
+        border: 2px solid #0ff !important;
+        color: #0ff !important;
+        font-family: 'space grotesk', sans-serif;
         text-align: center;
+        border-radius: 8px !important;
+        padding: 8px !important;
+      }
+      .tooltip-neon b {
+        color: #0ff;
+        font-weight: bold;
       }
       .btn-entrar {
-        display: inline-block; margin-top: 5px; padding: 3px 10px;
-        border: 1px solid #0ff; color: #0ff; border-radius: 10px; font-weight: bold;
+        display: inline-block; 
+        margin-top: 8px; 
+        padding: 5px 12px;
+        border: 1px solid #0ff; 
+        color: #0ff; 
+        background: rgba(0, 255, 255, 0.1);
+        border-radius: 6px; 
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .btn-entrar:hover {
+        background: rgba(0, 255, 255, 0.2);
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
       }
       @keyframes giroflex {
-        0% { filter: drop-shadow(0 0 5px red); }
-        50% { filter: drop-shadow(0 0 10px blue); }
-        100% { filter: drop-shadow(0 0 5px red); }
+        0% { filter: drop-shadow(0 0 5px #ff0000) drop-shadow(0 0 10px #ff0000); }
+        50% { filter: drop-shadow(0 0 10px #0000ff) drop-shadow(0 0 15px #0000ff); }
+        100% { filter: drop-shadow(0 0 5px #ff0000) drop-shadow(0 0 10px #ff0000); }
       }
-      .animacao-policia { animation: giroflex 0.6s infinite; }
+      .leaflet-popup-content-wrapper {
+        background: rgba(10, 10, 15, 0.95) !important;
+        border: 2px solid #0ff !important;
+        border-radius: 8px !important;
+      }
+      .leaflet-popup-tip {
+        background: rgba(10, 10, 15, 0.95) !important;
+        border: 2px solid #0ff !important;
+      }
     `;
     document.head.appendChild(style);
 
@@ -43,42 +80,62 @@ export default function GameMap() {
         const L = (window as any).L;
         const urlMapaFundo = 'https://static.wixstatic.com/media/50f4bf_9dbf16b020134b02adc81709d1e774b9~mv2.png';
         
+        // Destroy existing map if it exists
+        if (mapInstance.current) {
+          mapInstance.current.remove();
+        }
+        
         const map = L.map(mapContainer.current, {
           crs: L.CRS.Simple,
-          minZoom: -1.5,
-          maxZoom: 2,
+          minZoom: -2,
+          maxZoom: 3,
+          zoom: 0,
           zoomControl: false,
           attributionControl: false,
+          dragging: true,
+          touchZoom: true,
+          scrollWheelZoom: true,
         });
+        
+        mapInstance.current = map;
         
         const bounds = [[0, 0], [1000, 600]];
         L.imageOverlay(urlMapaFundo, bounds).addTo(map);
         map.fitBounds(bounds);
 
-        // Helper function to add locations
+        // Helper function to add locations with proper icon handling
         function addLocal(nome: string, img: string, x: number, y: number, size: number, css = '') {
           const icon = L.icon({
             iconUrl: img,
             iconSize: [size, size],
-            iconAnchor: [size / 2, size],
+            iconAnchor: [size / 2, size / 2],
+            popupAnchor: [0, -size / 2],
             className: css,
           });
-          L.marker([y, x], { icon: icon })
-            .addTo(map)
-            .bindTooltip(`<b>${nome}</b><br><div class="btn-entrar">ENTRAR</div>`, {
-              direction: 'top',
-              className: 'tooltip-neon',
-              interactive: true,
-            });
+          
+          const marker = L.marker([y, x], { icon: icon }).addTo(map);
+          
+          marker.bindTooltip(`<b>${nome}</b><br><div class="btn-entrar">ENTRAR</div>`, {
+            direction: 'top',
+            offset: [0, -10],
+            className: 'tooltip-neon',
+            permanent: false,
+            sticky: true,
+          });
+          
+          // Add click event
+          marker.on('click', () => {
+            console.log(`Clicked: ${nome}`);
+          });
         }
 
-        // 1. Police Vehicle (at the entrance of the favela - adjusted to the asphalt of the climb)
+        // 1. Police Vehicle (at the entrance of the favela - adjusted coordinates)
         addLocal(
           'VIATURA PM',
           'https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png',
-          380,
           420,
-          70,
+          380,
+          80,
           'animacao-policia'
         );
 
@@ -86,9 +143,9 @@ export default function GameMap() {
         addLocal(
           'SEU QG',
           'https://static.wixstatic.com/media/50f4bf_1776337cd2dc4ff1982d01b0079a48d2~mv2.png',
-          200,
-          300,
-          100
+          250,
+          280,
+          120
         );
       }
     };
@@ -96,6 +153,10 @@ export default function GameMap() {
 
     return () => {
       // Cleanup
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
@@ -107,8 +168,8 @@ export default function GameMap() {
       ref={mapContainer}
       id="map"
       style={{
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         background: '#000',
         margin: 0,
         padding: 0,
