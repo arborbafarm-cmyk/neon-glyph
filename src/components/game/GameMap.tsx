@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapButtons from '@/components/MapButtons';
 import { useMapButtonsStore } from '@/store/mapButtonsStore';
+import { Trash2, Plus } from 'lucide-react';
 
 export default function GameMap() {
   const mapContainer = useRef(null);
@@ -11,6 +12,10 @@ export default function GameMap() {
   const [clickedCoordinates, setClickedCoordinates] = useState(null);
   const [showCursor, setShowCursor] = useState(false);
   const addButton = useMapButtonsStore((state) => state.addButton);
+  const clearUserCreatedButtons = useMapButtonsStore((state) => state.clearUserCreatedButtons);
+  const userCreatedButtons = useMapButtonsStore((state) => 
+    state.buttons.filter((btn) => btn.isUserCreated)
+  );
 
   useEffect(() => {
     if (!document.getElementById('leaflet-css')) {
@@ -228,6 +233,24 @@ export default function GameMap() {
     navigator.clipboard.writeText(text);
   };
 
+  const handleAddButtonAtLastClick = () => {
+    if (!clickedCoordinates) return;
+    
+    const newButtonId = `btn-user-${Date.now()}`;
+    addButton({
+      id: newButtonId,
+      x: clickedCoordinates.x,
+      y: clickedCoordinates.y,
+      width: 60,
+      height: 40,
+      label: 'NOVO',
+      color: 'bg-blue-500 hover:bg-blue-400 border-blue-300 hover:border-blue-200',
+      onClick: () => {},
+      visible: true,
+      isUserCreated: true,
+    });
+  };
+
   return (
     <div ref={mapContainer} id="map" className="relative">
       {/* Componente de Botões do Mapa */}
@@ -253,6 +276,42 @@ export default function GameMap() {
             >
               📋 COPIAR
             </button>
+            
+            {/* Botão para inserir novo botão */}
+            {userCreatedButtons.length > 0 && (
+              <button
+                className="copy-btn"
+                onClick={handleAddButtonAtLastClick}
+                style={{ marginTop: '8px', background: '#00ff00', color: '#000' }}
+                title="Inserir botão na última posição clicada"
+              >
+                ➕ INSERIR BOTÃO
+              </button>
+            )}
+            
+            {/* Botão para apagar todos os botões criados */}
+            {userCreatedButtons.length > 0 && (
+              <button
+                className="copy-btn"
+                onClick={clearUserCreatedButtons}
+                style={{ marginTop: '4px', background: '#ff0000', color: '#fff' }}
+                title="Apagar todos os botões criados"
+              >
+                🗑️ APAGAR TUDO
+              </button>
+            )}
+            
+            {/* Botão para inserir primeiro botão */}
+            {userCreatedButtons.length === 0 && (
+              <button
+                className="copy-btn"
+                onClick={handleAddButtonAtLastClick}
+                style={{ marginTop: '8px', background: '#00ff00', color: '#000' }}
+                title="Inserir botão na última posição clicada"
+              >
+                ➕ INSERIR BOTÃO
+              </button>
+            )}
           </div>
         )}
       </div>

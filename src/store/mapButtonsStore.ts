@@ -11,6 +11,7 @@ export interface MapButton {
   color?: string; // Cor do botão (Tailwind class)
   onClick: () => void; // Função ao clicar
   visible?: boolean; // Se está visível
+  isUserCreated?: boolean; // Se foi criado pelo usuário (para diferenciar dos botões padrão)
 }
 
 interface MapButtonsStore {
@@ -19,6 +20,7 @@ interface MapButtonsStore {
   removeButton: (id: string) => void;
   updateButton: (id: string, updates: Partial<MapButton>) => void;
   clearButtons: () => void;
+  clearUserCreatedButtons: () => void;
   getButton: (id: string) => MapButton | undefined;
 }
 
@@ -47,6 +49,12 @@ export const useMapButtonsStore = create<MapButtonsStore>((set, get) => ({
   
   clearButtons: () => {
     set({ buttons: [] });
+  },
+  
+  clearUserCreatedButtons: () => {
+    set((state) => ({
+      buttons: state.buttons.filter((btn) => !btn.isUserCreated),
+    }));
   },
   
   getButton: (id) => {
