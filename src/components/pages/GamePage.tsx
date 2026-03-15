@@ -9,6 +9,7 @@ import GameMenuScreen from '@/components/game/GameMenuScreen'
 import GameStatusScreen from '@/components/game/GameStatusScreen'
 
 import CinematicSignboard from '@/components/CinematicSignboard'
+import Footer from '@/components/Footer'
 
 export default function GamePage() {
   const currentScreen = useGameScreenStore((state) => state.currentScreen)
@@ -42,30 +43,33 @@ export default function GamePage() {
 
   // jogo
   return (
-    <div className="w-screen h-screen bg-black overflow-hidden relative">
-      {currentScreen === 'menu' && (
-        <GameMenuScreen />
-      )}
+    <div className="flex flex-col min-h-screen bg-black">
+      <div className="flex-1 w-screen overflow-hidden relative">
+        {currentScreen === 'menu' && (
+          <GameMenuScreen />
+        )}
 
-      {currentScreen === 'map' && (
-        <GameMapScreen />
-      )}
+        {currentScreen === 'map' && (
+          <GameMapScreen />
+        )}
 
-      {currentScreen === 'location' && (
-        <GameLocationScreen />
-      )}
+        {currentScreen === 'location' && (
+          <GameLocationScreen />
+        )}
 
-      {currentScreen === 'character' && (
-        <GameCharacterScreen />
-      )}
+        {currentScreen === 'character' && (
+          <GameCharacterScreen />
+        )}
 
-      {currentScreen === 'inventory' && (
-        <GameInventoryScreen />
-      )}
+        {currentScreen === 'inventory' && (
+          <GameInventoryScreen />
+        )}
 
-      {currentScreen === 'status' && (
-        <GameStatusScreen />
-      )}
+        {currentScreen === 'status' && (
+          <GameStatusScreen />
+        )}
+      </div>
+      <Footer />
     </div>
   )
 }
