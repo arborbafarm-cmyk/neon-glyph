@@ -17,10 +17,10 @@ export default function GameMap() {
       body, html { margin: 0; padding: 0; overflow: hidden; background: #000; }
       #map { margin: 0; padding: 0; }
       .leaflet-container { background: #000 !important; }
-      
+
       /* Efeito Giroflex */
-      .giroflex { 
-        animation: light 0.6s infinite; 
+      .giroflex {
+        animation: light 0.6s infinite;
         pointer-events: none;
       }
       @keyframes light {
@@ -28,7 +28,7 @@ export default function GameMap() {
         50% { filter: drop-shadow(0 0 10px blue); }
         100% { filter: drop-shadow(0 0 5px red); }
       }
-      
+
       .leaflet-image-layer {
         cursor: pointer;
       }
@@ -45,12 +45,12 @@ export default function GameMap() {
     script.onload = () => {
       if (mapContainer.current && (window as any).L) {
         const L = (window as any).L;
-        
+
         // Destroy existing map if it exists
         if (mapInstance.current) {
           mapInstance.current.remove();
         }
-        
+
         // Setup do Mapa
         const map = L.map(mapContainer.current, {
           crs: L.CRS.Simple,
@@ -70,19 +70,19 @@ export default function GameMap() {
         // Usamos ImageOverlay em vez de Markers para eles "grudarem" na escala do mapa
         function addElemento(url: string, x: number, y: number, largura: number, altura: number, cssClass = '') {
           const area = [[y, x], [y + altura, x + largura]];
-          const img = L.imageOverlay(url, area, { 
+          const img = L.imageOverlay(url, area, {
             interactive: true,
-            className: cssClass 
+            className: cssClass
           }).addTo(map);
-          
+
           // Adiciona o Tooltip (opcional)
           img.bindTooltip("ENTRAR", { direction: 'top', sticky: true });
-          
+
           return img;
         }
 
         // POSICIONAMENTO MANUAL (Ajuste os números para o lugar exato)
-        
+
         // Viatura na entrada da favela (x, y, largura, altura)
         // Aumente/Diminua largura e altura para o tamanho desejado
         addElemento('https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png', 380, 420, 60, 40, 'giroflex');
