@@ -11,3 +11,17 @@ export const SKINS_QG = {
   90: "https://static.wixstatic.com/media/50f4bf_dacc94520dfa449384a529f15de074f6~mv2.png",
   100: "https://static.wixstatic.com/media/50f4bf_9683cd5787de47bf883c2453384fd2ae~mv2.png"
 } as const;
+
+/**
+ * Determines the appropriate skin URL based on the player's current level.
+ * If the player is between defined skin levels, returns the skin for the previous level.
+ * For example, a level 15 player sees the level 10 skin until reaching level 20.
+ * @param nivel - The player's current level
+ * @returns The skin URL for the appropriate level
+ */
+export const getSkinAtual = (nivel: number): string => {
+  // Get all levels that have a skin defined and filter those the player has already reached
+  const niveisComSkin = Object.keys(SKINS_QG).map(Number).reverse();
+  const nivelSkin = niveisComSkin.find(n => nivel >= n) || 1;
+  return SKINS_QG[nivelSkin as keyof typeof SKINS_QG];
+};
