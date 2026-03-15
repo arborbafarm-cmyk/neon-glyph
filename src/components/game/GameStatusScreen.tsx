@@ -20,7 +20,7 @@ export default function GameStatusScreen() {
     money: 7000,
   };
 
-  const StatBar = ({ label, current, max, color }: any) => (
+  const StatBar = ({ label, current, max, color, bgColor }: any) => (
     <div className="mb-4">
       <div className="flex justify-between mb-2">
         <span className="font-paragraph text-gray-300">{label}</span>
@@ -33,7 +33,7 @@ export default function GameStatusScreen() {
           initial={{ width: 0 }}
           animate={{ width: `${(current / max) * 100}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
-          className={`h-full rounded-full ${color.replace('text', 'bg')}`}
+          className={`h-full rounded-full ${bgColor}`}
         ></motion.div>
       </div>
     </div>
@@ -74,6 +74,7 @@ export default function GameStatusScreen() {
             current={playerStats.experience}
             max={playerStats.maxExperience}
             color="text-blue-400"
+            bgColor="bg-blue-400"
           />
 
           {/* Health */}
@@ -82,6 +83,7 @@ export default function GameStatusScreen() {
             current={playerStats.health}
             max={playerStats.maxHealth}
             color="text-red-400"
+            bgColor="bg-red-400"
           />
 
           {/* Reputation */}
@@ -90,6 +92,7 @@ export default function GameStatusScreen() {
             current={playerStats.reputation}
             max={playerStats.maxReputation}
             color="text-purple-400"
+            bgColor="bg-purple-400"
           />
 
           {/* Influence */}
@@ -98,6 +101,7 @@ export default function GameStatusScreen() {
             current={playerStats.influence}
             max={playerStats.maxInfluence}
             color="text-orange-400"
+            bgColor="bg-orange-400"
           />
 
           {/* Money */}
