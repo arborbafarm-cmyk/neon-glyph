@@ -88,7 +88,7 @@ export default function GameMap() {
         addElemento('https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png', 110, 405, 90, 90, 'giroflex');
 
         // Seu QG (Barraco inicial)
-        addElemento('https://static.wixstatic.com/media/50f4bf_1776337cd2dc4ff1982d01b0079a48d2~mv2.png', 200, 300, 80, 80);
+        addElemento('https://static.wixstatic.com/media/50f4bf_1776337cd2dc4ff1982d01b0079a48d2~mv2.png', 200, 300, 180, 180);
       }
     };
     document.body.appendChild(script);
