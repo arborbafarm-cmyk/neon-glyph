@@ -1,113 +1,123 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { motion } from 'framer-motion';
-import { usePlayerStore } from '@/store/playerStore';
-
-interface Point {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  link?: string;
-}
-
-const initialPoints: Point[] = [
-  { id: '1', name: 'Casa', x: 15, y: 20, link: '/casa' },
-  { id: '2', name: 'Loja de Luxo', x: 85, y: 25, link: '/luxury-showroom' },
-  { id: '3', name: 'Barracão da quadrilha', x: 25, y: 60 },
-  { id: '4', name: 'Arsenal', x: 75, y: 55 },
-  { id: '5', name: 'Cassino', x: 50, y: 35 },
-  { id: '6', name: 'Lavanderia', x: 30, y: 75 },
-  { id: '7', name: 'Viatura', x: 70, y: 70 },
-  { id: '8', name: 'Policial', x: 45, y: 80 },
-  { id: '9', name: 'Delegacia', x: 60, y: 45 },
-  { id: '10', name: 'Prefeitura', x: 20, y: 40, link: '/giro-no-asfalto' },
-  { id: '11', name: 'Tribunal de justiça', x: 80, y: 65 },
-  { id: '12', name: 'Governo do Estado', x: 35, y: 50 },
-  { id: '13', name: 'Ministério', x: 55, y: 15 },
-];
-
 export default function GamePage() {
-  const [points, setPoints] = useState<Point[]>(initialPoints);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const { level } = usePlayerStore();
-
-  const handleMouseDown = (e: React.MouseEvent, pointId: string) => {
-    e.preventDefault();
-    setDraggingId(pointId);
-    
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const point = points.find(p => p.id === pointId);
-      if (point) {
-        const pointX = (point.x / 100) * rect.width;
-        const pointY = (point.y / 100) * rect.height;
-        setDragOffset({
-          x: e.clientX - pointX,
-          y: e.clientY - pointY,
-        });
-      }
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (draggingId && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const newX = e.clientX - rect.left - dragOffset.x;
-      const newY = e.clientY - rect.top - dragOffset.y;
-
-      const percentX = Math.max(0, Math.min(100, (newX / rect.width) * 100));
-      const percentY = Math.max(0, Math.min(100, (newY / rect.height) * 100));
-
-      setPoints(points.map(p =>
-        p.id === draggingId ? { ...p, x: percentX, y: percentY } : p
-      ));
-    }
-  };
-
-  const handleMouseUp = () => {
-    setDraggingId(null);
-  };
-
-  const handlePointClick = (point: Point) => {
-    if (point.link) {
-      navigate(point.link);
-    } else if (point.id === '8' && level >= 1) {
-      // Policial - Bribery Guard
-      navigate('/bribery-guard');
-    }
-  };
-
-  useEffect(() => {
-    if (draggingId) {
-      document.addEventListener('mousemove', handleMouseMove as any);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove as any);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [draggingId, points, dragOffset]);
-
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      <main className="flex-1 w-full max-w-[120rem] mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="font-heading text-5xl font-bold text-foreground mb-2">
-            Mapa da Cidade
-          </h1>
+    <div
+      dangerouslySetInnerHTML={{
+        __html: `
+<div id="map" style="width: 100vw; height: 100vh; background: #000;"></div>
 
-        </div>
-        {/* Instructions */}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
 
-      </main>
-      <Footer />
-    </div>
+<style>
+  body, html { margin: 0; padding: 0; overflow: hidden; background: #000; }
+  
+  /* Estilo Neon para os Tooltips */
+  .tooltip-neon {
+    background: rgba(10, 10, 15, 0.95) !important;
+    border: 1px solid #0ff !important;
+    border-radius: 6px !important;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6) !important;
+    color: #fff !important;
+    font-family: 'Arial', sans-serif;
+    padding: 10px !important;
+    text-align: center;
+    pointer-events: auto !important;
+  }
+  .tooltip-neon strong { font-size: 1.2em; text-shadow: 0 0 5px #0ff; display: block; margin-bottom: 3px; }
+  .btn-entrar {
+    display: inline-block; padding: 4px 12px; border: 1px solid #0ff; border-radius: 12px;
+    color: #0ff; font-weight: bold; text-transform: uppercase;
+    margin-top: 5px; cursor: pointer; font-size: 0.9em;
+  }
+  .btn-entrar:hover { background: #0ff; color: #000; box-shadow: 0 0 10px #0ff; }
+  
+  /* Efeito Giroflex da Viatura */
+  @keyframes giroflex {
+    0% { filter: drop-shadow(0 0 5px red); }
+    50% { filter: drop-shadow(0 0 10px blue); }
+    100% { filter: drop-shadow(0 0 5px red); }
+  }
+  .animacao-policia { animation: giroflex 0.6s infinite; }
+</style>
+
+<script>
+  // ==========================================
+  // 1. CONFIGURAÇÃO DO JOGADOR
+  // ==========================================
+  let nivelJogador = 40; // Defina o nível aqui (0, 10, 20... 100)
+
+  // ==========================================
+  // 2. LINKS DOS ASSETS (STATIC WIX)
+  // ==========================================
+  const urlMapaFundo = 'https://static.wixstatic.com/media/50f4bf_9dbf16b020134b02adc81709d1e774b9~mv2.png';
+  const urlViatura = 'https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png';
+
+  // Dicionário de Evolução do Barraco
+  const evolucaoBarraco = {
+    0: 'https://static.wixstatic.com/media/50f4bf_1776337cd2dc4ff1982d01b0079a48d2~mv2.png',
+    10: 'https://static.wixstatic.com/media/50f4bf_6527240d26e94ca782357743f0ddddd7~mv2.png',
+    20: 'https://static.wixstatic.com/media/50f4bf_b23aee963b00465fa534f7705505b5b9~mv2.png',
+    30: 'https://static.wixstatic.com/media/50f4bf_b538b42955634d7190d28507d4b05023~mv2.png',
+    40: 'https://static.wixstatic.com/media/50f4bf_86c3183c0550490fab41c5a8a8f6184b~mv2.png',
+    50: 'https://static.wixstatic.com/media/50f4bf_f363ec9d5ca846c4990f7730c5bf479c~mv2.png',
+    60: 'https://static.wixstatic.com/media/50f4bf_f36ccf79521242ab8518cf871e9f6a16~mv2.png',
+    70: 'https://static.wixstatic.com/media/50f4bf_a8496fa280b84dbcac088278af9faded~mv2.png',
+    80: 'https://static.wixstatic.com/media/50f4bf_8a605af9fc4646fd84c89e99c6acc4eb~mv2.png',
+    90: 'https://static.wixstatic.com/media/50f4bf_dacc94520dfa449384a529f15de074f2~mv2.png',
+    100: 'https://static.wixstatic.com/media/50f4bf_9683cd5787de47bf883c2453384fd2ae~mv2.png'
+  };
+
+  // ==========================================
+  // 3. INICIALIZAÇÃO DO MAPA
+  // ==========================================
+  const bounds = [[0, 0], [1000, 1000]]; // Sistema de coordenadas simples
+  const map = L.map('map', { crs: L.CRS.Simple, minZoom: -2, maxZoom: 2, zoomControl: false, attributionControl: false });
+
+  L.imageOverlay(urlMapaFundo, bounds).addTo(map);
+  map.fitBounds(bounds);
+
+  // Função para adicionar locais interativos
+  function adicionarLocal(nome, desc, img, x, y, size, css = '') {
+    const icon = L.icon({ iconUrl: img, iconSize: [size, size], iconAnchor: [size/2, size], className: css });
+    L.marker([y, x], { icon: icon }).addTo(map)
+     .bindTooltip(\`<div><strong>\${nome}</strong><span>\${desc}</span><br><div class="btn-entrar">Entrar</div></div>\`, 
+     { direction: 'top', className: 'tooltip-neon', interactive: true, sticky: false });
+  }
+
+  // ==========================================
+  // 4. LÓGICA DE SELEÇÃO DO BARRACO
+  // ==========================================
+  function definirImagemQG(nivel) {
+    let nivelBase = Math.floor(nivel / 10) * 10;
+    if (nivelBase < 0) nivelBase = 0;
+    if (nivelBase > 100) nivelBase = 100;
+    return evolucaoBarraco[nivelBase];
+  }
+
+  // ==========================================
+  // 5. ADICIONANDO OS ELEMENTOS NO MAPA
+  // ==========================================
+
+  // O QG Evolutivo (na área da favela)
+  const imagemQGAtual = definirImagemQG(nivelJogador);
+  adicionarLocal(\`Seu QG (Nív. \${nivelJogador})\`, 'Domínio da Favela', imagemQGAtual, 300, 250, 130);
+
+  // A Viatura PM (na avenida principal)
+  adicionarLocal('Viatura PM', 'NPC: Sgt. Rocha', urlViatura, 500, 500, 90, 'animacao-policia');
+
+<\/script>
+        `,
+      }}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        margin: 0,
+        padding: 0,
+        overflow: 'hidden',
+      }}
+    />
   );
 }
