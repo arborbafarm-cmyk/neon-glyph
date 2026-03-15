@@ -87,8 +87,8 @@ export default function GameMap() {
         
         const map = L.map(mapContainer.current, {
           crs: L.CRS.Simple,
-          minZoom: -2,
-          maxZoom: 3,
+          minZoom: -1.5,
+          maxZoom: 2,
           zoom: 0,
           zoomControl: false,
           attributionControl: false,
@@ -108,8 +108,8 @@ export default function GameMap() {
           const icon = L.icon({
             iconUrl: img,
             iconSize: [size, size],
-            iconAnchor: [size / 2, size / 2],
-            popupAnchor: [0, -size / 2],
+            iconAnchor: [size / 2, size],
+            popupAnchor: [0, -size],
             className: css,
           });
           
@@ -133,9 +133,9 @@ export default function GameMap() {
         addLocal(
           'VIATURA PM',
           'https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png',
-          420,
           380,
-          80,
+          420,
+          70,
           'animacao-policia'
         );
 
@@ -143,9 +143,9 @@ export default function GameMap() {
         addLocal(
           'SEU QG',
           'https://static.wixstatic.com/media/50f4bf_1776337cd2dc4ff1982d01b0079a48d2~mv2.png',
-          250,
-          280,
-          120
+          200,
+          300,
+          100
         );
       }
     };
