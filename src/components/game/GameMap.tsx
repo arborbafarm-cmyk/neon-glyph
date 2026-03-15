@@ -76,7 +76,9 @@ export default function GameMap() {
       addElemento('https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png', 130, 430, 80, 54, 'giroflex', 'BLITZ', () => {
         navigate('/bribery-guard');
       });
-      addElemento('https://static.wixstatic.com/media/50f4bf_1776337cd2dc4ff1982d01b0079a48d2~mv2.png', 200, 290, 200, 220, '', 'MEU QG');
+      addElemento('https://static.wixstatic.com/media/50f4bf_1776337cd2dc4ff1982d01b0079a48d2~mv2.png', 200, 290, 200, 220, '', 'MEU QG', () => {
+        navigate('/barraco');
+      });
     };
     document.body.appendChild(script);
     return () => { if (mapInstance.current) mapInstance.current.remove(); };
