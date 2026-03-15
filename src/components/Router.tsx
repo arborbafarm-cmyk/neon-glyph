@@ -202,10 +202,10 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "BriberyGuardPage",
+        path: "bribery-guard",
         element: <BriberyGuardPage />,
         routeMetadata: {
-          'BriberyGuardPage': 'BriberyGuardPage'
+          pageIdentifier: 'bribery-guard',
         },
       },
       {

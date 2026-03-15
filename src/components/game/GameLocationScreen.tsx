@@ -3,16 +3,14 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { useNavigate } from 'react-router-dom';
 
 export default function GameLocationScreen() {
-  const navigate = useNavigate();
   const setScreen = useGameScreenStore((state) => state.setScreen);
   const selectedLocation = useGameScreenStore((state) => state.selectedLocation);
 
   const handleLocationAction = (locationId: string) => {
-    if ('briberyg'briberyg'briberyg'briberyg'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyg'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyg'briberyguard'ard'briberyguard'ard'briberyg'briberyguard'ard'briberyguard'ard' === 'briberyguardPage') {
-      navigate('/BriberyGuardPage');
+    if (locationId === 'bribery') {
+      window.location.href = '/bribery';
     }
   };
 
@@ -23,7 +21,7 @@ export default function GameLocationScreen() {
       image: 'https://static.wixstatic.com/media/50f4bf_86c3183c0550490fab41c5a8a8f6184b~mv2.png',
       actions: ['Descansar', 'Contar Dinheiro', 'Planejar'],
     },
-    'bribery-guard': {
+    bribery: {
       name: 'Viatura PM',
       desc: 'NPC: Sgt. Rocha',
       image: 'https://static.wixstatic.com/media/50f4bf_73f5f22017304e5198d1a876f1537486~mv2.png',
@@ -84,8 +82,8 @@ export default function GameLocationScreen() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button
-                onClick={() => selectedLocation === 'bribery-guard' && action === 'Subornar' && handleLocationAction('bribery-guard')}
+              <Button 
+                onClick={() => selectedLocation === 'bribery' && action === 'Subornar' && handleLocationAction('bribery')}
                 className="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-heading rounded-lg border-2 border-cyan-400 shadow-lg shadow-orange-500/50"
               >
                 {action}
