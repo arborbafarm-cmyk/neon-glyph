@@ -1,246 +1,139 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 export default function CinematicSignboard() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const signboardRef = useRef<THREE.Group | null>(null);
-  const [isAnimating, setIsAnimating] = useState(true);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+    useEffect(() => {
+        if (!containerRef.current) return;
 
-    // Scene setup
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-    scene.background = new THREE.Color(0x0a0e1a);
-    scene.fog = new THREE.Fog(0x0a0e1a, 100, 500);
+            // Configuração da Cena - Tons de azul profundo e preto absoluto
+                const scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0x020205);
+                        scene.fog = new THREE.Fog(0x020205, 10, 150);
 
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    camera.position.set(0, 15, 40);
-    cameraRef.current = camera;
+                            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+                                // Começa longe para o zoom de impacto
+                                    camera.position.set(0, 5, 80);
 
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowShadowMap;
-    containerRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+                                        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+                                            renderer.setSize(window.innerWidth, window.innerHeight);
+                                                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                                                    renderer.toneMapping = THREE.ReinhardToneMapping;
+                                                        containerRef.current.appendChild(renderer.domElement);
 
-    // Lighting setup
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-    scene.add(ambientLight);
+                                                            // Iluminação de Ostentação
+                                                                const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+                                                                    scene.add(ambientLight);
 
-    // Main spotlight for signboard
-    const spotLight = new THREE.SpotLight(0xffd700, 2, 200, Math.PI / 3, 0.5, 2);
-    spotLight.position.set(0, 30, 20);
-    spotLight.castShadow = true;
-    spotLight.shadow.mapSize.width = 2048;
-    spotLight.shadow.mapSize.height = 2048;
-    scene.add(spotLight);
+                                                                        // Luz principal "Dourada"
+                                                                            const goldSpot = new THREE.PointLight(0xffd700, 5, 100);
+                                                                                goldSpot.position.set(0, 10, 20);
+                                                                                    scene.add(goldSpot);
 
-    // Neon glow light
-    const neonLight = new THREE.PointLight(0x00eaff, 1.5, 150);
-    neonLight.position.set(0, 20, 0);
-    scene.add(neonLight);
+                                                                                        // Luz de contorno Neon "Comando" (Cyan/Azul)
+                                                                                            const neonLight = new THREE.RectAreaLight(0x00f2ff, 10, 50, 10);
+                                                                                                neonLight.position.set(0, 0, -2);
+                                                                                                    scene.add(neonLight);
 
-    // City lights in background
-    const cityLights = new THREE.Group();
-    for (let i = 0; i < 50; i++) {
-      const light = new THREE.PointLight(0xffaa00, Math.random() * 0.8 + 0.2, 100);
-      light.position.set(
-        (Math.random() - 0.5) * 300,
-        Math.random() * 50 + 10,
-        Math.random() * -200 - 100
-      );
-      cityLights.add(light);
-    }
-    scene.add(cityLights);
+                                                                                                        // Criação do Texto (Usando Canvas de Alta Resolução)
+                                                                                                            const canvas = document.createElement('canvas');
+                                                                                                                canvas.width = 2048;
+                                                                                                                    canvas.height = 512;
+                                                                                                                        const ctx = canvas.getContext('2d');
+                                                                                                                            if (ctx) {
+                                                                                                                                  // Background transparente para o metal brilhar
+                                                                                                                                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                                                                                                                              ctx.font = 'black 160px "Impact", sans-serif';
+                                                                                                                                                    ctx.textAlign = 'center';
+                                                                                                                                                          ctx.textBaseline = 'middle';
 
-    // Create signboard group
-    const signboard = new THREE.Group();
-    signboardRef.current = signboard;
-    scene.add(signboard);
+                                                                                                                                                                      // Camada de Brilho Externo (Glow)
+                                                                                                                                                                            ctx.shadowColor = '#00f2ff';
+                                                                                                                                                                                  ctx.shadowBlur = 40;
+                                                                                                                                                                                        ctx.strokeStyle = '#00f2ff';
+                                                                                                                                                                                              ctx.lineWidth = 10;
+                                                                                                                                                                                                    ctx.strokeText('COMPLEXO 1 DO COMANDO NORTE', canvas.width / 2, canvas.height / 2);
 
-    // Create canvas texture for text
-    const canvas = document.createElement('canvas');
-    canvas.width = 2048;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = '#0a0e1a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                                                                                                                                                                                          // Texto Principal Dourado Metálico
+                                                                                                                                                                                                                const gradient = ctx.createLinearGradient(0, 150, 0, 350);
+                                                                                                                                                                                                                      gradient.addColorStop(0, '#fff3a0');
+                                                                                                                                                                                                                            gradient.addColorStop(0.5, '#ffd700');
+                                                                                                                                                                                                                                  gradient.addColorStop(1, '#b8860b');
 
-      // Golden text with glow effect
-      ctx.font = 'bold 180px "Arial Black", sans-serif';
-      ctx.fillStyle = '#ffd700';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = '#00eaff';
-      ctx.shadowBlur = 30;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-      ctx.fillText('COMPLEXO 1 DO COMANDO NORTE', canvas.width / 2, canvas.height / 2);
+                                                                                                                                                                                                                                              ctx.shadowBlur = 0;
+                                                                                                                                                                                                                                                    ctx.fillStyle = gradient;
+                                                                                                                                                                                                                                                          ctx.fillText('COMPLEXO 1 DO COMANDO NORTE', canvas.width / 2, canvas.height / 2);
+                                                                                                                                                                                                                                                              }
 
-      // Add additional glow layers
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
-      ctx.shadowBlur = 60;
-      ctx.fillText('COMPLEXO 1 DO COMANDO NORTE', canvas.width / 2, canvas.height / 2);
-    }
+                                                                                                                                                                                                                                                                  const texture = new THREE.CanvasTexture(canvas);
+                                                                                                                                                                                                                                                                      const material = new THREE.MeshStandardMaterial({
+                                                                                                                                                                                                                                                                            map: texture,
+                                                                                                                                                                                                                                                                                  transparent: true,
+                                                                                                                                                                                                                                                                                        metalness: 1,
+                                                                                                                                                                                                                                                                                              roughness: 0.1,
+                                                                                                                                                                                                                                                                                                    emissive: new THREE.Color(0xffd700),
+                                                                                                                                                                                                                                                                                                          emissiveIntensity: 0.5
+                                                                                                                                                                                                                                                                                                              });
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.magFilter = THREE.LinearFilter;
-    texture.minFilter = THREE.LinearFilter;
+                                                                                                                                                                                                                                                                                                                  const geometry = new THREE.PlaneGeometry(60, 15);
+                                                                                                                                                                                                                                                                                                                      const mesh = new THREE.Mesh(geometry, material);
+                                                                                                                                                                                                                                                                                                                          scene.add(mesh);
 
-    // Create signboard mesh
-    const material = new THREE.MeshStandardMaterial({
-      map: texture,
-      emissive: new THREE.Color(0xffd700),
-      emissiveIntensity: 0.8,
-      metalness: 0.8,
-      roughness: 0.2,
-    });
+                                                                                                                                                                                                                                                                                                                              // Partículas de "Conflito" (Faíscas/Poeira no ar)
+                                                                                                                                                                                                                                                                                                                                  const pCount = 500;
+                                                                                                                                                                                                                                                                                                                                      const pGeometry = new THREE.BufferGeometry();
+                                                                                                                                                                                                                                                                                                                                          const pPos = new Float32Array(pCount * 3);
+                                                                                                                                                                                                                                                                                                                                              for(let i=0; i<pCount*3; i++) pPos[i] = (Math.random() - 0.5) * 150;
+                                                                                                                                                                                                                                                                                                                                                  pGeometry.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+                                                                                                                                                                                                                                                                                                                                                      const pMaterial = new THREE.PointsMaterial({ color: 0xffaa00, size: 0.2, transparent: true, opacity: 0.8 });
+                                                                                                                                                                                                                                                                                                                                                          const sparks = new THREE.Points(pGeometry, pMaterial);
+                                                                                                                                                                                                                                                                                                                                                              scene.add(sparks);
 
-    const geometry = new THREE.PlaneGeometry(40, 10);
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    signboard.add(mesh);
+                                                                                                                                                                                                                                                                                                                                                                  // Animação de Impacto
+                                                                                                                                                                                                                                                                                                                                                                      let frame = 0;
+                                                                                                                                                                                                                                                                                                                                                                          const animate = () => {
+                                                                                                                                                                                                                                                                                                                                                                                frame++;
+                                                                                                                                                                                                                                                                                                                                                                                      requestAnimationFrame(animate);
 
-    // Add frame/border
-    const frameGeometry = new THREE.BoxGeometry(42, 12, 0.5);
-    const frameMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffd700,
-      metalness: 0.9,
-      roughness: 0.1,
-      emissive: new THREE.Color(0xffd700),
-      emissiveIntensity: 0.5,
-    });
-    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-    frame.position.z = -0.3;
-    frame.castShadow = true;
-    frame.receiveShadow = true;
-    signboard.add(frame);
+                                                                                                                                                                                                                                                                                                                                                                                            // Zoom "Tarantino" (Rápido no início, suave no fim)
+                                                                                                                                                                                                                                                                                                                                                                                                  if (camera.position.z > 25) {
+                                                                                                                                                                                                                                                                                                                                                                                                          camera.position.z -= 0.8;
+                                                                                                                                                                                                                                                                                                                                                                                                                } else {
+                                                                                                                                                                                                                                                                                                                                                                                                                        // Leve tremor de câmera constante após o zoom
+                                                                                                                                                                                                                                                                                                                                                                                                                                camera.position.x = Math.sin(frame * 0.1) * 0.05;
+                                                                                                                                                                                                                                                                                                                                                                                                                                        camera.position.y = 5 + Math.cos(frame * 0.1) * 0.05;
+                                                                                                                                                                                                                                                                                                                                                                                                                                              }
 
-    // Add particles for atmosphere
-    const particleGeometry = new THREE.BufferGeometry();
-    const particleCount = 200;
-    const positionArray = new Float32Array(particleCount * 3);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    // Rotação sutil de poder
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          mesh.rotation.y = Math.sin(frame * 0.01) * 0.05;
 
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      positionArray[i] = (Math.random() - 0.5) * 100;
-      positionArray[i + 1] = Math.random() * 80;
-      positionArray[i + 2] = (Math.random() - 0.5) * 100 - 50;
-    }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                // Efeito de Flicker (Luz falhando estilo favela)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                      const flicker = Math.random() > 0.95 ? 0.2 : 1;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            material.emissiveIntensity = (0.4 + Math.sin(frame * 0.05) * 0.2) * flicker;
 
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  // Movimento das faíscas
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        sparks.rotation.y += 0.001;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              sparks.position.y -= 0.05;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    if(sparks.position.y < -20) sparks.position.y = 20;
 
-    const particleMaterial = new THREE.PointsMaterial({
-      color: 0x00eaff,
-      size: 0.3,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.6,
-    });
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          renderer.render(scene, camera);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              };
 
-    const particles = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particles);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  animate();
 
-    // Animation variables
-    let time = 0;
-    const startTime = Date.now();
-    const zoomDuration = 3000; // 3 seconds for zoom
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      const handleResize = () => {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            camera.aspect = window.innerWidth / window.innerHeight;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  camera.updateProjectionMatrix();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        renderer.setSize(window.innerWidth, window.innerHeight);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            };
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                window.addEventListener('resize', handleResize);
 
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      time = Date.now() - startTime;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    return () => {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          window.removeEventListener('resize', handleResize);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                containerRef.current?.removeChild(renderer.domElement);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    };
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      }, []);
 
-      // Zoom effect
-      if (time < zoomDuration) {
-        const progress = time / zoomDuration;
-        const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
-        camera.position.z = 40 - easeProgress * 25;
-        camera.position.y = 15 - easeProgress * 5;
-      }
-
-      // Signboard rotation and pulsing
-      signboard.rotation.y = Math.sin(time * 0.0005) * 0.1;
-      signboard.rotation.x = Math.cos(time * 0.0003) * 0.05;
-
-      // Pulsing glow effect
-      const pulse = Math.sin(time * 0.003) * 0.5 + 0.5;
-      if (mesh.material instanceof THREE.MeshStandardMaterial) {
-        mesh.material.emissiveIntensity = 0.6 + pulse * 0.4;
-      }
-      if (frame.material instanceof THREE.MeshStandardMaterial) {
-        frame.material.emissiveIntensity = 0.3 + pulse * 0.3;
-      }
-
-      // Neon light pulsing
-      neonLight.intensity = 1 + pulse * 0.5;
-
-      // Particle animation
-      const positionAttribute = particleGeometry.getAttribute('position');
-      const positions = positionAttribute.array as Float32Array;
-      for (let i = 0; i < positions.length; i += 3) {
-        positions[i + 1] -= 0.1;
-        if (positions[i + 1] < 0) {
-          positions[i + 1] = 80;
-        }
-      }
-      positionAttribute.needsUpdate = true;
-
-      // City lights flickering
-      cityLights.children.forEach((light: any) => {
-        light.intensity = Math.random() * 0.8 + 0.2;
-      });
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    // Handle window resize
-    const handleResize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      containerRef.current?.removeChild(renderer.domElement);
-      geometry.dispose();
-      material.dispose();
-      frameGeometry.dispose();
-      frameMaterial.dispose();
-      particleGeometry.dispose();
-      particleMaterial.dispose();
-      renderer.dispose();
-    };
-  }, []);
-
-  return (
-    <div
-      ref={containerRef}
-      className="w-full h-full"
-      style={{ position: 'relative', overflow: 'hidden' }}
-    />
-  );
-}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        return <div ref={containerRef} className="w-full h-screen bg-black" />;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
