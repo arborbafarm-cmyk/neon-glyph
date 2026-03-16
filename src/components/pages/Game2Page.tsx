@@ -28,7 +28,17 @@ export default function Game2Page() {
     const savedHotspots = localStorage.getItem('game2_hotspots');
     if (savedHotspots) {
       try {
-        setHotspots(JSON.parse(savedHotspots));
+        let loadedHotspots = JSON.parse(savedHotspots);
+        
+        // Update destinations for specific points
+        loadedHotspots = loadedHotspots.map((h: Hotspot) => {
+          if (h.number === 1) return { ...h, destination: 'barraco' };
+          if (h.number === 2) return { ...h, destination: 'bribery-guard' };
+          if (h.number === 12) return { ...h, destination: 'giro-no-asfalto' };
+          return h;
+        });
+        
+        setHotspots(loadedHotspots);
       } catch (e) {
         console.error('Erro ao carregar pontos salvos:', e);
       }
