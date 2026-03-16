@@ -23,15 +23,14 @@ export default function GameMapScreen() {
 
   return (
     <div className="w-full h-full relative bg-black flex items-center justify-center overflow-hidden">
-      {/* Map Container with 9:16 aspect ratio */}
+      {/* Map Container with 9:16 aspect ratio - Fixed dimensions */}
       <div 
         className="relative"
         style={{
-          width: '100%',
-          height: '100%',
-          maxWidth: 'calc(100vh * 9 / 16)',
-          maxHeight: '100vh',
+          width: 'calc(100vh * 9 / 16)',
+          height: '100vh',
           aspectRatio: '9 / 16',
+          maxWidth: '100%',
         }}
       >
         <div 
