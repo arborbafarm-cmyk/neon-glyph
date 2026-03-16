@@ -18,7 +18,14 @@ export default function Game2Page() {
     'https://static.wixstatic.com/media/50f4bf_6b3cb68c68a7486f93b1696d52192e7d~mv2.png',
   ]);
   const [isAddingHotspots, setIsAddingHotspots] = useState(false);
-  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  const [hotspots, setHotspots] = useState<Hotspot[]>([
+    {
+      id: 'barraco-point',
+      x: 50,
+      y: 50,
+      destination: 'barraco',
+    },
+  ]);
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
