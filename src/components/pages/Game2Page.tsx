@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Image } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, ChevronDown } from 'lucide-react';
-import PoliceCar from '@/components/PoliceCar';
+import { Image } from '@/components/ui/image';
+import { Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Hotspot {
   id: string;
@@ -142,8 +141,8 @@ export default function Game2Page() {
             <Image
               src="https://static.wixstatic.com/media/50f4bf_be8212bb9150412aada836ee21d92405~mv2.png"
               alt="Police Car"
-              width={192}
-              height={192}
+              width={292}
+              height={292}
               className="w-full h-full object-contain"
             />
           </div>
