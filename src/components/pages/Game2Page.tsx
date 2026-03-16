@@ -124,6 +124,15 @@ export default function Game2Page() {
     return images[currentImageIndex] || images[0];
   };
 
+  // Update image when player level changes
+  useEffect(() => {
+    const displayImage = getDisplayImage();
+    if (displayImage && images[currentImageIndex] !== displayImage) {
+      setImages([displayImage]);
+      setCurrentImageIndex(0);
+    }
+  }, [playerLevel]);
+
   const currentImage = getDisplayImage();
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
