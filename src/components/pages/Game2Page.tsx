@@ -4,7 +4,7 @@ import { Image } from '@/components/ui/image';
 export default function Game2Page() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [images, setImages] = useState<string[]>([
-    'https://static.wixstatic.com/media/50f4bf_8ad82d29d0444efcb381c4cdb3e2fbd7~mv2.png',
+    'https://static.wixstatic.com/media/50f4bf_6b3cb68c68a7486f93b1696d52192e7d~mv2.png',
   ]);
 
   // Method to update the image during gameplay
