@@ -2,13 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Image } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface Hotspot {
   id: string;
   x: number;
   y: number;
   destination?: string;
+  number: number;
 }
 
 export default function Game2Page() {
@@ -24,6 +25,7 @@ export default function Game2Page() {
       x: 50,
       y: 50,
       destination: 'barraco',
+      number: 1,
     },
   ]);
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
@@ -55,11 +57,14 @@ export default function Game2Page() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
+    const nextNumber = Math.max(...hotspots.map(h => h.number), 0) + 1;
+
     const newHotspot: Hotspot = {
       id: crypto.randomUUID(),
       x,
       y,
       destination: 'barraco',
+      number: nextNumber,
     };
 
     setHotspots(prev => [...prev, newHotspot]);
@@ -100,7 +105,7 @@ export default function Game2Page() {
         {hotspots.map(hotspot => (
           <div
             key={hotspot.id}
-            className="absolute w-8 h-8 bg-red-500 rounded-full border-2 border-red-300 flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors"
+            className="absolute w-10 h-10 bg-red-500 rounded-full border-2 border-red-300 flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors font-bold text-white text-sm"
             style={{
               left: `${hotspot.x}%`,
               top: `${hotspot.y}%`,
@@ -112,15 +117,15 @@ export default function Game2Page() {
                 navigate(`/${hotspot.destination}`);
               }
             }}
-            title={`Clique para ir para ${hotspot.destination || 'destino'}`}
+            title={`Ponto ${hotspot.number} - Clique para ir para ${hotspot.destination || 'destino'}`}
           >
-            <X className="w-4 h-4 text-white" />
+            {hotspot.number}
           </div>
         ))}
       </div>
 
       {/* Bottom Controls */}
-      <div className="bg-gray-900 border-t border-gray-700 p-4 flex gap-3 justify-center items-center flex-wrap">
+      <div className="bg-gray-900 border-t border-gray-700 p-4 flex gap-3 justify-center items-center flex-wrap sticky bottom-0 z-50">
         <Button
           onClick={toggleAddingHotspots}
           className={`flex items-center gap-2 ${
