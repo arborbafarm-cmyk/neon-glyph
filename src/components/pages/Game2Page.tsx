@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Image } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2, ChevronDown } from 'lucide-react';
 
 interface Hotspot {
   id: string;
@@ -19,36 +19,7 @@ export default function Game2Page() {
     'https://static.wixstatic.com/media/50f4bf_6b3cb68c68a7486f93b1696d52192e7d~mv2.png',
   ]);
   const [isAddingHotspots, setIsAddingHotspots] = useState(false);
-  const [hotspots, setHotspots] = useState<Hotspot[]>([
-    {
-      id: 'barraco-point',
-      x: 50,
-      y: 50,
-      destination: 'barraco',
-      number: 1,
-    },
-    {
-      id: 'luxury-showroom-point',
-      x: 60,
-      y: 40,
-      destination: 'luxury-showroom',
-      number: 6,
-    },
-    {
-      id: 'giro-no-asfalto-point',
-      x: 70,
-      y: 60,
-      destination: 'giro-no-asfalto',
-      number: 7,
-    },
-    {
-      id: 'bribery-guard-point',
-      x: 40,
-      y: 70,
-      destination: 'bribery-guard',
-      number: 10,
-    },
-  ]);
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -96,6 +67,12 @@ export default function Game2Page() {
     setHotspots(prev => prev.filter(h => h.id !== id));
   };
 
+  const updateHotspotDestination = (id: string, destination: string) => {
+    setHotspots(prev =>
+      prev.map(h => (h.id === id ? { ...h, destination } : h))
+    );
+  };
+
   const toggleAddingHotspots = () => {
     setIsAddingHotspots(!isAddingHotspots);
   };
@@ -103,6 +80,13 @@ export default function Game2Page() {
   const clearAllHotspots = () => {
     setHotspots([]);
   };
+
+  const destinationOptions = [
+    { value: 'barraco', label: 'Barraco' },
+    { value: 'luxury-showroom', label: 'Loja de Luxo' },
+    { value: 'giro-no-asfalto', label: 'Giro no Asfalto' },
+    { value: 'bribery-guard', label: 'Suborno do Guarda' },
+  ];
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-black">
@@ -174,6 +158,46 @@ export default function Game2Page() {
           </>
         )}
       </div>
+
+      {/* Hotspots Configuration Panel */}
+      {hotspots.length > 0 && (
+        <div className="bg-gray-800 border-t border-gray-700 p-4 max-h-64 overflow-y-auto">
+          <h3 className="text-white font-bold mb-3">Configurar Pontos Clicáveis</h3>
+          <div className="space-y-3">
+            {hotspots.map(hotspot => (
+              <div
+                key={hotspot.id}
+                className="bg-gray-700 p-3 rounded flex items-center justify-between gap-3"
+              >
+                <div className="flex-1">
+                  <div className="text-white font-bold text-sm mb-2">
+                    Ponto {hotspot.number} ({hotspot.x.toFixed(1)}%, {hotspot.y.toFixed(1)}%)
+                  </div>
+                  <select
+                    value={hotspot.destination || 'barraco'}
+                    onChange={(e) => updateHotspotDestination(hotspot.id, e.target.value)}
+                    className="w-full bg-gray-600 text-white text-sm p-2 rounded border border-gray-500"
+                  >
+                    {destinationOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  onClick={() => removeHotspot(hotspot.id)}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
