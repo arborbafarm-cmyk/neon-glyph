@@ -34,11 +34,13 @@ export default function HomePage() {
     setIsLoading(provider);
     try {
       if (provider === 'visitor') {
-        // For visitor access, navigate directly to the game without authentication
-        navigate('/game');
+        // For visitor access, navigate directly to game2
+        navigate('/game2');
       } else {
         // Trigger actual authentication via Wix Members SDK for other providers
         await actions.login();
+        // After successful login, navigate to game2
+        navigate('/game2');
       }
     } catch (error) {
       console.error(`Login failed for ${provider}:`, error);
