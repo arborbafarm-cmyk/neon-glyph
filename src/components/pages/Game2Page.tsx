@@ -160,7 +160,7 @@ export default function Game2Page() {
         {/* Police Car at Point 2 */}
         {hotspots.some(h => h.number === 2) && (
           <div
-            className="absolute w-72 h-72 flex items-center justify-center"
+            className="absolute w-86 h-86 flex items-center justify-center"
             style={{
               left: `${hotspots.find(h => h.number === 2)?.x || 50}%`,
               top: `${hotspots.find(h => h.number === 2)?.y || 50}%`,
@@ -172,7 +172,7 @@ export default function Game2Page() {
               alt="Police Car"
               width={292}
               height={292}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain animate-pulse"
             />
           </div>
         )}
