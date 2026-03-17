@@ -109,12 +109,24 @@ export default function GiroNoAsfaltoPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                   {/* Image 1 */}
                   <div className="flex justify-center">
-
+                    <Image
+                      src="https://static.wixstatic.com/media/50f4bf_a77a3c78afaa46cba94c613c74a83843~mv2.png?originWidth=256&originHeight=256"
+                      alt="Gallery Image 1"
+                      width={300}
+                      height={300}
+                      className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 object-cover w-full h-auto"
+                    />
                   </div>
 
                   {/* Image 2 */}
                   <div className="flex justify-center">
-
+                    <Image
+                      src="https://static.wixstatic.com/media/50f4bf_a77a3c78afaa46cba94c613c74a83843~mv2.png?originWidth=256&originHeight=256"
+                      alt="Gallery Image 2"
+                      width={300}
+                      height={300}
+                      className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 object-cover w-full h-auto"
+                    />
                   </div>
 
                   {/* Image 3 */}
