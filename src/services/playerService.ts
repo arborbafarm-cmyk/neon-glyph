@@ -1,107 +1,28 @@
-import { BaseCrudService } from '@/integrations';
+import { BaseCrudService } from "@/integrations";
+import { Players } from "@/entities";
 
-export interface LoggedInPlayer {
-  _id?: string;
-  memberId: string;
-  playerName: string;
-  nickname: string;
-  lastSeen: Date | string;
-  isOnline: boolean;
+const COLLECTION_ID = "players";
+
+export async function savePlayer(player: Partial<Players>) {
+  if (!player._id) {
+    player._id = crypto.randomUUID();
+  }
+  return BaseCrudService.create(COLLECTION_ID, player as Players);
 }
 
-const COLLECTION_ID = 'playerslogados';
+export async function updatePlayer(playerId: string, updates: Partial<Players>) {
+  return BaseCrudService.update(COLLECTION_ID, { _id: playerId, ...updates });
+}
 
-export const playerService = {
-  // Register or update a player when they log in
-  async registerPlayer(memberId: string, playerName: string, nickname: string): Promise<LoggedInPlayer> {
-    try {
-      // Check if player already exists
-      const existingPlayers = await BaseCrudService.getAll<LoggedInPlayer>(COLLECTION_ID);
-      const existingPlayer = existingPlayers.items.find(p => p.memberId === memberId);
+export async function loadPlayers() {
+  const result = await BaseCrudService.getAll<Players>(COLLECTION_ID);
+  return result.items || [];
+}
 
-      const playerData: LoggedInPlayer = {
-        memberId,
-        playerName,
-        nickname,
-        lastSeen: new Date(),
-        isOnline: true,
-      };
+export async function getPlayerById(playerId: string) {
+  return BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+}
 
-      if (existingPlayer) {
-        // Update existing player
-        await BaseCrudService.update(COLLECTION_ID, {
-          _id: existingPlayer._id,
-          ...playerData,
-        });
-        return { ...playerData, _id: existingPlayer._id };
-      } else {
-        // Create new player entry
-        const newPlayerId = crypto.randomUUID();
-        await BaseCrudService.create(COLLECTION_ID, {
-          _id: newPlayerId,
-          ...playerData,
-        });
-        return { ...playerData, _id: newPlayerId };
-      }
-    } catch (error) {
-      console.error('Error registering player:', error);
-      throw error;
-    }
-  },
-
-  // Mark player as offline
-  async setPlayerOffline(memberId: string): Promise<void> {
-    try {
-      const existingPlayers = await BaseCrudService.getAll<LoggedInPlayer>(COLLECTION_ID);
-      const player = existingPlayers.items.find(p => p.memberId === memberId);
-
-      if (player) {
-        await BaseCrudService.update(COLLECTION_ID, {
-          _id: player._id,
-          isOnline: false,
-          lastSeen: new Date(),
-        });
-      }
-    } catch (error) {
-      console.error('Error setting player offline:', error);
-      throw error;
-    }
-  },
-
-  // Get all online players
-  async getOnlinePlayers(): Promise<LoggedInPlayer[]> {
-    try {
-      const result = await BaseCrudService.getAll<LoggedInPlayer>(COLLECTION_ID);
-      return result.items.filter(p => p.isOnline);
-    } catch (error) {
-      console.error('Error fetching online players:', error);
-      throw error;
-    }
-  },
-
-  // Get all players
-  async getAllPlayers(): Promise<LoggedInPlayer[]> {
-    try {
-      const result = await BaseCrudService.getAll<LoggedInPlayer>(COLLECTION_ID);
-      return result.items;
-    } catch (error) {
-      console.error('Error fetching all players:', error);
-      throw error;
-    }
-  },
-
-  // Delete player entry
-  async deletePlayer(memberId: string): Promise<void> {
-    try {
-      const existingPlayers = await BaseCrudService.getAll<LoggedInPlayer>(COLLECTION_ID);
-      const player = existingPlayers.items.find(p => p.memberId === memberId);
-
-      if (player) {
-        await BaseCrudService.delete(COLLECTION_ID, player._id!);
-      }
-    } catch (error) {
-      console.error('Error deleting player:', error);
-      throw error;
-    }
-  },
-};
+export async function deletePlayer(playerId: string) {
+  return BaseCrudService.delete(COLLECTION_ID, playerId);
+}

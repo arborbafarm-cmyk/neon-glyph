@@ -55,6 +55,14 @@ export interface Players {
   _id: string;
   _createdDate?: Date;
   _updatedDate?: Date;
+  /** @wixFieldType number */
+  cleanMoney?: number;
+  /** @wixFieldType date */
+  updatedAt?: Date | string;
+  /** @wixFieldType number */
+  dirtyMoney?: number;
+  /** @wixFieldType text */
+  playerId?: string;
   /** @wixFieldType text */
   playerName?: string;
   /** @wixFieldType number */

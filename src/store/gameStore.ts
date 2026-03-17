@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { Players } from '@/entities';
 
 // Fluxo Event Interfaces
 export interface FluxoPlayer {
@@ -42,6 +43,7 @@ export interface GameState {
   isSpinning: boolean;
   lastResult: string[] | null;
   fluxo: FluxoState;
+  players: Record<string, Players>;
   setSpins: (spins: number) => void;
   setDirtMoney: (money: number) => void;
   setMultiplier: (multiplier: number) => void;
@@ -52,6 +54,9 @@ export interface GameState {
   addDirtMoney: (amount: number) => void;
   addSpins: (amount: number) => void;
   subtractSpins: (amount: number) => void;
+  setPlayers: (players: Record<string, Players>) => void;
+  addPlayer: (player: Players) => void;
+  updatePlayer: (playerId: string, updates: Partial<Players>) => void;
   reset: () => void;
 }
 
@@ -83,6 +88,7 @@ const initialState = {
   isSpinning: false,
   lastResult: null,
   fluxo: initialFluxoState,
+  players: {},
 };
 
 export const useGameStore = create<GameState>()(
@@ -99,6 +105,16 @@ export const useGameStore = create<GameState>()(
       addDirtMoney: (amount) => set((state) => ({ dirtMoney: state.dirtMoney + amount })),
       addSpins: (amount) => set((state) => ({ spins: state.spins + amount })),
       subtractSpins: (amount) => set((state) => ({ spins: Math.max(0, state.spins - amount) })),
+      setPlayers: (players) => set({ players }),
+      addPlayer: (player) => set((state) => ({
+        players: { ...state.players, [player.playerId || player._id]: player }
+      })),
+      updatePlayer: (playerId, updates) => set((state) => ({
+        players: {
+          ...state.players,
+          [playerId]: { ...state.players[playerId], ...updates }
+        }
+      })),
       reset: () => set(initialState),
       // Fluxo event methods
       fluxo: {
