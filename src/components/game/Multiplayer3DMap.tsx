@@ -44,6 +44,18 @@ export default function Multiplayer3DMap() {
   const barracosRef = useRef<Map<string, Barraco>>(new Map());
   const playersRef = useRef<Map<string, any>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Camera controls state
+  const [cameraControls, setCameraControls] = useState({
+    isRotating: false,
+    isPanning: false,
+    isZooming: false,
+    lastX: 0,
+    lastY: 0,
+    rotationX: 0,
+    rotationY: 0,
+    distance: 50,
+  });
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -105,18 +117,110 @@ export default function Multiplayer3DMap() {
 
     window.addEventListener('resize', handleResize);
 
+    // Mouse controls
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) { // Left click - rotate
+        setCameraControls(prev => ({
+          ...prev,
+          isRotating: true,
+          lastX: e.clientX,
+          lastY: e.clientY,
+        }));
+      } else if (e.button === 2) { // Right click - pan
+        setCameraControls(prev => ({
+          ...prev,
+          isPanning: true,
+          lastX: e.clientX,
+          lastY: e.clientY,
+        }));
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setCameraControls(prev => {
+        const deltaX = e.clientX - prev.lastX;
+        const deltaY = e.clientY - prev.lastY;
+
+        let newControls = { ...prev, lastX: e.clientX, lastY: e.clientY };
+
+        if (prev.isRotating) {
+          newControls.rotationY += deltaX * 0.01;
+          newControls.rotationX += deltaY * 0.01;
+          newControls.rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, newControls.rotationX));
+        } else if (prev.isPanning) {
+          const panSpeed = 0.1;
+          const centerX = GRID_SIZE / 2;
+          const centerZ = GRID_HEIGHT / 2;
+          
+          const panX = -deltaX * panSpeed * Math.cos(prev.rotationY);
+          const panZ = -deltaX * panSpeed * Math.sin(prev.rotationY);
+          const panY = deltaY * panSpeed;
+
+          if (camera) {
+            camera.position.x += panX;
+            camera.position.z += panZ;
+            camera.position.y += panY;
+          }
+        }
+
+        return newControls;
+      });
+    };
+
+    const handleMouseUp = () => {
+      setCameraControls(prev => ({
+        ...prev,
+        isRotating: false,
+        isPanning: false,
+      }));
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setCameraControls(prev => {
+        const zoomSpeed = 2;
+        const newDistance = Math.max(10, Math.min(100, prev.distance + e.deltaY * 0.1));
+        return { ...prev, distance: newDistance };
+      });
+    };
+
+    renderer.domElement.addEventListener('mousedown', handleMouseDown);
+    renderer.domElement.addEventListener('mousemove', handleMouseMove);
+    renderer.domElement.addEventListener('mouseup', handleMouseUp);
+    renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+    renderer.domElement.addEventListener('wheel', handleWheel, { passive: false });
+
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
+
+      // Update camera position based on controls
+      if (camera) {
+        const centerX = GRID_SIZE / 2;
+        const centerZ = GRID_HEIGHT / 2;
+        const centerY = 10;
+
+        const x = centerX + cameraControls.distance * Math.sin(cameraControls.rotationY) * Math.cos(cameraControls.rotationX);
+        const y = centerY + cameraControls.distance * Math.sin(cameraControls.rotationX);
+        const z = centerZ + cameraControls.distance * Math.cos(cameraControls.rotationY) * Math.cos(cameraControls.rotationX);
+
+        camera.position.set(x, y, z);
+        camera.lookAt(centerX, centerY, centerZ);
+      }
+
       renderer.render(scene, camera);
     };
     animate();
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+      renderer.domElement.removeEventListener('mousemove', handleMouseMove);
+      renderer.domElement.removeEventListener('mouseup', handleMouseUp);
+      renderer.domElement.removeEventListener('wheel', handleWheel);
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, []);
+  }, [cameraControls]);
 
   // Create grid tiles
   const createTiles = (scene: THREE.Scene) => {
@@ -427,14 +531,17 @@ export default function Multiplayer3DMap() {
   }, []);
 
   return (
-    <div className="w-full h-screen bg-black relative">
+    <div className="w-screen h-screen bg-black relative overflow-hidden">
       <div ref={containerRef} className="w-full h-full" />
+      
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="text-white text-2xl">Carregando mapa 3D...</div>
         </div>
       )}
-      <div className="absolute top-4 left-4 text-white bg-black bg-opacity-70 p-4 rounded max-h-96 overflow-y-auto">
+      
+      {/* Info Panel */}
+      <div className="absolute top-4 left-4 text-white bg-black bg-opacity-70 p-4 rounded max-h-96 overflow-y-auto z-10">
         <h2 className="text-xl font-bold mb-2">Mapa Multiplayer 3D - Complexo</h2>
         <p>Total de Tiles: {GRID_SIZE * GRID_HEIGHT}</p>
         <p>QG do Complexo: {QG_SIZE * QG_SIZE} tiles (área central)</p>
@@ -455,6 +562,50 @@ export default function Multiplayer3DMap() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Controls Panel */}
+      <div className="absolute bottom-4 left-4 text-white bg-black bg-opacity-70 p-4 rounded z-10">
+        <h3 className="text-lg font-bold mb-2">Controles:</h3>
+        <div className="space-y-1 text-sm">
+          <p>🖱️ <strong>Clique esquerdo + Arraste:</strong> Rotacionar câmera</p>
+          <p>🖱️ <strong>Clique direito + Arraste:</strong> Mover câmera</p>
+          <p>🔍 <strong>Scroll do mouse:</strong> Zoom in/out</p>
+        </div>
+      </div>
+
+      {/* Pinça (Zoom Controls) */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+        <button
+          onClick={() => setCameraControls(prev => ({ ...prev, distance: Math.max(10, prev.distance - 5) }))}
+          className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition"
+          title="Zoom In"
+        >
+          🔍+
+        </button>
+        <button
+          onClick={() => setCameraControls(prev => ({ ...prev, distance: Math.min(100, prev.distance + 5) }))}
+          className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition"
+          title="Zoom Out"
+        >
+          🔍−
+        </button>
+        <button
+          onClick={() => setCameraControls({
+            isRotating: false,
+            isPanning: false,
+            isZooming: false,
+            lastX: 0,
+            lastY: 0,
+            rotationX: 0,
+            rotationY: 0,
+            distance: 50,
+          })}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition"
+          title="Reset View"
+        >
+          ↺ Reset
+        </button>
       </div>
     </div>
   );
