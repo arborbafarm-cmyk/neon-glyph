@@ -328,13 +328,12 @@ export default function SlotMachine() {
   return (
     <div className="flex flex-col items-center justify-center gap-6">
       {/* Spin Button - Independent */}
-      <div className="w-full max-w-3xl pt-8 px-6 md:px-12 flex flex-col items-center bg-gradient-to-br from-gray-900/70 to-black/70 border-secondary rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/50 border border-none justify-start">
+      <div className="w-full max-w-3xl pt-8 px-6 md:px-12 flex flex-col items-center from-gray-900/70 to-black/70 border-secondary rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/50 border border-none justify-start bg-[#000000ff]">
         <div className="absolute inset-0 bg-secondary opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none rounded-3xl"></div>
         <div className="relative z-10 w-full text-center">
           <SpinButton />
         </div>
       </div>
-
       {/* Slots Display - Independent */}
       <SlotsDisplay />
     </div>
