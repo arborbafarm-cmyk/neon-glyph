@@ -113,7 +113,7 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-[110px]" style={{
+    <header className="fixed top-0 left-0 right-0 z-50 h-auto py-3" style={{
       background: 'rgba(15,20,30,0.85)',
       backdropFilter: 'blur(10px)',
       borderBottom: '2px solid #00eaff',
@@ -121,20 +121,20 @@ export default function Header() {
     }}>
       {/* HUD Lines */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[30px] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-hud-line-blue/20 to-transparent" />
-        <div className="absolute bottom-[30px] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-hud-line-blue/20 to-transparent" />
+        <div className="absolute top-[20px] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-hud-line-blue/20 to-transparent" />
+        <div className="absolute bottom-[20px] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-hud-line-blue/20 to-transparent" />
       </div>
-      <div className="h-full max-w-[120rem] mx-auto px-6 flex items-center justify-between">
+      <div className="max-w-[120rem] mx-auto px-4 md:px-6 flex items-center justify-between flex-wrap gap-3">
         {/* Left Area - Logo & Navigation */}
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-white hover:text-secondary transition-colors duration-300 font-heading text-lg font-bold uppercase tracking-wider">
+        <div className="flex items-center gap-4 md:gap-8 order-1 md:order-1">
+          <Link to="/" className="text-white hover:text-secondary transition-colors duration-300 font-heading text-base md:text-lg font-bold uppercase tracking-wider whitespace-nowrap">
             DOMÍNIO
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/projects" className="text-foreground/70 hover:text-secondary transition-colors duration-300 font-paragraph text-sm uppercase tracking-wider">
+            <Link to="/projects" className="text-foreground/70 hover:text-secondary transition-colors duration-300 font-paragraph text-xs md:text-sm uppercase tracking-wider whitespace-nowrap">
               Projetos
             </Link>
-            <Link to="/game" className="text-foreground/70 hover:text-secondary transition-colors duration-300 font-paragraph text-sm uppercase tracking-wider">
+            <Link to="/game" className="text-foreground/70 hover:text-secondary transition-colors duration-300 font-paragraph text-xs md:text-sm uppercase tracking-wider whitespace-nowrap">
               Jogar
             </Link>
           </nav>
@@ -148,9 +148,9 @@ export default function Header() {
                   aria-label="Menu"
                 >
                   {isMobileMenuOpen ? (
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5" />
                   ) : (
-                    <Menu className="w-6 h-6" />
+                    <Menu className="w-5 h-5" />
                   )}
                 </button>
               </DropdownMenuTrigger>
@@ -171,19 +171,19 @@ export default function Header() {
         </div>
 
         {/* Center Area - Avatar */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center order-3 md:order-2 w-full md:w-auto">
           <button
             onClick={handleAvatarClick}
             className="relative group cursor-pointer transition-transform duration-300 hover:scale-110"
             aria-label="Alterar avatar"
           >
-            <div className="w-[70px] h-[70px] rounded-full overflow-hidden border-[3px] border-subtitle-neon-blue relative" style={{
+            <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] rounded-full overflow-hidden border-[2px] md:border-[3px] border-subtitle-neon-blue relative" style={{
               boxShadow: '0 0 20px rgba(0,234,255,0.8), inset 0 0 10px rgba(0,234,255,0.3)'
             }}>
               <Image
                 src={avatarUrl}
                 alt="Avatar do jogador"
-                width={70}
+                width={60}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-subtitle-neon-blue/0 group-hover:bg-subtitle-neon-blue/20 transition-colors duration-300 flex items-center justify-center">
@@ -204,9 +204,9 @@ export default function Header() {
         </div>
 
         {/* Right Area - Player Name & Icons */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2 md:gap-4 order-2 md:order-3 flex-wrap justify-center md:justify-end w-full md:w-auto">
           {/* Player Names */}
-          <div className="flex flex-col items-start gap-1">
+          <div className="flex flex-col items-start gap-1 hidden sm:flex">
             {/* Main Player Name */}
             <div className="flex items-center gap-2">
 
@@ -221,7 +221,7 @@ export default function Header() {
                   onChange={(e) => setTempCustomName(e.target.value)}
                   onBlur={handleCustomNameSave}
                   onKeyDown={handleCustomNameKeyPress}
-                  className="bg-transparent border-b-2 border-logo-gradient-start text-logo-gradient-start font-paragraph text-sm md:text-base font-medium tracking-wider outline-none px-2"
+                  className="bg-transparent border-b-2 border-logo-gradient-start text-logo-gradient-start font-paragraph text-xs md:text-sm font-medium tracking-wider outline-none px-2"
                   style={{
                     textShadow: '0 0 8px rgba(255,69,0,0.6)'
                   }}
@@ -232,69 +232,69 @@ export default function Header() {
               ) : (
                 <button
                   onClick={handleCustomNameClick}
-                  className="px-3 py-1 rounded border-2 border-logo-gradient-start text-logo-gradient-start font-paragraph text-sm md:text-base font-medium tracking-wider hover:bg-logo-gradient-start/10 hover:brightness-150 transition-all duration-300"
+                  className="px-2 md:px-3 py-1 rounded border-2 border-logo-gradient-start text-logo-gradient-start font-paragraph text-xs md:text-sm font-medium tracking-wider hover:bg-logo-gradient-start/10 hover:brightness-150 transition-all duration-300"
                   style={{
                     textShadow: '0 0 8px rgba(255,69,0,0.6)'
                   }}
                 >
-                  {customPlayerName || '+ Nome Gamer'}
+                  {customPlayerName || '+ Nome'}
                 </button>
               )}
             </div>
           </div>
           {/* Clean Money Vault */}
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-logo-gradient-start/20 to-logo-gradient-end/20 rounded-lg border-2 border-logo-gradient-start" style={{
+          <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2 bg-gradient-to-r from-logo-gradient-start/20 to-logo-gradient-end/20 rounded-lg border-2 border-logo-gradient-start text-xs md:text-sm" style={{
             filter: 'drop-shadow(0 0 10px rgba(255,69,0,0.5))'
           }}>
-            <Vault className="w-6 h-6 text-logo-gradient-start" style={{
+            <Vault className="w-4 h-4 md:w-5 md:h-5 text-logo-gradient-start" style={{
               filter: 'drop-shadow(0 0 8px rgba(255,69,0,0.8))'
             }} />
             <div className="flex flex-col">
-              <span className="text-xs text-logo-gradient-start font-heading">COFRE SUJO</span>
-              <span className="text-lg font-bold text-white font-heading">R$ {dirtyMoney.toLocaleString('pt-BR')}</span>
+              <span className="text-xs text-logo-gradient-start font-heading leading-none">SUJO</span>
+              <span className="font-bold text-white font-heading text-xs md:text-sm leading-none">R$ {dirtyMoney.toLocaleString('pt-BR')}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-subtitle-neon-blue/20 to-subtitle-neon-blue/10 rounded-lg border-2 border-subtitle-neon-blue" style={{
+          <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2 bg-gradient-to-r from-subtitle-neon-blue/20 to-subtitle-neon-blue/10 rounded-lg border-2 border-subtitle-neon-blue text-xs md:text-sm" style={{
             filter: 'drop-shadow(0 0 10px rgba(0,234,255,0.5))'
           }}>
-            <Vault className="w-6 h-6 text-subtitle-neon-blue" style={{
+            <Vault className="w-4 h-4 md:w-5 md:h-5 text-subtitle-neon-blue" style={{
               filter: 'drop-shadow(0 0 8px rgba(0,234,255,0.8))'
             }} />
             <div className="flex flex-col">
-              <span className="text-xs text-subtitle-neon-blue font-heading">COFRE LIMPO</span>
-              <span className="text-lg font-bold text-white font-heading">R$ {cleanMoney.toLocaleString('pt-BR')}</span>
+              <span className="text-xs text-subtitle-neon-blue font-heading leading-none">LIMPO</span>
+              <span className="font-bold text-white font-heading text-xs md:text-sm leading-none">R$ {cleanMoney.toLocaleString('pt-BR')}</span>
             </div>
           </div>
           {/* Spin Vault */}
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg border-2 border-yellow-400" style={{
+          <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg border-2 border-yellow-400 text-xs md:text-sm" style={{
             filter: 'drop-shadow(0 0 10px rgba(255,193,7,0.5))'
           }}>
-            <Dice5 className="w-6 h-6 text-yellow-400" style={{
+            <Dice5 className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" style={{
               filter: 'drop-shadow(0 0 8px rgba(255,193,7,0.8))'
             }} />
             <div className="flex flex-col">
-              <span className="text-xs text-yellow-400 font-heading">GIROS</span>
-              <span className="text-lg font-bold text-white font-heading">{spins}</span>
-              <span className="text-xs text-yellow-300 font-paragraph">+{Math.max(1, level)} em {formatTime(timeUntilNextGain)}</span>
+              <span className="text-xs text-yellow-400 font-heading leading-none">GIROS</span>
+              <span className="font-bold text-white font-heading text-xs md:text-sm leading-none">{spins}</span>
+              <span className="text-xs text-yellow-300 font-paragraph leading-none">+{Math.max(1, level)}</span>
             </div>
           </div>
 
           {/* Level Display */}
 
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-logo-gradient-start/20 to-logo-gradient-end/20 rounded-lg border-2 border-logo-gradient-start" style={{
+          <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-2 bg-gradient-to-r from-logo-gradient-start/20 to-logo-gradient-end/20 rounded-lg border-2 border-logo-gradient-start text-xs md:text-sm" style={{
             filter: 'drop-shadow(0 0 10px rgba(255,69,0,0.5))'
           }}>
-            <Zap className="w-6 h-6 text-logo-gradient-start" style={{
+            <Zap className="w-4 h-4 md:w-5 md:h-5 text-logo-gradient-start" style={{
               filter: 'drop-shadow(0 0 8px rgba(255,69,0,0.8))'
             }} />
             <div className="flex flex-col">
-              <span className="text-xs text-logo-gradient-start font-heading">NÍVEL</span>
-              <span className="text-lg font-bold text-white font-heading">{level}/100</span>
+              <span className="text-xs text-logo-gradient-start font-heading leading-none">NÍVEL</span>
+              <span className="font-bold text-white font-heading text-xs md:text-sm leading-none">{level}/100</span>
             </div>
           </div>
           {/* Dirty Money Display */}
           {/* Icons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
             <button
               className="text-white hover:text-subtitle-neon-blue transition-all duration-300 hover:brightness-150"
               style={{
@@ -318,4 +318,18 @@ export default function Header() {
       </div>
     </header>
   );
+}
+
+// Add padding to body to account for fixed header
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    body {
+      padding-top: auto;
+    }
+    main {
+      margin-top: 140px;
+    }
+  `;
+  document.head.appendChild(style);
 }
