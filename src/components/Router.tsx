@@ -4,8 +4,6 @@ import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import DrawingCanvas from '@/components/DrawingCanvas';
-import DrawingToolbar from '@/components/DrawingToolbar';
 
 const HomePage = lazy(() => import('@/components/pages/HomePage'));
 const GiroNoAsfaltoPage = lazy(() => import('@/components/pages/GiroNoAsfaltoPage'));
@@ -46,8 +44,6 @@ function Layout() {
   return (
     <>
       <ScrollToTop />
-      <DrawingCanvas />
-      <DrawingToolbar />
       <Suspense fallback={<LoadingSpinner />}>
         <Outlet />
       </Suspense>

@@ -91,16 +91,6 @@ function SpinButton() {
   return (
     <div className="flex flex-col items-center justify-center gap-6 w-full">
       {/* Multiplier Controls */}
-      <button
-        onClick={handleSpin}
-        disabled={isSpinning || spins <= 0}
-        className="w-full max-w-sm md:max-w-lg px-12 py-6 bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end text-white font-heading text-2xl md:text-3xl font-bold rounded-full hover:brightness-125 transition-all duration-500 ease-out disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-logo-gradient-start/40 transform hover:-translate-y-1 active:translate-y-0"
-        style={{
-          filter: 'drop-shadow(0 0 20px rgba(255,69,0,0.8))'
-        }}
-      >
-        {isSpinning ? 'GIRANDO...' : 'GIRAR'}
-      </button>
       <div className="flex flex-col items-center gap-2 w-full">
         <div className="text-secondary font-heading text-sm md:text-base">Multiplicador: <span className="text-logo-gradient-start font-bold text-lg">x{selectedMultiplier}</span></div>
         <div className="flex gap-2 flex-wrap justify-center">
@@ -120,7 +110,19 @@ function SpinButton() {
           ))}
         </div>
       </div>
+
       {/* Spin Button */}
+      <button
+        onClick={handleSpin}
+        disabled={isSpinning || spins <= 0}
+        className="w-full max-w-sm md:max-w-lg px-12 py-6 bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end text-white font-heading text-2xl md:text-3xl font-bold rounded-full hover:brightness-125 transition-all duration-500 ease-out disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-logo-gradient-start/40 transform hover:-translate-y-1 active:translate-y-0"
+        style={{
+          filter: 'drop-shadow(0 0 20px rgba(255,69,0,0.8))'
+        }}
+      >
+        {isSpinning ? 'GIRANDO...' : 'GIRAR'}
+      </button>
+
       {spins <= 0 && (
         <div className="text-center text-red-500 font-heading font-bold text-lg md:text-xl animate-pulse">
           SEM GIROS DISPONÍVEIS
@@ -241,6 +243,7 @@ function SlotsDisplay() {
           <AnimatedMoney key={money.id} amount={money.amount} id={money.id} />
         ))}
       </AnimatePresence>
+
       {/* Slot Item Labels */}
       {/* Slot Display */}
       <div className="flex gap-3 justify-center items-center">
@@ -270,7 +273,7 @@ function SlotsDisplay() {
       </div>
       {/* Result Message */}
       {resultMessage && (
-        <div className="text-center mt-4 text-secondary font-heading text-sm bg-[#ff4500ff]">
+        <div className="text-center mt-4 text-secondary font-heading text-sm">
           {resultMessage}
         </div>
       )}
@@ -325,7 +328,7 @@ export default function SlotMachine() {
   return (
     <div className="flex flex-col items-center justify-center gap-6">
       {/* Spin Button - Independent */}
-      <div className="fixed top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl pt-8 px-6 md:px-12 flex flex-col items-center from-gray-900/70 to-black/70 border-secondary rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/50 border border-none justify-start bg-[#000000ff] z-50 cursor-move" draggable="true">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl pt-8 px-6 md:px-12 flex flex-col items-center from-gray-900/70 to-black/70 border-secondary rounded-3xl shadow-2xl overflow-hidden relative group transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/50 border border-none justify-start bg-[#000000ff] z-50 cursor-move" draggable="true">
         <div className="absolute inset-0 bg-secondary opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none rounded-3xl"></div>
         <div className="relative z-10 w-full text-center">
           <SpinButton />
