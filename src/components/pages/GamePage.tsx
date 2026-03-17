@@ -9,6 +9,7 @@ import GameCharacterScreen from '@/components/game/GameCharacterScreen';
 import GameInventoryScreen from '@/components/game/GameInventoryScreen';
 import GameStatusScreen from '@/components/game/GameStatusScreen';
 import CinematicSignboard from '@/components/CinematicSignboard';
+import GameHUD from '@/components/GameHUD';
 
 export default function GamePage() {
 
@@ -40,7 +41,7 @@ const timer = setTimeout(() => {
 
   return (
 
-  <div className="w-screen h-[calc(100vh-80px)] bg-black overflow-hidden">
+  <div className="w-screen h-[calc(100vh-80px)] bg-black overflow-hidden relative">
 
     {currentScreen === 'map' && <GameMapScreen />}
 
@@ -51,6 +52,8 @@ const timer = setTimeout(() => {
           {currentScreen === 'inventory' && <GameInventoryScreen />}
 
             {currentScreen === 'status' && <GameStatusScreen />}
+
+            <GameHUD />
 
             </div>
 
