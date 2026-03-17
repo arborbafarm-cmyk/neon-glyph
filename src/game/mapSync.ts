@@ -1,7 +1,7 @@
 import { syncPlayers } from "./playerSync";
 
-export function startMapSync() {
-  setInterval(() => {
+export function startMapSync(){
+  setInterval(()=>{
     syncPlayers();
-  }, 3000);
+  },3000);
 }
