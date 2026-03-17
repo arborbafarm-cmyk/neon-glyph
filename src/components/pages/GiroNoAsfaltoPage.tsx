@@ -33,8 +33,6 @@ export default function GiroNoAsfaltoPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0d14] flex flex-col relative">
-
-
       {/* Edit Title Modal */}
       {editingId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[101] backdrop-blur-sm">
@@ -64,7 +62,6 @@ export default function GiroNoAsfaltoPage() {
           </div>
         </div>
       )}
-
       {/* Draggable Containers */}
       <div className="relative w-full flex-1">
         {containers.find(c => c.id === 'header')?.isVisible && (
@@ -112,24 +109,12 @@ export default function GiroNoAsfaltoPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                   {/* Image 1 */}
                   <div className="flex justify-center">
-                    <Image
-                      src="https://static.wixstatic.com/media/50f4bf_39c163c41c504c6a8903be986987ed35~mv2.png?originWidth=256&originHeight=256"
-                      alt="Gallery Image 1"
-                      width={300}
-                      height={300}
-                      className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 object-cover w-full h-auto"
-                    />
+
                   </div>
 
                   {/* Image 2 */}
                   <div className="flex justify-center">
-                    <Image
-                      src="https://static.wixstatic.com/media/50f4bf_1b05ee749d0045a1b12419907452332a~mv2.png?originWidth=256&originHeight=256"
-                      alt="Gallery Image 2"
-                      width={300}
-                      height={300}
-                      className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 object-cover w-full h-auto"
-                    />
+
                   </div>
 
                   {/* Image 3 */}
