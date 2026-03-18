@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import InteractiveTileGrid from '@/components/game/InteractiveTileGrid';
@@ -168,10 +167,8 @@ export default function StarMapPage() {
         <Header />
 
         {/* Interactive Tile Grid Section */}
-        <div className="flex-1 flex items-center justify-center px-4 py-12 md:py-0 w-full">
-          <div className="w-full h-full min-h-[600px] md:min-h-[800px]">
-            <InteractiveTileGrid gridSize={28} tileSize={1} />
-          </div>
+        <div className="flex-1 w-full">
+          <InteractiveTileGrid gridSize={28} tileSize={1} />
         </div>
 
         <Footer />
