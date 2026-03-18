@@ -42,8 +42,8 @@ const GRID_HEIGHT = 25;
 const TILE_SIZE = 1;
 const TILES_PER_BARRACO = 4;
 
-// QG do Complexo - Central area (8x8 tiles in the center)
-const QG_SIZE = 8;
+// QG do Complexo - Central area (4x4 tiles in the center)
+const QG_SIZE = 4;
 const QG_START_X = (GRID_SIZE - QG_SIZE) / 2;
 const QG_START_Z = (GRID_HEIGHT - QG_SIZE) / 2;
 
