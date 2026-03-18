@@ -451,18 +451,16 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     controls.update();
     controlsRef.current = controls;
     
-    // ===== CUSTOM CAMERA LOCK (Y-axis enforcement) =====
-    // Store the initial camera Y position and enforce it every frame
-    const initialCameraY = camera.position.y;
-    const originalUpdate = controls.update.bind(controls);
+    // ===== FIXED TARGET - PREVENT GRID MOVEMENT =====
+    // Store the fixed target position
+    const fixedTarget = new THREE.Vector3(platformCenterX, platformCenterY, platformCenterZ);
     
-    // Override the update method to lock Y-axis after each update
+    // Override the update method to keep target fixed and only move camera
+    const originalUpdate = controls.update.bind(controls);
     controls.update = function() {
       originalUpdate();
-      // Lock camera Y position to prevent vertical movement
-      camera.position.y = initialCameraY;
-      // Ensure target Y remains at ground level
-      this.target.y = platformCenterY;
+      // Force target to remain at fixed position - this keeps grid static
+      this.target.copy(fixedTarget);
     };
 
     // ===== MOUSE INTERACTION FOR TILE SELECTION =====
