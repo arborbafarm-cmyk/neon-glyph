@@ -64,6 +64,15 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     isClickable: false,
   });
   const luxuryStoreGroupRef = useRef<THREE.Group | null>(null);
+  const qgRef = useRef<QGData>({
+    position: { x: 0, z: 0 },
+    gridX: 0,
+    gridZ: 0,
+    size: 4,
+    model: null,
+    isClickable: false,
+  });
+  const qgGroupRef = useRef<THREE.Group | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
