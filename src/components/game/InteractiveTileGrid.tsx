@@ -166,50 +166,21 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     const gridLines = new THREE.LineSegments(gridLinesGeometry, gridLinesMaterial);
     scene.add(gridLines);
 
-    // ===== LOAD QG 3D MODEL (4x4 GRID AREA) =====
+    // ===== LOAD OPTIONAL 3D MODEL =====
     const gltfLoader = new GLTFLoader();
-    
-    // Calculate 4x4 grid area dimensions (16 grids total)
-    const qgGridSize = 4; // 4x4 grids
-    const qgAreaWidth = qgGridSize * tileSize;
-    const qgAreaHeight = qgGridSize * tileSize;
-    
-    // Position QG in center of the grid
-    const qgCenterX = gridTotalWidth / 2;
-    const qgCenterZ = gridTotalHeight / 2;
-    
     gltfLoader.load(
-      'https://static.wixstatic.com/3d/50f4bf_938928189a844f56ac340bada0b551bd.glb',
+      'https://static.wixstatic.com/3d/50f4bf_d6b5b42919df42f5a18545627953b239.glb',
       (gltf) => {
         const model = gltf.scene;
-        
-        // Calculate bounding box to determine model dimensions
-        const box = new THREE.Box3().setFromObject(model);
-        const modelSize = box.getSize(new THREE.Vector3());
-        const maxModelDim = Math.max(modelSize.x, modelSize.y, modelSize.z);
-        
-        // Scale model to fit within 4x4 grid area
-        const targetSize = Math.min(qgAreaWidth, qgAreaHeight) * 0.9;
-        const scale = targetSize / maxModelDim;
-        
-        model.scale.set(scale, scale, scale);
-        model.position.set(qgCenterX, 0, qgCenterZ);
+        model.scale.set(2, 2, 2);
+        model.position.set(gridTotalWidth / 2, 0, gridTotalHeight / 2);
         model.castShadow = true;
         model.receiveShadow = true;
-        
-        // Recursively set shadow properties for all children
-        model.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
-        
         scene.add(model);
       },
       undefined,
       (error) => {
-        console.warn('Failed to load QG 3D model:', error);
+        console.warn('Failed to load 3D model:', error);
       }
     );
 
