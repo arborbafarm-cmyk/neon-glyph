@@ -198,22 +198,22 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     // ===== LOAD LUXURY STORE 3D MODEL =====
     const gltfLoader = new GLTFLoader();
     
-    // Calculate CENTERED position for 4x4 luxury store (16 tiles)
+    // Calculate position for 4x4 luxury store (16 tiles) - REPOSITIONED to upper-left area
     const storeSize = 4; // 4x4 tiles
     
-    // Center the store on the platform
-    // Platform spans from startX to startX + gridTotalWidth
-    // Center is at startX + gridTotalWidth / 2
-    const platformCenterWorldX = startX + gridTotalWidth / 2;
-    const platformCenterWorldZ = startZ + gridTotalHeight / 2;
+    // Position the store in the upper-left quadrant (leaving center for another building)
+    // Grid is 40x20, so we place it at approximately grid position (6, 3)
+    const storeGridX = 6;
+    const storeGridZ = 3;
     
-    // For a 4x4 store, the center position should be at platform center
-    const storeWorldX = platformCenterWorldX;
-    const storeWorldZ = platformCenterWorldZ;
+    // Convert grid coordinates to world coordinates
+    // Grid position (6, 3) means starting at tile 6,3
+    // Center of a 4x4 store at grid position (6,3) is at (6+2, 3+2) = (8, 5)
+    const storeCenterGridX = storeGridX + storeSize / 2;
+    const storeCenterGridZ = storeGridZ + storeSize / 2;
     
-    // Calculate grid coordinates from world coordinates
-    const storeGridX = Math.round((storeWorldX - startX) / tileSize) - storeSize / 2;
-    const storeGridZ = Math.round((storeWorldZ - startZ) / tileSize) - storeSize / 2;
+    const storeWorldX = startX + storeCenterGridX * tileSize;
+    const storeWorldZ = startZ + storeCenterGridZ * tileSize;
     
     luxuryStoreRef.current = {
       position: { x: storeWorldX, z: storeWorldZ },
@@ -223,6 +223,15 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       model: null,
       isClickable: true,
     };
+    
+    // Debug: Log the store position
+    console.log('Luxury Store Position:', {
+      gridX: storeGridX,
+      gridZ: storeGridZ,
+      worldX: storeWorldX,
+      worldZ: storeWorldZ,
+      gridSize: storeSize,
+    });
     
     gltfLoader.load(
       'https://static.wixstatic.com/3d/50f4bf_55eda8581fc04c02a39a33c94b588afc.glb',
