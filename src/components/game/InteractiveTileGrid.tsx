@@ -169,8 +169,13 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     // ===== LOAD QG 3D MODEL =====
     // Position QG in the center 4x4 grid (16 tiles total)
     const qgGridSize = 4; // 4x4 grid
-    const qgCenterX = gridTotalWidth / 2;
-    const qgCenterZ = gridTotalHeight / 2;
+    const qgAreaSize = qgGridSize * tileSize; // Size of 4x4 area in world units
+    
+    // Calculate center position of the 4x4 area within the grid
+    // Grid goes from startX to startX + gridTotalWidth
+    // Center of 4x4 area = center of entire grid
+    const qgCenterX = 0; // Center of grid (since grid is centered at origin)
+    const qgCenterZ = 0; // Center of grid (since grid is centered at origin)
     
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
@@ -178,15 +183,12 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       (gltf) => {
         const model = gltf.scene;
         
-        // Calculate scale to fit within 4x4 grid area
-        // 4x4 grid = 4 tiles width/height
-        const qgAreaSize = qgGridSize * tileSize;
-        
-        // Scale model to fit nicely within the 4x4 area
-        const scale = (qgAreaSize * 0.8) / 2; // 80% of available space
+        // Scale model to fit within 4x4 grid area (4 units x 4 units)
+        // Use 80% of available space to leave some padding
+        const scale = (qgAreaSize * 0.8) / 2;
         model.scale.set(scale, scale, scale);
         
-        // Position at center of grid
+        // Position exactly at center of the 4x4 area
         model.position.set(qgCenterX, 0, qgCenterZ);
         model.castShadow = true;
         model.receiveShadow = true;
