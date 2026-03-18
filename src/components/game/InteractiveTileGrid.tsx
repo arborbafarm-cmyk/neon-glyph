@@ -37,14 +37,16 @@ interface InteractiveTileGridProps {
   tileSize?: number;
 }
 
-const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
-  onTileSelect,
-  onLuxuryStoreClick,
-  onQGClick,
-  gridWidth = 40,
-  gridHeight = 20,
-  tileSize = 1,
-}) => {
+const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
+  {
+    onTileSelect,
+    onLuxuryStoreClick,
+    onQGClick,
+    gridWidth = 40,
+    gridHeight = 20,
+    tileSize = 1,
+  }
+) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -87,7 +89,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     const width = containerRef.current.clientWidth;
     const height = containerRef.current.clientHeight;
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
-    
+
     // Position camera to view the entire grid
     const gridTotalWidth = gridWidth * tileSize;
     const gridTotalHeight = gridHeight * tileSize;
@@ -132,30 +134,30 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d')!;
-    
+
     // Base color: grayish-brown (#6b5e4a)
     const baseColor = '#6b5e4a';
     ctx.fillStyle = baseColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     // Add subtle color variations to avoid repetition
     for (let i = 0; i < 200; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
       const size = Math.random() * 40 + 10;
       const variation = Math.random() * 0.15 - 0.075; // ±7.5% variation
-      
+
       // Create subtle patches of slightly different colors
       ctx.fillStyle = `rgba(107, 94, 74, ${0.3 + variation})`;
       ctx.fillRect(x, y, size, size);
     }
-    
+
     // Add sparse dry grass/vegetation (very light, sparse)
     for (let i = 0; i < 80; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
       const grassLength = Math.random() * 8 + 3;
-      
+
       // Dry grass color - muted brownish-green
       ctx.strokeStyle = `rgba(100, 95, 70, ${0.4 + Math.random() * 0.3})`;
       ctx.lineWidth = 1;
@@ -164,61 +166,61 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       ctx.lineTo(x + (Math.random() - 0.5) * 4, y - grassLength);
       ctx.stroke();
     }
-    
+
     // Add small stones/pebbles scattered across
     for (let i = 0; i < 120; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
       const stoneSize = Math.random() * 6 + 2;
-      
+
       // Stone colors - gray with slight variation
       const stoneShade = Math.floor(Math.random() * 30 + 80);
       ctx.fillStyle = `rgba(${stoneShade}, ${stoneShade - 5}, ${stoneShade - 10}, ${0.6 + Math.random() * 0.3})`;
       ctx.beginPath();
       ctx.arc(x, y, stoneSize, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Add subtle shadow to stones
       ctx.strokeStyle = `rgba(40, 40, 40, 0.3)`;
       ctx.lineWidth = 0.5;
       ctx.stroke();
     }
-    
+
     // Add wear marks and natural depressions
     for (let i = 0; i < 50; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
       const width = Math.random() * 30 + 15;
       const height = Math.random() * 8 + 3;
-      
+
       ctx.fillStyle = `rgba(60, 55, 45, ${0.2 + Math.random() * 0.2})`;
       ctx.fillRect(x, y, width, height);
     }
-    
+
     const groundTexture = new THREE.CanvasTexture(canvas);
     groundTexture.magFilter = THREE.LinearFilter;
     groundTexture.minFilter = THREE.LinearMipmapLinearFilter;
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
     groundTexture.repeat.set(4, 4); // Repeat pattern to avoid obvious tiling
-    
+
     // ===== CREATE NORMAL MAP FOR DEPTH =====
     // Create a simple normal map to simulate surface irregularity
     const normalCanvas = document.createElement('canvas');
     normalCanvas.width = 256;
     normalCanvas.height = 256;
     const normalCtx = normalCanvas.getContext('2d')!;
-    
+
     // Base normal color (neutral blue - 0.5, 0.5, 1.0 in normalized space)
     normalCtx.fillStyle = '#8080ff';
     normalCtx.fillRect(0, 0, normalCanvas.width, normalCanvas.height);
-    
+
     // Add subtle bumps and depressions
     for (let i = 0; i < 150; i++) {
       const x = Math.random() * normalCanvas.width;
       const y = Math.random() * normalCanvas.height;
       const size = Math.random() * 20 + 5;
-      
+
       // Create subtle normal variations
       const gradient = normalCtx.createRadialGradient(x, y, 0, x, y, size);
       gradient.addColorStop(0, '#9090ff');
@@ -228,18 +230,18 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       normalCtx.arc(x, y, size, 0, Math.PI * 2);
       normalCtx.fill();
     }
-    
+
     const normalMap = new THREE.CanvasTexture(normalCanvas);
     normalMap.wrapS = THREE.RepeatWrapping;
     normalMap.wrapT = THREE.RepeatWrapping;
     normalMap.repeat.set(4, 4);
-    
+
     // ===== CREATE TILE GRID (40x20 = 800 tiles) =====
     const totalTiles = gridWidth * gridHeight;
-    
+
     // Create 3D box geometry for tiles
     const geometry = new THREE.BoxGeometry(tileSize * 0.9, tileSize * 0.05, tileSize * 0.9);
-    
+
     // Base material - realistic beaten earth with texture
     const baseMaterial = new THREE.MeshStandardMaterial({
       map: groundTexture,
@@ -331,24 +333,24 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
 
     // ===== LOAD LUXURY STORE 3D MODEL =====
     const gltfLoader = new GLTFLoader();
-    
+
     // Calculate position for 4x4 luxury store (16 tiles) - REPOSITIONED to upper-left area
     const storeSize = 4; // 4x4 tiles
-    
+
     // Position the store in the upper-left quadrant (leaving center for another building)
     // Grid is 40x20, so we place it at approximately grid position (6, 3)
     const storeGridX = 6;
     const storeGridZ = 3;
-    
+
     // Convert grid coordinates to world coordinates
     // Grid position (6, 3) means starting at tile 6,3
     // Center of a 4x4 store at grid position (6,3) is at (6+2, 3+2) = (8, 5)
     const storeCenterGridX = storeGridX + storeSize / 2;
     const storeCenterGridZ = storeGridZ + storeSize / 2;
-    
+
     const storeWorldX = startX + storeCenterGridX * tileSize;
     const storeWorldZ = startZ + storeCenterGridZ * tileSize;
-    
+
     luxuryStoreRef.current = {
       position: { x: storeWorldX, z: storeWorldZ },
       gridX: storeGridX,
@@ -357,7 +359,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       model: null,
       isClickable: true,
     };
-    
+
     // Debug: Log the store position
     console.log('Luxury Store Position:', {
       gridX: storeGridX,
@@ -366,39 +368,39 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       worldZ: storeWorldZ,
       gridSize: storeSize,
     });
-    
+
     gltfLoader.load(
       'https://static.wixstatic.com/3d/50f4bf_55eda8581fc04c02a39a33c94b588afc.glb',
       (gltf) => {
         const model = gltf.scene;
-        
+
         // Create a group for the luxury store
         const storeGroup = new THREE.Group();
-        
+
         // Position at center of platform
         storeGroup.position.set(storeWorldX, 0, storeWorldZ);
-        
+
         // Calculate bounding box to determine proper scale
         const bbox = new THREE.Box3().setFromObject(model);
         const size = bbox.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
-        
+
         // Scale to fit exactly 4x4 tiles (4 units in world space)
         const targetSize = storeSize * tileSize; // 4 units
         const scale = targetSize / maxDim;
         model.scale.set(scale, scale, scale);
-        
+
         // Center the model within the group
         bbox.setFromObject(model);
         const center = bbox.getCenter(new THREE.Vector3());
         model.position.sub(center);
-        
+
         // Ensure model sits on the ground (y = 0)
         // Get the bottom of the model
         bbox.setFromObject(model);
         const bottomY = bbox.min.y;
         model.position.y -= bottomY; // Lift model so bottom is at y = 0
-        
+
         // Apply shadow properties recursively to all children
         model.traverse((child) => {
           if (child instanceof THREE.Mesh) {
@@ -414,10 +416,10 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
             }
           }
         });
-        
+
         storeGroup.add(model);
         scene.add(storeGroup);
-        
+
         luxuryStoreRef.current.model = storeGroup;
         luxuryStoreGroupRef.current = storeGroup;
       },
@@ -432,14 +434,14 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     const qgSize = 4; // 4x4 tiles
     const qgGridX = (gridWidth / 2) - (qgSize / 2); // Center horizontally
     const qgGridZ = (gridHeight / 2) - (qgSize / 2); // Center vertically
-    
+
     // Convert grid coordinates to world coordinates
     const qgCenterGridX = qgGridX + qgSize / 2;
     const qgCenterGridZ = qgGridZ + qgSize / 2;
-    
+
     const qgWorldX = startX + qgCenterGridX * tileSize;
     const qgWorldZ = startZ + qgCenterGridZ * tileSize;
-    
+
     qgRef.current = {
       position: { x: qgWorldX, z: qgWorldZ },
       gridX: qgGridX,
@@ -448,7 +450,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       model: null,
       isClickable: true,
     };
-    
+
     // Debug: Log the QG position
     console.log('QG Position:', {
       gridX: qgGridX,
@@ -457,39 +459,39 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       worldZ: qgWorldZ,
       gridSize: qgSize,
     });
-    
+
     gltfLoader.load(
       'https://static.wixstatic.com/3d/50f4bf_938928189a844f56ac340bada0b551bd.glb',
       (gltf) => {
         const model = gltf.scene;
-        
+
         // Create a group for the QG
         const qgGroup = new THREE.Group();
-        
+
         // Position at center of platform
         qgGroup.position.set(qgWorldX, 0, qgWorldZ);
-        
+
         // Calculate bounding box to determine proper scale
         const bbox = new THREE.Box3().setFromObject(model);
         const size = bbox.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
-        
+
         // Scale to fit exactly 4x4 tiles (4 units in world space)
         const targetSize = qgSize * tileSize; // 4 units
         const scale = targetSize / maxDim;
         model.scale.set(scale, scale, scale);
-        
+
         // Center the model within the group
         bbox.setFromObject(model);
         const center = bbox.getCenter(new THREE.Vector3());
         model.position.sub(center);
-        
+
         // Ensure model sits on the ground (y = 0)
         // Get the bottom of the model
         bbox.setFromObject(model);
         const bottomY = bbox.min.y;
         model.position.y -= bottomY; // Lift model so bottom is at y = 0
-        
+
         // Apply shadow properties recursively to all children
         model.traverse((child) => {
           if (child instanceof THREE.Mesh) {
@@ -505,10 +507,10 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
             }
           }
         });
-        
+
         qgGroup.add(model);
         scene.add(qgGroup);
-        
+
         qgRef.current.model = qgGroup;
         qgGroupRef.current = qgGroup;
       },
@@ -520,61 +522,98 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
 
     // ===== ORBIT CONTROLS WITH CUSTOM CONFIGURATION =====
     const controls = new OrbitControls(camera, renderer.domElement);
-    
+
     // ===== CAMERA TARGET (Fixed at platform center) =====
     const platformCenterX = gridTotalWidth / 2;
     const platformCenterY = 0; // Ground level - FIXED, cannot change
     const platformCenterZ = gridTotalHeight / 2;
     controls.target.set(platformCenterX, platformCenterY, platformCenterZ);
-    
+
     // ===== DAMPING CONFIGURATION (Smooth Movement) =====
     controls.enableDamping = true;
     controls.dampingFactor = 0.08; // Smooth deceleration
     controls.autoRotate = false;
     controls.autoRotateSpeed = 0;
-    
+
     // ===== ZOOM CONFIGURATION =====
     controls.enableZoom = true;
     controls.zoomSpeed = 1.2; // Sensitivity for scroll/pinch
     controls.minDistance = maxDim * 0.4; // Zoom in limit (close to platform)
     controls.maxDistance = maxDim * 2.5; // Zoom out limit (overview)
-    
+
     // ===== PAN CONFIGURATION =====
     controls.enablePan = false; // Disable panning to keep focus on center
-    
+
     // ===== ROTATION CONFIGURATION =====
     controls.enableRotate = true;
     controls.rotateSpeed = 0.8; // Rotation sensitivity
-    
+
     // ===== VERTICAL ANGLE LOCK (Polar Angle: 30° to 75°) =====
     // Convert degrees to radians
     // 30° = Math.PI / 6 ≈ 0.524 rad
     // 75° = Math.PI * 0.417 ≈ 1.309 rad
     controls.minPolarAngle = Math.PI / 6; // 30° - slight incline
     controls.maxPolarAngle = (Math.PI * 5) / 12; // 75° - tilted view
-    
+
     // ===== AZIMUTH LOCK (Horizontal rotation only) =====
     // Allow free rotation around Y-axis (no restrictions)
     controls.minAzimuthAngle = -Infinity;
     controls.maxAzimuthAngle = Infinity;
-    
+
     // ===== TOUCH SUPPORT =====
     controls.touchDollyRotate = true; // Enable pinch-to-zoom on mobile
     controls.touchDollySpeed = 8; // Pinch zoom sensitivity
-    
+
     controls.update();
     controlsRef.current = controls;
-    
-    // ===== FIXED TARGET - PREVENT GRID MOVEMENT =====
+
+    // ===== ABSOLUTE GRID LOCK - PREVENT ANY MOVEMENT =====
     // Store the fixed target position
     const fixedTarget = new THREE.Vector3(platformCenterX, platformCenterY, platformCenterZ);
-    
-    // Override the update method to keep target fixed and only move camera
+
+    // Override the update method to enforce absolute grid immobility
     const originalUpdate = controls.update.bind(controls);
     controls.update = function() {
       originalUpdate();
-      // Force target to remain at fixed position - this keeps grid static
+
+      // RULE 1: Force target to remain at fixed position (0, 0, 0) relative to grid center
       this.target.copy(fixedTarget);
+
+      // RULE 2: Lock all grid objects to prevent any transformation
+      // Grid position: LOCKED at (0, 0, 0)
+      if (instancedMesh) {
+        instancedMesh.position.set(0, 0, 0);
+        instancedMesh.rotation.set(0, 0, 0);
+        instancedMesh.scale.set(1, 1, 1);
+      }
+
+      // Lock ground plane
+      if (ground) {
+        ground.position.set(0, -0.05, 0);
+        ground.rotation.set(-Math.PI / 2, 0, 0);
+        ground.scale.set(1, 1, 1);
+      }
+
+      // Lock grid lines
+      if (gridLines) {
+        gridLines.position.set(0, 0, 0);
+        gridLines.rotation.set(0, 0, 0);
+        gridLines.scale.set(1, 1, 1);
+      }
+
+      // Lock luxury store group
+      if (luxuryStoreGroupRef.current) {
+        luxuryStoreGroupRef.current.position.set(storeWorldX, 0, storeWorldZ);
+        luxuryStoreGroupRef.current.rotation.set(0, 0, 0);
+        luxuryStoreGroupRef.current.scale.set(1, 1, 1);
+      }
+
+      // Lock QG group
+      if (qgGroupRef.current) {
+        qgGroupRef.current.position.set(qgWorldX, 0, qgWorldZ);
+        qgGroupRef.current.rotation.set(0, 0, 0);
+        qgGroupRef.current.scale.set(1, 1, 1);
+      }
     };
 
     // ===== MOUSE INTERACTION FOR TILE SELECTION =====
@@ -663,11 +702,11 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
       window.removeEventListener('resize', onWindowResize);
       renderer.domElement.removeEventListener('mousemove', onMouseMove);
       renderer.domElement.removeEventListener('click', onMouseClick);
-      
+
       if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
         containerRef.current.removeChild(renderer.domElement);
       }
-      
+
       geometry.dispose();
       baseMaterial.dispose();
       groundGeometry.dispose();
