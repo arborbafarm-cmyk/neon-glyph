@@ -148,7 +148,7 @@ export default function CityMap() {
 
         // Open luxury shop if tile is occupied
         if (tileData.occupied) {
-          navigate('/luxury-showroom');
+          navigate('/luxuryshowroom');
         }
       }
     };
