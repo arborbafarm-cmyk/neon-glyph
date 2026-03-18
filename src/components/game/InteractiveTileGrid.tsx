@@ -407,6 +407,12 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     // ===== ORBIT CONTROLS WITH CUSTOM CONFIGURATION =====
     const controls = new OrbitControls(camera, renderer.domElement);
     
+    // ===== CAMERA TARGET (Fixed at platform center) =====
+    const platformCenterX = gridTotalWidth / 2;
+    const platformCenterY = 0; // Ground level - FIXED, cannot change
+    const platformCenterZ = gridTotalHeight / 2;
+    controls.target.set(platformCenterX, platformCenterY, platformCenterZ);
+    
     // ===== DAMPING CONFIGURATION (Smooth Movement) =====
     controls.enableDamping = true;
     controls.dampingFactor = 0.08; // Smooth deceleration
@@ -426,23 +432,17 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     controls.enableRotate = true;
     controls.rotateSpeed = 0.8; // Rotation sensitivity
     
-    // ===== CAMERA TARGET (Fixed at platform center) =====
-    const platformCenterX = gridTotalWidth / 2;
-    const platformCenterY = 0; // Ground level - FIXED, cannot change
-    const platformCenterZ = gridTotalHeight / 2;
-    controls.target.set(platformCenterX, platformCenterY, platformCenterZ);
+    // ===== VERTICAL ANGLE LOCK (Polar Angle: 30° to 75°) =====
+    // Convert degrees to radians
+    // 30° = Math.PI / 6 ≈ 0.524 rad
+    // 75° = Math.PI * 0.417 ≈ 1.309 rad
+    controls.minPolarAngle = Math.PI / 6; // 30° - slight incline
+    controls.maxPolarAngle = (Math.PI * 5) / 12; // 75° - tilted view
     
-    // ===== VERTICAL AXIS LOCK (Y-axis completely blocked) =====
-    // Block all vertical movement by restricting polar angle to a very narrow range
-    // This prevents the camera from moving up or down while still allowing horizontal rotation
-    const fixedPolarAngle = Math.PI * 0.5; // 90 degrees - camera at same height as target
-    controls.minPolarAngle = fixedPolarAngle - 0.01; // ~89.4 degrees
-    controls.maxPolarAngle = fixedPolarAngle + 0.01; // ~90.6 degrees
-    
-    // ===== HORIZONTAL ROTATION (Y-axis only) =====
-    // Allow free rotation around the vertical axis (azimuth)
-    // No restrictions on azimuth angle
-    controls.autoRotateSpeed = 0;
+    // ===== AZIMUTH LOCK (Horizontal rotation only) =====
+    // Allow free rotation around Y-axis (no restrictions)
+    controls.minAzimuthAngle = -Infinity;
+    controls.maxAzimuthAngle = Infinity;
     
     // ===== TOUCH SUPPORT =====
     controls.touchDollyRotate = true; // Enable pinch-to-zoom on mobile
@@ -451,7 +451,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     controls.update();
     controlsRef.current = controls;
     
-    // ===== CUSTOM CAMERA POSITION LOCK =====
+    // ===== CUSTOM CAMERA LOCK (Y-axis enforcement) =====
     // Store the initial camera Y position and enforce it every frame
     const initialCameraY = camera.position.y;
     const originalUpdate = controls.update.bind(controls);
