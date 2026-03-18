@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { useNavigate } from 'react-router-dom';
 import { useLuxuryShopStore } from '@/store/luxuryShopStore';
 
 interface Tile {
@@ -149,7 +150,7 @@ export default function CityMap() {
 
         // Open luxury shop if tile is occupied
         if (tileData.occupied) {
-          openShop();
+          navigate('/luxury-showroom');
         }
       }
     };

@@ -3,10 +3,17 @@ import { useLuxuryShopStore, luxuryItems } from '@/store/luxuryShopStore';
 import { useGameStore } from '@/store/gameStore';
 import { X, ShoppingBag, Check } from 'lucide-react';
 import { Image } from '@/components/ui/image';
+import { useNavigate } from 'react-router-dom';
 
 export default function LuxuryShop() {
+  const navigate = useNavigate();
   const { isOpen, closeShop, selectedItem, selectItem, purchaseItem, isPurchased } = useLuxuryShopStore();
   const { dirtMoney, playerLevel, setDirtMoney } = useGameStore();
+
+  const handleClose = () => {
+    closeShop();
+    navigate('/luxury-showroom');
+  };
 
   const handlePurchase = (item: typeof luxuryItems[0]) => {
     if (dirtMoney >= item.price && playerLevel >= item.level) {
@@ -28,7 +35,7 @@ export default function LuxuryShop() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={closeShop}
+            onClick={handleClose}
             className="fixed inset-0 bg-black/80 z-40"
           />
 
@@ -47,7 +54,7 @@ export default function LuxuryShop() {
                   <h2 className="font-heading text-2xl text-amber-100">Loja de Luxo</h2>
                 </div>
                 <button
-                  onClick={closeShop}
+                  onClick={handleClose}
                   className="p-2 hover:bg-amber-700 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-amber-100" />
