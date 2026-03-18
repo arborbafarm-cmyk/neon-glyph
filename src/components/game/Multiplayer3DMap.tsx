@@ -444,16 +444,29 @@ export default function Multiplayer3DMap() {
       color,
     };
 
-    // Base
+    // PLATFORM BASE - 4x4 tiles (16 tiles total) - RIGID SURFACE
+    const platformGeometry = new THREE.BoxGeometry(4, 0.4, 4);
+    const platformMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x555555,
+      roughness: 0.6,
+      metalness: 0.3,
+    });
+    const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+    platform.position.y = 0.2; // Sits on ground (y=0)
+    platform.castShadow = true;
+    platform.receiveShadow = true;
+    group.add(platform);
+
+    // Base (sits ON the platform)
     const baseGeometry = new THREE.BoxGeometry(2.5, 0.3, 2.5);
     const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
     const base = new THREE.Mesh(baseGeometry, baseMaterial);
-    base.position.y = 0.15;
+    base.position.y = 0.55; // 0.2 (platform center) + 0.2 (platform half-height) + 0.15 (base half-height)
     base.castShadow = true;
     base.receiveShadow = true;
     group.add(base);
 
-    // Main structure
+    // Main structure (sits ON the base)
     const structureGeometry = new THREE.BoxGeometry(2.5, 2.5, 2.5);
     const structureMaterial = new THREE.MeshStandardMaterial({
       color,
@@ -461,7 +474,7 @@ export default function Multiplayer3DMap() {
       emissiveIntensity: 0.3,
     });
     const structure = new THREE.Mesh(structureGeometry, structureMaterial);
-    structure.position.y = 1.5;
+    structure.position.y = 2.05; // 0.55 + 0.3 (base half-height) + 1.2 (structure half-height)
     structure.castShadow = true;
     structure.receiveShadow = true;
     group.add(structure);
@@ -470,7 +483,7 @@ export default function Multiplayer3DMap() {
     const roofGeometry = new THREE.ConeGeometry(1.8, 1.2, 4);
     const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xd2691e });
     const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-    roof.position.y = 3.2;
+    roof.position.y = 3.7; // 2.05 + 1.25 (structure half-height) + 0.6 (roof half-height)
     roof.rotation.y = Math.PI / 4;
     roof.castShadow = true;
     roof.receiveShadow = true;
@@ -480,7 +493,7 @@ export default function Multiplayer3DMap() {
     const doorGeometry = new THREE.BoxGeometry(0.8, 1.5, 0.1);
     const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
     const door = new THREE.Mesh(doorGeometry, doorMaterial);
-    door.position.set(0, 1.2, 1.3);
+    door.position.set(0, 2.05 + 0.7, 1.3); // Positioned on structure
     door.castShadow = true;
     group.add(door);
 
@@ -489,7 +502,7 @@ export default function Multiplayer3DMap() {
       const windowGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.05);
       const windowMaterial = new THREE.MeshStandardMaterial({ color: 0x87CEEB });
       const window = new THREE.Mesh(windowGeometry, windowMaterial);
-      window.position.set(-0.6 + i * 1.2, 2.2, 1.3);
+      window.position.set(-0.6 + i * 1.2, 2.05 + 1.2, 1.3); // Positioned on structure
       window.castShadow = true;
       group.add(window);
     }
