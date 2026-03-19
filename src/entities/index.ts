@@ -21,6 +21,31 @@ export interface Background {
 
 
 /**
+ * Collection ID: ThreeD
+ * Interface for _3D
+ */
+export interface _3D {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  modelName?: string;
+  /** @wixFieldType text */
+  modelDescription?: string;
+  /** @wixFieldType image - Contains image URL, render with <Image> component, NOT as text */
+  renderImage?: string;
+  /** @wixFieldType number */
+  polygonCount?: number;
+  /** @wixFieldType boolean */
+  isAnimated?: boolean;
+  /** @wixFieldType url */
+  sourceUrl?: string;
+  /** @wixFieldType media_gallery */
+  3D?: any;
+}
+
+
+/**
  * Collection ID: itensdeluxo
  * Interface for ItensdeLuxo
  */
