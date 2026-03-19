@@ -4,10 +4,10 @@ import Footer from '@/components/Footer';
 
 export default function LuxuryShowroomPage() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="w-full min-h-screen pt-[100px] pb-20 overflow-hidden">
-        {/* Full-screen background image */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Full-screen background image - fixed to fill remaining space */}
         <Image
           src="https://static.wixstatic.com/media/50f4bf_38c9f88d54654e38906e049af6a8b5a4~mv2.png"
           alt="Luxury Showroom Background"
@@ -20,6 +20,6 @@ export default function LuxuryShowroomPage() {
         <div className="absolute inset-0 bg-black/20" />
       </div>
       <Footer />
-    </>
+    </div>
   );
 }
