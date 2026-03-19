@@ -210,19 +210,7 @@ export default function LuxuryShop() {
                 </button>
               </div>
 
-              {/* Footer */}
-              <div className="bg-slate-800 border-t border-amber-600 px-6 py-4 flex justify-between items-center">
-                <div className="flex gap-6">
-                  <div>
-                    <p className="font-paragraph text-xs text-amber-200/70">Dinheiro Sujo</p>
-                    <p className="font-heading text-lg text-amber-300">${dirtMoney.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="font-paragraph text-xs text-cyan-300/70">Nível</p>
-                    <p className="font-heading text-lg text-cyan-400">{playerLevel}</p>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </motion.div>
         </>
