@@ -28,7 +28,7 @@ export default function LuxuryShowroomPage() {
                                     }, []);
 
                                       // ✅ LÓGICA AJUSTADA (base no nível do barraco)
-                                        const system = getLuxurySystem(barracoLevel || 1);
+                                        const system = getLuxurySystem(barracoLevel || 1
 
                                           const items = (system?.items || []).map((item, index) => ({
                                               id: index,
