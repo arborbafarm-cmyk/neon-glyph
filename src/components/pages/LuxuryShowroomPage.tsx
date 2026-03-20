@@ -7,6 +7,8 @@ import BlingModal from '@/components/BlingModal';
 import LuxuryNPCDialog from '@/components/LuxuryNPCDialog';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
+import { BaseCrudService } from '@/integrations';
+import { Players } from '@/entities';
 
 // sistema da loja
 import { getLuxurySystem } from '../../data/luxoItems';
@@ -16,12 +18,45 @@ export default function LuxuryShowroomPage() {
   const [showInitialDialog, setShowInitialDialog] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [purchaseMessage, setPurchaseMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // 🔥 STORE
   const barracoLevel = usePlayerStore((state) => state.barracoLevel);
   const playerLevel = usePlayerStore((state) => state.level);
   const cleanMoney = useCleanMoneyStore((state) => state.cleanMoney);
   const removeCleanMoney = useCleanMoneyStore((state) => state.removeCleanMoney);
+  const { setBarracoLevel } = usePlayerStore();
+
+  // 🔥 Carregar dados do jogador ao montar o componente
+  useEffect(() => {
+    const loadPlayerData = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        let playerId = urlParams.get('playerId') || localStorage.getItem('currentPlayerId');
+        
+        if (!playerId) {
+          const result = await BaseCrudService.getAll<Players>('players', [], { limit: 1 });
+          if (result.items && result.items.length > 0) {
+            playerId = result.items[0]._id;
+            localStorage.setItem('currentPlayerId', playerId);
+          }
+        }
+
+        if (playerId) {
+          const playerData = await BaseCrudService.getById<Players>('players', playerId);
+          if (playerData?.level) {
+            setBarracoLevel(playerData.level);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar dados do jogador:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPlayerData();
+  }, [setBarracoLevel]);
 
   // 🔥 garante que nunca quebra
   const level = barracoLevel ?? 1;
