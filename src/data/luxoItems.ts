@@ -44,7 +44,7 @@ const itemTypes = [
   },
   {
     name: "Óculos",
-    image: "https://static.wixstatic.com/media/50f4bf_226ad016652549d4a32bf5d065c22547~mv2.png"
+    image: "https://static.wixstatic.com/media/50f4bf_01707feefbb346e09308f3739d8586a8~mv2.png"
   },
 ];
 

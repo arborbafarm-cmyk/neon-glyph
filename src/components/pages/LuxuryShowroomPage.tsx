@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import BlingModal from '@/components/BlingModal';
 import LuxuryNPCDialog from '@/components/LuxuryNPCDialog';
 import { usePlayerStore } from '@/store/playerStore';
+import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 
 // sistema da loja
 import { getLuxurySystem } from '../../data/luxoItems';
@@ -14,10 +15,13 @@ export default function LuxuryShowroomPage() {
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [showInitialDialog, setShowInitialDialog] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
+  const [purchaseMessage, setPurchaseMessage] = useState('');
 
   // 🔥 STORE
   const barracoLevel = usePlayerStore((state) => state.barracoLevel);
   const playerLevel = usePlayerStore((state) => state.level);
+  const cleanMoney = useCleanMoneyStore((state) => state.cleanMoney);
+  const removeCleanMoney = useCleanMoneyStore((state) => state.removeCleanMoney);
 
   // 🔥 garante que nunca quebra
   const level = barracoLevel ?? 1;
@@ -41,6 +45,18 @@ export default function LuxuryShowroomPage() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // 🔥 função para comprar item
+  const handleBuyItem = (item: any) => {
+    if (cleanMoney >= item.price) {
+      removeCleanMoney(item.price);
+      setPurchaseMessage(`✅ ${item.name} comprado com sucesso!`);
+      setTimeout(() => setPurchaseMessage(''), 3000);
+    } else {
+      setPurchaseMessage(`❌ Dinheiro insuficiente! Faltam R$ ${(item.price - cleanMoney).toLocaleString('pt-BR')}`);
+      setTimeout(() => setPurchaseMessage(''), 3000);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -96,11 +112,24 @@ export default function LuxuryShowroomPage() {
           }}
           onCancel={() => setShowCollectionModal(false)}
           onHelp={() => alert('Coleção de luxo baseada no seu nível')}
-          title={`Coleção Nível ${level} 💎`}
+          title={`Coleção ${system.collectionName} 💎`}
         >
           <div className="text-center text-white/80 mb-6">
             <p>Itens liberados conforme seu nível de barraco</p>
+            <p className="text-yellow-400 font-bold mt-2">Saldo: R$ {cleanMoney.toLocaleString('pt-BR')}</p>
           </div>
+
+          {/* MENSAGEM DE COMPRA */}
+          {purchaseMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-4 p-3 bg-white/20 rounded-lg text-center text-white font-bold"
+            >
+              {purchaseMessage}
+            </motion.div>
+          )}
 
           {/* ITENS */}
           <div className="grid gap-6">
@@ -131,6 +160,21 @@ export default function LuxuryShowroomPage() {
                   <p className="text-yellow-400 font-heading text-xl">
                     R$ {item.price.toLocaleString('pt-BR')}
                   </p>
+                </div>
+
+                {/* BOTÃO DE COMPRA */}
+                <div className="flex items-center">
+                  <button
+                    onClick={() => handleBuyItem(item)}
+                    disabled={cleanMoney < item.price}
+                    className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                      cleanMoney >= item.price
+                        ? 'bg-yellow-400 text-black hover:bg-yellow-300 cursor-pointer'
+                        : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
+                    }`}
+                  >
+                    Comprar
+                  </button>
                 </div>
               </motion.div>
             ))}
