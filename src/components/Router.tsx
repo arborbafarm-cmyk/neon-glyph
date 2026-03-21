@@ -6,6 +6,7 @@ import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const HomePage = lazy(() => import('@/components/pages/HomePage'));
+const GamePage2 = lazy(() => import('@/components/pages/GamePage2'));
 const GiroNoAsfaltoPage = lazy(() => import('@/components/pages/GiroNoAsfaltoPage'));
 const LuxuryShowroomPage = lazy(() => import('@/components/pages/LuxuryShowroomPage'));
 const BarracoPage = lazy(() => import('@/components/pages/BarracoPage'));
@@ -46,6 +47,13 @@ const router = createBrowserRouter([
         element: <HomePage />,
         routeMetadata: {
           pageIdentifier: 'home',
+        },
+      },
+      {
+        path: "game2",
+        element: <GamePage2 />,
+        routeMetadata: {
+          pageIdentifier: 'game2',
         },
       },
       {

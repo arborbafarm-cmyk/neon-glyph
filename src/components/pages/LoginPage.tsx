@@ -14,11 +14,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && member) {
-      // Redirect to game map after successful login
-      setCurrentScreen('map');
-      navigate('/game');
+      // Redirect to star map after successful login
+      navigate('/star-map');
     }
-  }, [isAuthenticated, member, navigate, setCurrentScreen]);
+  }, [isAuthenticated, member, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
