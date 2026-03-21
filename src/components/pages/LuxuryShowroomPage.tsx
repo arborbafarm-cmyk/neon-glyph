@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BlingModal from '@/components/BlingModal';
 import LuxuryNPCDialog from '@/components/LuxuryNPCDialog';
+import Luxury3DShowroom from '@/components/Luxury3DShowroom';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 import { BaseCrudService } from '@/integrations';
@@ -99,11 +100,16 @@ export default function LuxuryShowroomPage() {
 
       <div className="flex-1 relative w-full overflow-hidden bg-black">
 
+        {/* 3D SHOWROOM */}
+        <div className="absolute inset-0 w-full h-full">
+          <Luxury3DShowroom />
+        </div>
+
         {/* BACKGROUND */}
         <Image
           src="https://static.wixstatic.com/media/50f4bf_e591cecf171a471cbfa4c0d91653f072~mv2.png"
           alt="Luxury Showroom Background"
-          className="absolute w-full h-full object-cover"
+          className="absolute w-full h-full object-cover opacity-30"
           width={1920}
           height={1080}
         />
@@ -113,108 +119,112 @@ export default function LuxuryShowroomPage() {
           src="https://static.wixstatic.com/media/50f4bf_8dc3c6fde14f4e06b7937591bf2c203d~mv2.png"
           alt="NPC"
           onClick={() => setShowItemsModal(true)}
-          className="absolute right-10 bottom-0 h-[80%] cursor-pointer transition-transform hover:scale-105"
+          className="absolute right-10 bottom-0 h-[80%] cursor-pointer transition-transform hover:scale-105 z-20"
           width={400}
           height={800}
         />
 
         {/* DIALOGO INICIAL */}
-        <LuxuryNPCDialog
-          isOpen={showInitialDialog}
-          onClose={() => setShowInitialDialog(false)}
-          onViewCollection={() => {
-            setShowInitialDialog(false);
-            setShowCollectionModal(true);
-          }}
-          onAccept={() => {
-            setShowInitialDialog(false);
-            setShowCollectionModal(true);
-          }}
-          onDenounce={() => {
-            setShowInitialDialog(false);
-          }}
-          title="Bem-vindo ao Showroom"
-          message="Bem-vindo… Aqui não é sobre comprar. É sobre se posicionar. Cada coleção revela o seu nível."
-        />
+        <div className="relative z-30">
+          <LuxuryNPCDialog
+            isOpen={showInitialDialog}
+            onClose={() => setShowInitialDialog(false)}
+            onViewCollection={() => {
+              setShowInitialDialog(false);
+              setShowCollectionModal(true);
+            }}
+            onAccept={() => {
+              setShowInitialDialog(false);
+              setShowCollectionModal(true);
+            }}
+            onDenounce={() => {
+              setShowInitialDialog(false);
+            }}
+            title="Bem-vindo ao Showroom"
+            message="Bem-vindo… Aqui não é sobre comprar. É sobre se posicionar. Cada coleção revela o seu nível."
+          />
+        </div>
 
         {/* COLEÇÃO */}
-        <BlingModal
-          isOpen={showCollectionModal}
-          onClose={() => setShowCollectionModal(false)}
-          onOk={() => {
-            setShowCollectionModal(false);
-            setShowItemsModal(true);
-          }}
-          onCancel={() => setShowCollectionModal(false)}
-          onHelp={() => alert('Coleção de luxo baseada no seu nível')}
-          title={`Coleção ${system.collectionName} 💎`}
-        >
-          <div className="text-center text-white/80 mb-6">
-            <p>Itens liberados conforme seu nível de barraco</p>
-            <p className="text-yellow-400 font-bold mt-2">Saldo: R$ {cleanMoney.toLocaleString('pt-BR')}</p>
-          </div>
+        <div className="relative z-30">
+          <BlingModal
+            isOpen={showCollectionModal}
+            onClose={() => setShowCollectionModal(false)}
+            onOk={() => {
+              setShowCollectionModal(false);
+              setShowItemsModal(true);
+            }}
+            onCancel={() => setShowCollectionModal(false)}
+            onHelp={() => alert('Coleção de luxo baseada no seu nível')}
+            title={`Coleção ${system.collectionName} 💎`}
+          >
+            <div className="text-center text-white/80 mb-6">
+              <p>Itens liberados conforme seu nível de barraco</p>
+              <p className="text-yellow-400 font-bold mt-2">Saldo: R$ {cleanMoney.toLocaleString('pt-BR')}</p>
+            </div>
 
-          {/* MENSAGEM DE COMPRA */}
-          {purchaseMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-3 bg-white/20 rounded-lg text-center text-white font-bold"
-            >
-              {purchaseMessage}
-            </motion.div>
-          )}
-
-          {/* ITENS */}
-          <div className="grid gap-6">
-            {items.map((item) => (
+            {/* MENSAGEM DE COMPRA */}
+            {purchaseMessage && (
               <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: item.id * 0.1 }}
-                className="flex gap-4 p-4 bg-white/10 rounded-lg backdrop-blur hover:bg-white/20 transition-colors"
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4 p-3 bg-white/20 rounded-lg text-center text-white font-bold"
               >
-                {/* IMAGEM DO ITEM */}
-                {item.image && (
-                  <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-black/50">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                      width={96}
-                      height={96}
-                    />
-                  </div>
-                )}
-
-                {/* INFO DO ITEM */}
-                <div className="flex-1 flex flex-col justify-center">
-                  <p className="text-white font-bold text-lg">{item.name}</p>
-                  <p className="text-yellow-400 font-heading text-xl">
-                    R$ {item.price.toLocaleString('pt-BR')}
-                  </p>
-                </div>
-
-                {/* BOTÃO DE COMPRA */}
-                <div className="flex items-center">
-                  <button
-                    onClick={() => handleBuyItem(item)}
-                    disabled={cleanMoney < item.price}
-                    className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                      cleanMoney >= item.price
-                        ? 'bg-yellow-400 text-black hover:bg-yellow-300 cursor-pointer'
-                        : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
-                    }`}
-                  >
-                    Comprar
-                  </button>
-                </div>
+                {purchaseMessage}
               </motion.div>
-            ))}
-          </div>
-        </BlingModal>
+            )}
+
+            {/* ITENS */}
+            <div className="grid gap-6">
+              {items.map((item) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: item.id * 0.1 }}
+                  className="flex gap-4 p-4 bg-white/10 rounded-lg backdrop-blur hover:bg-white/20 transition-colors"
+                >
+                  {/* IMAGEM DO ITEM */}
+                  {item.image && (
+                    <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-black/50">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        width={96}
+                        height={96}
+                      />
+                    </div>
+                  )}
+
+                  {/* INFO DO ITEM */}
+                  <div className="flex-1 flex flex-col justify-center">
+                    <p className="text-white font-bold text-lg">{item.name}</p>
+                    <p className="text-yellow-400 font-heading text-xl">
+                      R$ {item.price.toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+
+                  {/* BOTÃO DE COMPRA */}
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleBuyItem(item)}
+                      disabled={cleanMoney < item.price}
+                      className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                        cleanMoney >= item.price
+                          ? 'bg-yellow-400 text-black hover:bg-yellow-300 cursor-pointer'
+                          : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
+                      }`}
+                    >
+                      Comprar
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </BlingModal>
+        </div>
 
       </div>
 
