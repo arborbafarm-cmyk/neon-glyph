@@ -147,7 +147,7 @@ export default function HomePage() {
             {/* Decorative background glow for the whole block */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
 
-            {/* --- LOGO REVEAL --- */}
+            {/* --- LOGO REVEAL WITH STAR --- */}
             <motion.div
               initial={{ opacity: 0, y: -40, filter: 'blur(10px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
@@ -156,6 +156,22 @@ export default function HomePage() {
             >
               <div className="relative group">
                 <div className="absolute inset-0 bg-logo-gold/20 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                
+                {/* Star decoration - top right */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={{ duration: 1.5, delay: 0.4, ease: "easeOut" }}
+                  className="absolute -top-8 -right-8 sm:-top-12 sm:-right-12 z-20"
+                >
+                  <Image
+                    src="https://static.wixstatic.com/media/50f4bf_ff18e89b48f24c95b39c2e32fd579193~mv2.png"
+                    alt="Decorative star"
+                    className="w-16 h-16 sm:w-24 sm:h-24 drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]"
+                    width={96}
+                  />
+                </motion.div>
+                
                 <Image
                   src="https://static.wixstatic.com/media/50f4bf_7c2f3e2a62cb49d19eb52f4920c201b6~mv2.png"
                   alt="DOMÍNIO DO COMANDO Logo"

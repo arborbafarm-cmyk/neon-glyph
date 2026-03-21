@@ -91,6 +91,9 @@ export default function Header() {
                   <Link to="/">Início</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link to="/star-map">Star Map</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/giro-no-asfalto">Giro no Asfalto</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
