@@ -38,11 +38,10 @@ const GiroAsfaltoObject: React.FC<GiroAsfaltoObjectProps> = ({
     const giroGridZ = 8; // Starting grid position Z
 
     // Calculate center position in world coordinates
-    const giroCenterGridX = giroGridX + giroWidth / 2;
-    const giroCenterGridZ = giroGridZ + giroDepth / 2;
-
-    const giroWorldX = gridStartX + giroCenterGridX * tileSize;
-    const giroWorldZ = gridStartZ + giroCenterGridZ * tileSize;
+    // Grid coordinates are tile indices, so we need to convert to world space
+    // World position = gridStart + (gridIndex + 0.5) * tileSize for center of tile
+    const giroWorldX = gridStartX + (giroGridX + giroWidth / 2) * tileSize;
+    const giroWorldZ = gridStartZ + (giroGridZ + giroDepth / 2) * tileSize;
 
     // Calculate blocked tiles (8 tiles total)
     const blockedTiles: Array<{ x: number; z: number }> = [];
@@ -63,6 +62,9 @@ const GiroAsfaltoObject: React.FC<GiroAsfaltoObjectProps> = ({
       worldX: giroWorldX,
       worldZ: giroWorldZ,
       gridSize: `${giroWidth}x${giroDepth}`,
+      gridStartX,
+      gridStartZ,
+      tileSize,
       blockedTiles,
     });
 
