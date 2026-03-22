@@ -4,6 +4,7 @@ import { useAgilitySkillTreeStore } from '@/store/agilitySkillTreeStore';
 import { useAttackSkillTreeStore } from '@/store/attackSkillTreeStore';
 import { useDefenseSkillTreeStore } from '@/store/defenseSkillTreeStore';
 import { useRespeitSkillTreeStore } from '@/store/respeitSkillTreeStore';
+import { useVigorSkillTreeStore } from '@/store/vigorSkillTreeStore';
 import { usePlayerStore } from '@/store/playerStore';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -995,6 +996,258 @@ function RespeitSkillSection() {
   );
 }
 
+// Vigor Skill Component
+function VigorSkillSection() {
+  const {
+    skills: vigorSkills,
+    startUpgrade: vigorStartUpgrade,
+    finalizeUpgrade: vigorFinalizeUpgrade,
+    canUpgrade: vigorCanUpgrade,
+    getRemainingTime: vigorGetRemainingTime,
+    getVigorStats,
+    getUpgradeCost: vigorGetUpgradeCost,
+    getUpgradeDuration: vigorGetUpgradeDuration,
+    isSkillUnlocked: vigorIsSkillUnlocked,
+  } = useVigorSkillTreeStore();
+
+  const { playerMoney, setPlayerMoney } = usePlayerStore();
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [upgradeTimers, setUpgradeTimers] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTimers: Record<string, number> = {};
+      let hasActiveUpgrades = false;
+
+      Object.values(vigorSkills).forEach((skill) => {
+        if (skill.upgrading && skill.endTime) {
+          const remaining = skill.endTime - Date.now();
+          newTimers[skill.id] = Math.max(0, remaining);
+
+          if (remaining <= 0) {
+            vigorFinalizeUpgrade(skill.id);
+          } else {
+            hasActiveUpgrades = true;
+          }
+        }
+      });
+
+      setUpgradeTimers(newTimers);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [vigorSkills, vigorFinalizeUpgrade]);
+
+  const handleStartUpgrade = (skillId: string) => {
+    setIsLoading(true);
+    const result = vigorStartUpgrade(skillId, playerMoney);
+
+    if (result.success) {
+      const cost = vigorGetUpgradeCost(skillId);
+      setPlayerMoney(playerMoney - cost);
+    } else {
+      alert(result.error || 'Erro ao iniciar upgrade');
+    }
+    setIsLoading(false);
+  };
+
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+  };
+
+  const skillOrder = ['vigor_1', 'vigor_2', 'vigor_3', 'vigor_4', 'vigor_5'];
+  const vigorStats = getVigorStats();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-2xl font-bold text-purple-400">Árvore de Vigor</h3>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-purple-400">{vigorStats.maxEnergy.toFixed(0)}</div>
+          <p className="text-xs text-gray-400">Energia Máxima</p>
+        </div>
+      </div>
+
+      {skillOrder.map((skillId, index) => {
+        const skill = vigorSkills[skillId];
+        if (!skill) return null;
+
+        const isUnlocked = vigorIsSkillUnlocked(skillId);
+        const canUpgradeSkill = vigorCanUpgrade(skillId, playerMoney);
+        const cost = vigorGetUpgradeCost(skillId);
+        const duration = vigorGetUpgradeDuration(skillId);
+        const remainingTime = upgradeTimers[skillId] || 0;
+        const progressPercent = skill.upgrading
+          ? ((duration - remainingTime) / duration) * 100
+          : 0;
+
+        return (
+          <motion.div
+            key={skillId}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="relative"
+          >
+            {index < skillOrder.length - 1 && (
+              <div className="absolute left-12 top-full w-0.5 h-8 bg-gradient-to-b from-purple-500 to-transparent"></div>
+            )}
+
+            <Card
+              className={`p-6 border-2 transition-all duration-300 cursor-pointer ${
+                isUnlocked
+                  ? 'border-purple-500/50 bg-slate-700/50 hover:border-purple-400 hover:bg-slate-700/70'
+                  : 'border-gray-600/30 bg-slate-800/30 opacity-60'
+              } ${selectedSkill === skillId ? 'ring-2 ring-purple-400' : ''}`}
+              onClick={() => setSelectedSkill(selectedSkill === skillId ? null : skillId)}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start gap-4 flex-1">
+                  <div
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      isUnlocked
+                        ? 'bg-gradient-to-br from-purple-500 to-pink-600'
+                        : 'bg-gray-600'
+                    }`}
+                  >
+                    {isUnlocked ? (
+                      <Heart className="w-6 h-6" />
+                    ) : (
+                      <Lock className="w-6 h-6" />
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold font-heading">{skill.name}</h3>
+                      <span className="text-sm text-purple-400 font-bold">
+                        Nível {skill.level}/{skill.maxLevel}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-300 mb-3">
+                      {getVigorSkillDescription(skillId, skill.level)}
+                    </p>
+
+                    {!isUnlocked && (
+                      <p className="text-xs text-yellow-400">
+                        🔒 Desbloqueado quando {getVigorUnlockRequirement(skillId)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-24 flex-shrink-0">
+                  <div className="bg-slate-600 rounded-full h-2 mb-1 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-purple-400 to-pink-500 h-full transition-all duration-300"
+                      style={{
+                        width: `${(skill.level / skill.maxLevel) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-400 text-right">
+                    {Math.round((skill.level / skill.maxLevel) * 100)}%
+                  </p>
+                </div>
+              </div>
+
+              {skill.upgrading && (
+                <div className="mb-4 p-3 bg-purple-900/30 rounded-lg border border-purple-500/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-purple-300">Upgrade em progresso...</span>
+                    <span className="text-sm font-bold text-purple-400">
+                      {formatTime(remainingTime)}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-600 rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      className="bg-gradient-to-r from-purple-400 to-pink-400 h-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ duration: 0.1, ease: 'linear' }}
+                    ></motion.div>
+                  </div>
+                </div>
+              )}
+
+              {selectedSkill === skillId && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 pt-4 border-t border-slate-600/50 space-y-3"
+                >
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400">Custo Próximo Nível:</p>
+                      <p className="text-lg font-bold text-green-400">
+                        ${cost.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Duração:</p>
+                      <p className="text-lg font-bold text-purple-400">
+                        {formatTime(duration)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {skill.level < skill.maxLevel && (
+                    <Button
+                      onClick={() => handleStartUpgrade(skillId)}
+                      disabled={!canUpgradeSkill || isLoading}
+                      className={`w-full py-2 rounded-lg font-bold transition-all ${
+                        canUpgradeSkill
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white'
+                          : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {isLoading ? (
+                        <LoadingSpinner />
+                      ) : canUpgradeSkill ? (
+                        <>
+                          <span>Fazer Upgrade</span>
+                        </>
+                      ) : !isUnlocked ? (
+                        'Bloqueado'
+                      ) : skill.level >= skill.maxLevel ? (
+                        'Máximo Atingido'
+                      ) : playerMoney < cost ? (
+                        'Dinheiro Insuficiente'
+                      ) : (
+                        'Indisponível'
+                      )}
+                    </Button>
+                  )}
+
+                  {skill.level >= skill.maxLevel && (
+                    <div className="p-3 bg-green-900/30 rounded-lg border border-green-500/30 text-center">
+                      <p className="text-green-400 font-bold">✓ Nível Máximo Atingido</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Attack Skill Component
 function AttackSkillSection() {
   const { skills: attackSkills, startUpgrade: attackStartUpgrade, finalizeUpgrade: attackFinalizeUpgrade, canUpgrade: attackCanUpgrade, getRemainingTime: attackGetRemainingTime, getAttackBonus, getSkillProgress } =
@@ -1267,6 +1520,9 @@ export default function InvestmentSkillTreePage() {
     vigor: 'Vigor',
   };
 
+  const AnimatePresence = ({ children }: any) => <>{children}</>;
+  const ChevronRight = ({ className }: any) => <ChevronDown className={className} />;
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header />
@@ -1522,4 +1778,25 @@ function getDefenseSkillDescription(skillId: string, level: number): string {
     defesa_5: `Alcance o pico da proteção com blindagem total. Cada nível fornece bônus massivo de ${level * 5}%.`,
   };
   return descriptions[skillId] || 'Skill desconhecida';
+}
+
+function getVigorSkillDescription(skillId: string, level: number): string {
+  const descriptions: Record<string, string> = {
+    vigor_1: `Desenvolva o fôlego de rua. Aumenta energia máxima em ${level}%.`,
+    vigor_2: `Fortaleça sua resistência física. Reduz consumo de energia em ${level}%.`,
+    vigor_3: `Domine o ritmo de operações. Aumenta ações consecutivas em ${level * 1.5}%.`,
+    vigor_4: `Acelere sua recuperação de energia. Aumenta regeneração em ${level}%.`,
+    vigor_5: `Alcance energia inquebrável. Bônus massivo em stamina e recuperação: ${level}%.`,
+  };
+  return descriptions[skillId] || 'Skill desconhecida';
+}
+
+function getVigorUnlockRequirement(skillId: string): string {
+  const requirements: Record<string, string> = {
+    vigor_2: 'Fôlego de Rua atinja nível 10',
+    vigor_3: 'Resistência Física atinja nível 15',
+    vigor_4: 'Ritmo de Operação atinja nível 20',
+    vigor_5: 'Recuperação Acelerada atinja nível 25',
+  };
+  return requirements[skillId] || 'Requisitos desconhecidos';
 }
