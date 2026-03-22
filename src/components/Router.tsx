@@ -22,6 +22,7 @@ const BriberyMinistroPage = lazy(() => import('@/components/pages/BriberyMinistr
 const BriberyPresidentePage = lazy(() => import('@/components/pages/BriberyPresidentePage'));
 const StarMapPage = lazy(() => import('@/components/pages/StarMapPage'));
 const ResetLuxuryPage = lazy(() => import('@/components/pages/ResetLuxuryPage'));
+const ResetInvestmentPage = lazy(() => import('@/components/pages/ResetInvestmentPage'));
 const InvestmentSkillTreePage = lazy(() => import('@/components/pages/InvestmentSkillTreePage'));
 {/* ... keep existing code (other lazy imports) ... */}
 
@@ -168,6 +169,13 @@ const router = createBrowserRouter([
         element: <InvestmentSkillTreePage />,
         routeMetadata: {
           pageIdentifier: 'investment-center',
+        },
+      },
+      {
+        path: "reset-investment",
+        element: <ResetInvestmentPage />,
+        routeMetadata: {
+          pageIdentifier: 'reset-investment',
         },
       },
 

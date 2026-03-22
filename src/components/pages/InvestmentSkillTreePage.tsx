@@ -239,11 +239,11 @@ export default function InvestmentSkillTreePage() {
                 </p>
               </motion.div>
 
-              {/* Money Display */}
+              {/* Money Display and Reset Button */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex justify-center mb-12"
+                className="flex justify-center items-center gap-6 mb-12"
               >
                 <div className="bg-black/60 border border-cyan-400/50 rounded-lg px-8 py-4 backdrop-blur-sm">
                   <p className="text-cyan-400 font-paragraph text-sm">Dinheiro Sujo Disponível</p>
@@ -251,6 +251,12 @@ export default function InvestmentSkillTreePage() {
                     {formatMoney(dirtyMoney)}
                   </p>
                 </div>
+                <a
+                  href="/reset-investment"
+                  className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-heading font-bold rounded-lg border border-blue-400/50 transition-all shadow-lg shadow-blue-500/50"
+                >
+                  🔄 Resetar
+                </a>
               </motion.div>
 
               {/* Categories Grid */}
