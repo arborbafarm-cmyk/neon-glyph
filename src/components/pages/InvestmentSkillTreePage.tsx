@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSkillTreeStore, SkillNode } from '@/store/skillTreeStore';
 import { useAgilitySkillTreeStore } from '@/store/agilitySkillTreeStore';
 import { useAttackSkillTreeStore } from '@/store/attackSkillTreeStore';
+import { useDefenseSkillTreeStore } from '@/store/defenseSkillTreeStore';
+import { useRespeitSkillTreeStore } from '@/store/respeitSkillTreeStore';
 import { usePlayerStore } from '@/store/playerStore';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -508,6 +510,481 @@ function AgilitySkillSection() {
                       <p className="text-green-400 font-bold">✓ Nível Máximo Atingido</p>
                     </div>
                   )}
+                </motion.div>
+              )}
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Defense Skill Component
+function DefenseSkillSection() {
+  const {
+    skills: defenseSkills,
+    startUpgrade: defenseStartUpgrade,
+    finalizeUpgrade: defenseFinalizeUpgrade,
+    canUpgrade: defenseCanUpgrade,
+    getRemainingTime: defenseGetRemainingTime,
+    getUpgradeCost: defenseGetUpgradeCost,
+    getUpgradeDuration: defenseGetUpgradeDuration,
+    getDefenseBonus,
+  } = useDefenseSkillTreeStore();
+
+  const { cleanMoney, dirtyMoney } = usePlayerStore();
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [upgradeTimers, setUpgradeTimers] = useState<Record<string, number>>({});
+
+  const totalMoney = cleanMoney + dirtyMoney;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTimers: Record<string, number> = {};
+      Object.keys(defenseSkills).forEach((skillId) => {
+        const skill = defenseSkills[skillId];
+        if (skill.upgrading) {
+          const remaining = defenseGetRemainingTime(skillId);
+          newTimers[skillId] = remaining;
+
+          if (remaining <= 0) {
+            defenseFinalizeUpgrade(skillId);
+          }
+        }
+      });
+      setUpgradeTimers(newTimers);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [defenseSkills, defenseGetRemainingTime, defenseFinalizeUpgrade]);
+
+  const handleStartUpgrade = (skillId: string) => {
+    const result = defenseStartUpgrade(skillId, totalMoney);
+    if (result.success) {
+      setSelectedSkill(skillId);
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    }
+    return `${seconds}s`;
+  };
+
+  const skillOrder = ['defesa_1', 'defesa_2', 'defesa_3', 'defesa_4', 'defesa_5'];
+  const orderedSkills = skillOrder.map((id) => defenseSkills[id]).filter(Boolean);
+  const defenseBonus = getDefenseBonus();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-2xl font-bold text-cyan-400">Árvore de Defesa</h3>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-cyan-400">+{(defenseBonus * 100).toFixed(1)}%</div>
+          <p className="text-xs text-gray-400">Bônus Total</p>
+        </div>
+      </div>
+
+      {orderedSkills.map((skill, index) => {
+        const isLocked =
+          skill.requires && skill.requires.length > 0
+            ? skill.requires.some((reqId) => {
+                const reqSkill = defenseSkills[reqId];
+                let requiredLevel = 0;
+                if (reqId === 'defesa_1' && skill.id === 'defesa_2') requiredLevel = 10;
+                if (reqId === 'defesa_2' && skill.id === 'defesa_3') requiredLevel = 15;
+                if (reqId === 'defesa_3' && skill.id === 'defesa_4') requiredLevel = 20;
+                if (reqId === 'defesa_4' && skill.id === 'defesa_5') requiredLevel = 25;
+                return reqSkill.level < requiredLevel;
+              })
+            : false;
+
+        const canUpgradeSkill = defenseCanUpgrade(skill.id, totalMoney);
+        const upgradeCost = defenseGetUpgradeCost(skill.id);
+        const upgradeDuration = defenseGetUpgradeDuration(skill.id);
+        const remainingTime = upgradeTimers[skill.id] || 0;
+
+        return (
+          <motion.div
+            key={skill.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="relative"
+          >
+            {index < orderedSkills.length - 1 && (
+              <div className="absolute left-12 top-full w-0.5 h-8 bg-gradient-to-b from-cyan-500 to-transparent"></div>
+            )}
+
+            <Card
+              className={`p-6 border-2 transition-all duration-300 cursor-pointer ${
+                isLocked
+                  ? 'border-gray-600/30 bg-slate-800/30 opacity-60'
+                  : 'border-cyan-500/50 bg-slate-700/50 hover:border-cyan-400 hover:bg-slate-700/70'
+              } ${selectedSkill === skill.id ? 'ring-2 ring-cyan-400' : ''}`}
+              onClick={() => setSelectedSkill(selectedSkill === skill.id ? null : skill.id)}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start gap-4 flex-1">
+                  <div
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      !isLocked
+                        ? 'bg-gradient-to-br from-cyan-500 to-blue-600'
+                        : 'bg-gray-600'
+                    }`}
+                  >
+                    {!isLocked ? (
+                      <Shield className="w-6 h-6" />
+                    ) : (
+                      <Lock className="w-6 h-6" />
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold font-heading">{skill.name}</h3>
+                      <span className="text-sm text-cyan-400 font-bold">
+                        Nível {skill.level}/{skill.maxLevel}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-300 mb-3">
+                      {getDefenseSkillDescription(skill.id, skill.level)}
+                    </p>
+
+                    {isLocked && (
+                      <p className="text-xs text-yellow-400">
+                        🔒 Desbloqueado quando requisitos forem atendidos
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-24 flex-shrink-0">
+                  <div className="bg-slate-600 rounded-full h-2 mb-1 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full transition-all duration-300"
+                      style={{
+                        width: `${(skill.level / skill.maxLevel) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-400 text-right">
+                    {Math.round((skill.level / skill.maxLevel) * 100)}%
+                  </p>
+                </div>
+              </div>
+
+              {skill.upgrading && (
+                <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-blue-300">Upgrade em progresso...</span>
+                    <span className="text-sm font-bold text-cyan-400">
+                      {formatTime(remainingTime)}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-600 rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      className="bg-gradient-to-r from-blue-400 to-cyan-400 h-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((upgradeDuration - remainingTime) / upgradeDuration) * 100}%` }}
+                      transition={{ duration: 0.1, ease: 'linear' }}
+                    ></motion.div>
+                  </div>
+                </div>
+              )}
+
+              {selectedSkill === skill.id && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 pt-4 border-t border-slate-600/50 space-y-3"
+                >
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400">Custo Próximo Nível:</p>
+                      <p className="text-lg font-bold text-green-400">
+                        ${upgradeCost.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Duração:</p>
+                      <p className="text-lg font-bold text-cyan-400">
+                        {formatTime(upgradeDuration)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {skill.level < skill.maxLevel && (
+                    <Button
+                      onClick={() => handleStartUpgrade(skill.id)}
+                      disabled={!canUpgradeSkill}
+                      className={`w-full py-2 rounded-lg font-bold transition-all ${
+                        canUpgradeSkill
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white'
+                          : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {canUpgradeSkill ? 'Fazer Upgrade' : 'Requisitos Não Atendidos'}
+                    </Button>
+                  )}
+
+                  {skill.level >= skill.maxLevel && (
+                    <div className="p-3 bg-green-900/30 rounded-lg border border-green-500/30 text-center">
+                      <p className="text-green-400 font-bold">✓ Nível Máximo Atingido</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Respect Skill Component
+function RespeitSkillSection() {
+  const {
+    skills: respeitSkills,
+    startUpgrade: respeitStartUpgrade,
+    finalizeUpgrade: respeitFinalizeUpgrade,
+    canUpgrade: respeitCanUpgrade,
+    getRemainingTime: respeitGetRemainingTime,
+    getTotalRespectLevel,
+    getSkillProgress,
+  } = useRespeitSkillTreeStore();
+
+  const { cleanMoney, dirtyMoney } = usePlayerStore();
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [upgradeTimers, setUpgradeTimers] = useState<Record<string, number>>({});
+
+  const totalMoney = cleanMoney + dirtyMoney;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTimers: Record<string, number> = {};
+      Object.keys(respeitSkills).forEach((skillId) => {
+        const remaining = respeitGetRemainingTime(skillId);
+        if (remaining > 0) {
+          newTimers[skillId] = remaining;
+        } else if (respeitSkills[skillId].upgrading && remaining <= 0) {
+          respeitFinalizeUpgrade(skillId);
+        }
+      });
+      setUpgradeTimers(newTimers);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [respeitSkills, respeitGetRemainingTime, respeitFinalizeUpgrade]);
+
+  const handleStartUpgrade = (skillId: string) => {
+    const result = respeitStartUpgrade(skillId, totalMoney);
+    if (result.success) {
+      setSelectedSkill(skillId);
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
+  const getCost = (skillId: string) => {
+    const skill = respeitSkills[skillId];
+    return Math.ceil(skill.baseCost * Math.pow(skill.level + 1, 1.8));
+  };
+
+  const getDuration = (skillId: string) => {
+    const skill = respeitSkills[skillId];
+    return Math.ceil(skill.baseTime * Math.pow(skill.level + 1, 1.5));
+  };
+
+  const totalRespect = getTotalRespectLevel();
+  const skillOrder = ['respeito_1', 'respeito_2', 'respeito_3', 'respeito_4', 'respeito_5'];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-2xl font-bold text-orange-400">Árvore de Respeito</h3>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-orange-400">{totalRespect}</div>
+          <p className="text-xs text-gray-400">Nível Total</p>
+        </div>
+      </div>
+
+      {skillOrder.map((skillId, index) => {
+        const skill = respeitSkills[skillId];
+        const cost = getCost(skillId);
+        const duration = getDuration(skillId);
+        const remainingTime = upgradeTimers[skillId] || 0;
+        const canUpgradeSkill = respeitCanUpgrade(skillId, totalMoney);
+        const progress = getSkillProgress(skillId);
+
+        const isLocked = skill.requires && skill.requires.length > 0 && !canUpgradeSkill && skill.level === 0;
+
+        return (
+          <motion.div
+            key={skillId}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            onClick={() => setSelectedSkill(selectedSkill === skillId ? null : skillId)}
+            className="cursor-pointer"
+          >
+            <Card
+              className={`bg-gradient-to-r p-6 border-2 transition-all ${
+                selectedSkill === skillId
+                  ? 'border-cyan-400 shadow-lg shadow-cyan-400/50'
+                  : isLocked
+                    ? 'border-gray-600 opacity-60'
+                    : 'border-orange-500/50 hover:border-orange-400'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="text-3xl">
+                    {index === 0 && '🏘️'}
+                    {index === 1 && '👥'}
+                    {index === 2 && '🕸️'}
+                    {index === 3 && '👑'}
+                    {index === 4 && '⚡'}
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-2xl font-bold text-white">{skill.name}</h3>
+                    <p className="text-sm text-gray-400">
+                      Nível {skill.level} / {skill.maxLevel}
+                    </p>
+                  </div>
+                </div>
+
+                {isLocked && <Lock className="w-6 h-6 text-gray-500" />}
+                {!isLocked && skill.level === skill.maxLevel && (
+                  <div className="text-2xl">✅</div>
+                )}
+                {!isLocked && skill.level < skill.maxLevel && (
+                  <ChevronRight
+                    className={`w-6 h-6 transition-transform ${
+                      selectedSkill === skillId ? 'rotate-90' : ''
+                    }`}
+                  />
+                )}
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                  <motion.div
+                    className="bg-gradient-to-r from-orange-500 to-red-500 h-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+
+              {/* Expanded Details */}
+              {selectedSkill === skillId && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-6 pt-6 border-t border-slate-600 space-y-4"
+                >
+                  {/* Description */}
+                  <div>
+                    <p className="text-sm text-gray-400 mb-2">Descrição:</p>
+                    <p className="text-white">
+                      {skillId === 'respeito_1' &&
+                        'Desbloqueia áreas iniciais e pequenos bônus de influência'}
+                      {skillId === 'respeito_2' &&
+                        'Libera NPCs locais e missões básicas'}
+                      {skillId === 'respeito_3' &&
+                        'Acesso a contatos estratégicos e operações melhores'}
+                      {skillId === 'respeito_4' &&
+                        'Libera novas regiões do mapa e bônus de autoridade'}
+                      {skillId === 'respeito_5' &&
+                        'Desbloqueio global de conteúdo avançado e bônus massivo de influência'}
+                    </p>
+                  </div>
+
+                  {/* Upgrade Info */}
+                  {skill.level < skill.maxLevel && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-700/50 p-4 rounded-lg">
+                        <p className="text-xs text-gray-400 mb-1">Custo do Próximo Upgrade</p>
+                        <p className="text-xl font-bold text-orange-400">${cost.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-slate-700/50 p-4 rounded-lg">
+                        <p className="text-xs text-gray-400 mb-1">Tempo de Upgrade</p>
+                        <p className="text-xl font-bold text-cyan-400">{formatTime(duration)}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upgrade Status */}
+                  {skill.upgrading && remainingTime > 0 && (
+                    <div className="bg-blue-900/30 border border-blue-500/50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-4 h-4 text-blue-400" />
+                        <p className="text-sm text-blue-400">Upgrade em Progresso</p>
+                      </div>
+                      <p className="text-2xl font-bold text-blue-300">{formatTime(remainingTime)}</p>
+                      <div className="w-full bg-slate-700 rounded-full h-2 mt-3 overflow-hidden">
+                        <motion.div
+                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-full"
+                          initial={{ width: 0 }}
+                          animate={{
+                            width: `${100 - (remainingTime / getDuration(skillId)) * 100}%`,
+                          }}
+                          transition={{ duration: 0.1 }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-4">
+                    {skill.level < skill.maxLevel && !skill.upgrading && (
+                      <Button
+                        onClick={() => handleStartUpgrade(skillId)}
+                        disabled={!canUpgradeSkill}
+                        className={`flex-1 ${
+                          canUpgradeSkill
+                            ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                            : 'bg-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        {canUpgradeSkill ? 'Iniciar Upgrade' : 'Requisitos Não Atendidos'}
+                      </Button>
+                    )}
+
+                    {skill.level === skill.maxLevel && (
+                      <Button disabled className="flex-1 bg-gray-600">
+                        Nível Máximo Atingido
+                      </Button>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </Card>
@@ -1034,4 +1511,15 @@ function getAgilityUnlockRequirement(skillId: string): string {
     agilidade_5: 'Mobilidade Tática atinja nível 25',
   };
   return requirements[skillId] || 'Requisitos desconhecidos';
+}
+
+function getDefenseSkillDescription(skillId: string, level: number): string {
+  const descriptions: Record<string, string> = {
+    defesa_1: `Aprenda técnicas de fuga rápida para minimizar perdas quando as operações falham. Cada nível reduz perdas em ${level}%.`,
+    defesa_2: `Invista em cofres blindados para proteger seu dinheiro. Cada nível aumenta proteção em ${level * 1.5}%.`,
+    defesa_3: `Fortifique seu território contra invasões. Cada nível reduz dano recebido em ${level * 1.5}%.`,
+    defesa_4: `Implemente sistemas de segurança avançados. Cada nível aumenta resistência geral em ${level}%.`,
+    defesa_5: `Alcance o pico da proteção com blindagem total. Cada nível fornece bônus massivo de ${level * 5}%.`,
+  };
+  return descriptions[skillId] || 'Skill desconhecida';
 }
