@@ -1653,9 +1653,50 @@ export default function InvestmentSkillTreePage() {
             </div>
           </motion.div>
 
+          {/* Defesa Section */}
+           <motion.div
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ delay: 0.2 }}
+           >
+             <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
+               <button
+                 onClick={() => toggleTree('defesa')}
+                 className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
+                 style={{
+                   backgroundColor: `${TREE_COLORS['defesa'].bg}20`,
+                   borderBottom: expandedTrees['defesa']
+                     ? `2px solid ${TREE_COLORS['defesa'].border}`
+                     : 'none',
+                 }}
+               >
+                 <span className="text-lg font-bold">Defesa</span>
+                 {expandedTrees['defesa'] ? (
+                   <ChevronUp size={20} />
+                 ) : (
+                   <ChevronDown size={20} />
+                 )}
+               </button>
+
+               <AnimatePresence>
+                 {expandedTrees['defesa'] && (
+                   <motion.div
+                     initial={{ opacity: 0, height: 0 }}
+                     animate={{ opacity: 1, height: 'auto' }}
+                     exit={{ opacity: 0, height: 0 }}
+                     transition={{ duration: 0.3 }}
+                     className="p-6"
+                   >
+                     <DefenseSkillSection />
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+             </div>
+           </motion.div>
+
           {/* Other Trees */}
           {(Object.keys(TREE_COLORS) as Array<keyof typeof TREE_COLORS>)
-            .filter((key) => key !== 'agilidade' && key !== 'ataque')
+            .filter((key) => key !== 'agilidade' && key !== 'ataque' && key !== 'defesa')
             .map((treeKey) => (
               <motion.div
                 key={treeKey}
