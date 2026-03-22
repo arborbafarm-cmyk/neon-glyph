@@ -15,22 +15,18 @@ export type Skill = {
   endTime?: number;
 };
 
-export type RespeitSkillTreeState = {
+interface RespeitSkillTreeState {
   skills: Record<string, Skill>;
+  totalRespect: number;
   initializeSkills: () => void;
   startUpgrade: (skillId: string, playerMoney: number) => { success: boolean; message: string };
   finalizeUpgrade: (skillId: string) => { success: boolean; message: string };
   canUpgrade: (skillId: string, playerMoney: number) => boolean;
   getRemainingTime: (skillId: string) => number;
   getRespectBonus: () => number;
-  getTotalRespectLevel: () => number;
   getSkillProgress: (skillId: string) => number;
-  getUnlockedContent: () => {
-    unlockedAreas: string[];
-    unlockedNPCs: string[];
-    unlockedMissions: string[];
-  };
-};
+  resetAllSkills: () => void;
+}
 
 const INITIAL_SKILLS: Record<string, Skill> = {
   respeito_1: {
@@ -94,9 +90,10 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
   persist(
     (set, get) => ({
       skills: INITIAL_SKILLS,
+      totalRespect: 0,
 
       initializeSkills: () => {
-        set({ skills: INITIAL_SKILLS });
+        set({ skills: INITIAL_SKILLS, totalRespect: 0 });
       },
 
       startUpgrade: (skillId: string, playerMoney: number) => {
@@ -107,12 +104,10 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
           return { success: false, message: 'Skill não encontrada' };
         }
 
-        // Verificar se já está em upgrade
         if (skill.upgrading) {
           return { success: false, message: 'Skill já está em upgrade' };
         }
 
-        // Verificar se atingiu maxLevel
         if (skill.level >= skill.maxLevel) {
           return { success: false, message: 'Skill já atingiu o nível máximo' };
         }
@@ -121,14 +116,18 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
         if (skill.requires && skill.requires.length > 0) {
           for (const requiredSkillId of skill.requires) {
             const requiredSkill = state.skills[requiredSkillId];
-            if (!requiredSkill) {
-              return { success: false, message: `Skill requisitada não encontrada: ${requiredSkillId}` };
-            }
+            if (!requiredSkill) continue;
 
-            // Verificar se o requisito foi cumprido
-            const requiredLevel = requiredSkillId === 'respeito_1' ? 10 : requiredSkillId === 'respeito_2' ? 15 : requiredSkillId === 'respeito_3' ? 20 : 25;
+            const requiredLevel = requiredSkillId === 'respeito_1' ? 10 : 
+                                 requiredSkillId === 'respeito_2' ? 15 :
+                                 requiredSkillId === 'respeito_3' ? 20 :
+                                 requiredSkillId === 'respeito_4' ? 25 : 0;
+
             if (requiredSkill.level < requiredLevel) {
-              return { success: false, message: `Requisito não cumprido: ${requiredSkill.name} deve estar no nível ${requiredLevel}` };
+              return { 
+                success: false, 
+                message: `Requer ${requiredSkill.name} nível ${requiredLevel}` 
+              };
             }
           }
         }
@@ -136,28 +135,27 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
         // Calcular custo
         const cost = Math.ceil(skill.baseCost * Math.pow(skill.level + 1, 1.8));
 
-        // Verificar se tem dinheiro suficiente
         if (playerMoney < cost) {
-          return { success: false, message: `Dinheiro insuficiente. Necessário: ${cost}, Disponível: ${playerMoney}` };
+          return { success: false, message: `Dinheiro insuficiente. Necessário: $${cost}` };
         }
 
         // Calcular duração
         const duration = Math.ceil(skill.baseTime * Math.pow(skill.level + 1, 1.5));
+        const now = Date.now();
 
-        // Atualizar skill
         set((state) => ({
           skills: {
             ...state.skills,
             [skillId]: {
               ...skill,
               upgrading: true,
-              startTime: Date.now(),
-              endTime: Date.now() + duration,
+              startTime: now,
+              endTime: now + duration,
             },
           },
         }));
 
-        return { success: true, message: `Upgrade iniciado. Custo: ${cost}. Duração: ${Math.ceil(duration / 1000)}s` };
+        return { success: true, message: `Upgrade iniciado. Custo: $${cost}` };
       },
 
       finalizeUpgrade: (skillId: string) => {
@@ -176,7 +174,6 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
           return { success: false, message: 'Upgrade ainda não foi concluído' };
         }
 
-        // Incrementar level
         set((state) => ({
           skills: {
             ...state.skills,
@@ -188,6 +185,7 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
               endTime: undefined,
             },
           },
+          totalRespect: state.totalRespect + 1,
         }));
 
         return { success: true, message: `${skill.name} foi atualizado para nível ${skill.level + 1}` };
@@ -201,20 +199,25 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
         if (skill.upgrading) return false;
         if (skill.level >= skill.maxLevel) return false;
 
+        const cost = Math.ceil(skill.baseCost * Math.pow(skill.level + 1, 1.8));
+        if (playerMoney < cost) return false;
+
         // Verificar requisitos
         if (skill.requires && skill.requires.length > 0) {
           for (const requiredSkillId of skill.requires) {
             const requiredSkill = state.skills[requiredSkillId];
-            if (!requiredSkill) return false;
+            if (!requiredSkill) continue;
 
-            const requiredLevel = requiredSkillId === 'respeito_1' ? 10 : requiredSkillId === 'respeito_2' ? 15 : requiredSkillId === 'respeito_3' ? 20 : 25;
+            const requiredLevel = requiredSkillId === 'respeito_1' ? 10 : 
+                                 requiredSkillId === 'respeito_2' ? 15 :
+                                 requiredSkillId === 'respeito_3' ? 20 :
+                                 requiredSkillId === 'respeito_4' ? 25 : 0;
+
             if (requiredSkill.level < requiredLevel) return false;
           }
         }
 
-        // Verificar dinheiro
-        const cost = Math.ceil(skill.baseCost * Math.pow(skill.level + 1, 1.8));
-        return playerMoney >= cost;
+        return true;
       },
 
       getRemainingTime: (skillId: string) => {
@@ -229,162 +232,26 @@ export const useRespeitSkillTreeStore = create<RespeitSkillTreeState>()(
 
       getRespectBonus: () => {
         const state = get();
-        let totalBonus = 0;
-
-        Object.values(state.skills).forEach((skill) => {
-          totalBonus += skill.level;
-        });
-
-        return totalBonus;
-      },
-
-      getTotalRespectLevel: () => {
-        const state = get();
-        let totalLevel = 0;
-
-        Object.values(state.skills).forEach((skill) => {
-          totalLevel += skill.level;
-        });
-
-        return totalLevel;
+        return Object.values(state.skills).reduce((total, skill) => total + skill.level, 0);
       },
 
       getSkillProgress: (skillId: string) => {
         const state = get();
         const skill = state.skills[skillId];
 
-        if (!skill) return 0;
+        if (!skill || !skill.upgrading || !skill.startTime || !skill.endTime) return 0;
 
-        return (skill.level / skill.maxLevel) * 100;
+        const elapsed = Date.now() - skill.startTime;
+        const total = skill.endTime - skill.startTime;
+        return Math.min((elapsed / total) * 100, 100);
       },
 
-      getUnlockedContent: () => {
-        const state = get();
-        const totalRespect = state.getTotalRespectLevel();
-        const respeito1Level = state.skills.respeito_1.level;
-        const respeito2Level = state.skills.respeito_2.level;
-        const respeito3Level = state.skills.respeito_3.level;
-        const respeito4Level = state.skills.respeito_4.level;
-        const respeito5Level = state.skills.respeito_5.level;
-
-        const unlockedAreas: string[] = [];
-        const unlockedNPCs: string[] = [];
-        const unlockedMissions: string[] = [];
-
-        // Nome na Quebrada - Áreas iniciais
-        if (respeito1Level >= 5) {
-          unlockedAreas.push('Favela Central');
-          unlockedNPCs.push('Chefe Local');
-          unlockedMissions.push('Primeiras Operações');
-        }
-
-        if (respeito1Level >= 10) {
-          unlockedAreas.push('Zona de Influência');
-          unlockedNPCs.push('Informante');
-        }
-
-        if (respeito1Level >= 15) {
-          unlockedAreas.push('Mercado Negro');
-          unlockedMissions.push('Operações Intermediárias');
-        }
-
-        // Influência Local - NPCs e missões
-        if (respeito2Level >= 5) {
-          unlockedNPCs.push('Fornecedor');
-          unlockedMissions.push('Missões de Influência');
-        }
-
-        if (respeito2Level >= 10) {
-          unlockedNPCs.push('Mediador');
-          unlockedAreas.push('Bairro Controlado');
-        }
-
-        if (respeito2Level >= 15) {
-          unlockedNPCs.push('Estrategista');
-          unlockedMissions.push('Operações Estratégicas');
-        }
-
-        // Rede de Contatos - Contatos estratégicos
-        if (respeito3Level >= 5) {
-          unlockedNPCs.push('Contato Estratégico');
-          unlockedMissions.push('Operações Coordenadas');
-        }
-
-        if (respeito3Level >= 10) {
-          unlockedNPCs.push('Aliado Regional');
-          unlockedAreas.push('Zona de Operações');
-        }
-
-        if (respeito3Level >= 15) {
-          unlockedNPCs.push('Chefe Regional');
-          unlockedMissions.push('Operações Regionais');
-        }
-
-        if (respeito3Level >= 20) {
-          unlockedNPCs.push('Conselheiro');
-          unlockedMissions.push('Missões de Alto Risco');
-        }
-
-        // Domínio Regional - Novas regiões
-        if (respeito4Level >= 5) {
-          unlockedAreas.push('Região Expandida');
-          unlockedMissions.push('Operações de Expansão');
-        }
-
-        if (respeito4Level >= 10) {
-          unlockedAreas.push('Zona de Domínio');
-          unlockedNPCs.push('Lorde do Território');
-        }
-
-        if (respeito4Level >= 15) {
-          unlockedAreas.push('Região Controlada');
-          unlockedMissions.push('Operações de Consolidação');
-        }
-
-        if (respeito4Level >= 20) {
-          unlockedAreas.push('Império Regional');
-          unlockedNPCs.push('Imperador Regional');
-        }
-
-        if (respeito4Level >= 25) {
-          unlockedMissions.push('Operações Imperiais');
-        }
-
-        // Império do Comando - Conteúdo avançado
-        if (respeito5Level >= 5) {
-          unlockedMissions.push('Operações Globais');
-          unlockedNPCs.push('Conselho Supremo');
-        }
-
-        if (respeito5Level >= 10) {
-          unlockedAreas.push('Sede do Comando');
-          unlockedMissions.push('Operações Estratégicas Globais');
-        }
-
-        if (respeito5Level >= 15) {
-          unlockedNPCs.push('Líder Supremo');
-          unlockedMissions.push('Missões Lendárias');
-        }
-
-        if (respeito5Level >= 20) {
-          unlockedAreas.push('Zona Proibida');
-          unlockedMissions.push('Operações Secretas');
-        }
-
-        if (respeito5Level >= 30) {
-          unlockedMissions.push('Operações Finais');
-        }
-
-        return {
-          unlockedAreas: [...new Set(unlockedAreas)],
-          unlockedNPCs: [...new Set(unlockedNPCs)],
-          unlockedMissions: [...new Set(unlockedMissions)],
-        };
+      resetAllSkills: () => {
+        set({ skills: INITIAL_SKILLS, totalRespect: 0 });
       },
     }),
     {
-      name: 'respeit-skill-tree-storage',
-      version: 1,
+      name: 'respeito-skill-tree-storage',
     }
   )
 );

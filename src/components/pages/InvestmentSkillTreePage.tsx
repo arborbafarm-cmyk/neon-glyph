@@ -763,7 +763,7 @@ function RespeitSkillSection() {
     finalizeUpgrade: respeitFinalizeUpgrade,
     canUpgrade: respeitCanUpgrade,
     getRemainingTime: respeitGetRemainingTime,
-    getTotalRespectLevel,
+    getRespectBonus,
     getSkillProgress,
   } = useRespeitSkillTreeStore();
 
@@ -821,7 +821,7 @@ function RespeitSkillSection() {
     return Math.ceil(skill.baseTime * Math.pow(skill.level + 1, 1.5));
   };
 
-  const totalRespect = getTotalRespectLevel();
+  const totalRespect = getRespectBonus();
   const skillOrder = ['respeito_1', 'respeito_2', 'respeito_3', 'respeito_4', 'respeito_5'];
 
   return (
@@ -884,9 +884,9 @@ function RespeitSkillSection() {
                   <div className="text-2xl">✅</div>
                 )}
                 {!isLocked && skill.level < skill.maxLevel && (
-                  <ChevronRight
+                  <ChevronDown
                     className={`w-6 h-6 transition-transform ${
-                      selectedSkill === skillId ? 'rotate-90' : ''
+                      selectedSkill === skillId ? 'rotate-180' : ''
                     }`}
                   />
                 )}
