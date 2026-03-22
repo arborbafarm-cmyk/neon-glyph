@@ -43,11 +43,9 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Target,
   Shield,
   Lock,
-  Fortress: Shield,
   Crown,
   Users,
   Heart,
-  Armor,
 };
 
 interface SkillNodeProps {
