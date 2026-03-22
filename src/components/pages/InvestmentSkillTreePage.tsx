@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useInvestmentSkillTreeStore, type Skill } from '@/store/investmentSkillTreeStore';
+import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,13 +29,14 @@ type SkillModalData = {
 export default function InvestmentSkillTreePage() {
   const {
     skills,
-    dirtyMoney,
     upgradeSkill,
     finalizeUpgrade,
     canUpgrade,
     getRemainingTime,
     getSkill,
   } = useInvestmentSkillTreeStore();
+  
+  const { dirtyMoney } = useDirtyMoneyStore();
 
   const [selectedSkill, setSelectedSkill] = useState<SkillModalData | null>(null);
   const [scale, setScale] = useState(1);
