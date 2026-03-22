@@ -5,6 +5,7 @@ import { useAttackSkillTreeStore } from '@/store/attackSkillTreeStore';
 import { useDefenseSkillTreeStore } from '@/store/defenseSkillTreeStore';
 import { useRespeitSkillTreeStore } from '@/store/respeitSkillTreeStore';
 import { useVigorSkillTreeStore } from '@/store/vigorSkillTreeStore';
+import { useIntelligenceSkillTreeStore } from '@/store/intelligenceSkillTreeStore';
 import { usePlayerStore } from '@/store/playerStore';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -1248,6 +1249,258 @@ function VigorSkillSection() {
   );
 }
 
+// Intelligence Skill Component
+function IntelligenceSkillSection() {
+  const {
+    skills: intelligenceSkills,
+    startUpgrade: intelligenceStartUpgrade,
+    finalizeUpgrade: intelligenceFinalizeUpgrade,
+    canUpgrade: intelligenceCanUpgrade,
+    getRemainingTime: intelligenceGetRemainingTime,
+    getIntelligenceBonus,
+    calculateUpgradeCost: intelligenceGetUpgradeCost,
+    calculateUpgradeDuration: intelligenceGetUpgradeDuration,
+    getSkillRequirements,
+  } = useIntelligenceSkillTreeStore();
+
+  const { cleanMoney, dirtyMoney } = usePlayerStore();
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [upgradeTimers, setUpgradeTimers] = useState<Record<string, number>>({});
+
+  const totalMoney = cleanMoney + dirtyMoney;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTimers: Record<string, number> = {};
+      Object.keys(intelligenceSkills).forEach((skillId) => {
+        const skill = intelligenceSkills[skillId];
+        if (skill.upgrading) {
+          const remaining = intelligenceGetRemainingTime(skillId);
+          newTimers[skillId] = remaining;
+
+          if (remaining <= 0) {
+            intelligenceFinalizeUpgrade(skillId);
+          }
+        }
+      });
+      setUpgradeTimers(newTimers);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [intelligenceSkills, intelligenceGetRemainingTime, intelligenceFinalizeUpgrade]);
+
+  const handleStartUpgrade = (skillId: string) => {
+    const result = intelligenceStartUpgrade(skillId);
+    if (result.success) {
+      setSelectedSkill(skillId);
+    } else {
+      alert(result.error || 'Erro ao iniciar upgrade');
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
+  const skillOrder = ['inteligencia_1', 'inteligencia_2', 'inteligencia_3', 'inteligencia_4', 'inteligencia_5'];
+  const intelligenceBonus = getIntelligenceBonus();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-2xl font-bold text-blue-400">Árvore de Inteligência</h3>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-blue-400">+{intelligenceBonus.toFixed(2)}%</div>
+          <p className="text-xs text-gray-400">Bônus Total</p>
+        </div>
+      </div>
+
+      {skillOrder.map((skillId, index) => {
+        const skill = intelligenceSkills[skillId];
+        if (!skill) return null;
+
+        const requirements = getSkillRequirements(skillId);
+        const cost = intelligenceGetUpgradeCost(skillId);
+        const duration = intelligenceGetUpgradeDuration(skillId);
+        const remainingTime = upgradeTimers[skillId] || 0;
+        const canUpgradeSkill = intelligenceCanUpgrade(skillId);
+        const progressPercent = (skill.level / skill.maxLevel) * 100;
+
+        return (
+          <motion.div
+            key={skillId}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="relative"
+          >
+            {index < skillOrder.length - 1 && (
+              <div className="absolute left-12 top-full w-0.5 h-8 bg-gradient-to-b from-blue-500 to-transparent"></div>
+            )}
+
+            <Card
+              className={`p-6 border-2 transition-all duration-300 cursor-pointer ${
+                !requirements.met
+                  ? 'border-gray-600/30 bg-slate-800/30 opacity-60'
+                  : 'border-blue-500/50 bg-slate-700/50 hover:border-blue-400 hover:bg-slate-700/70'
+              } ${selectedSkill === skillId ? 'ring-2 ring-blue-400' : ''}`}
+              onClick={() => setSelectedSkill(selectedSkill === skillId ? null : skillId)}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start gap-4 flex-1">
+                  <div
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      !requirements.met
+                        ? 'bg-gray-600'
+                        : 'bg-gradient-to-br from-blue-500 to-cyan-600'
+                    }`}
+                  >
+                    {!requirements.met ? (
+                      <Lock className="w-6 h-6" />
+                    ) : (
+                      <Brain className="w-6 h-6" />
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold font-heading">{skill.name}</h3>
+                      <span className="text-sm text-blue-400 font-bold">
+                        Nível {skill.level}/{skill.maxLevel}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-300 mb-3">
+                      {skill.description}
+                    </p>
+
+                    {!requirements.met && (
+                      <p className="text-xs text-yellow-400">
+                        🔒 Requisitos não atendidos
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-24 flex-shrink-0">
+                  <div className="bg-slate-600 rounded-full h-2 mb-1 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-blue-400 to-cyan-500 h-full transition-all duration-300"
+                      style={{
+                        width: `${(skill.level / skill.maxLevel) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-400 text-right">
+                    {Math.round((skill.level / skill.maxLevel) * 100)}%
+                  </p>
+                </div>
+              </div>
+
+              {skill.upgrading && (
+                <div className="mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-blue-300">Upgrade em progresso...</span>
+                    <span className="text-sm font-bold text-cyan-400">
+                      {formatTime(remainingTime)}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-600 rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      className="bg-gradient-to-r from-blue-400 to-cyan-400 h-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((duration - remainingTime) / duration) * 100}%` }}
+                      transition={{ duration: 0.1, ease: 'linear' }}
+                    ></motion.div>
+                  </div>
+                </div>
+              )}
+
+              {selectedSkill === skillId && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 pt-4 border-t border-slate-600/50 space-y-3"
+                >
+                  {skill.requires && skill.requires.length > 0 && (
+                    <div>
+                      <p className="text-sm font-bold text-slate-300 mb-2">Requisitos:</p>
+                      <div className="space-y-2">
+                        {!requirements.met && requirements.missing.length > 0 ? (
+                          requirements.missing.map((req, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-2 text-red-400 text-sm"
+                            >
+                              <AlertCircle className="w-4 h-4" />
+                              {req}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex items-center gap-2 text-green-400 text-sm">
+                            <Check className="w-4 h-4" />
+                            Todos os requisitos atendidos
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400">Custo Próximo Nível:</p>
+                      <p className="text-lg font-bold text-green-400">
+                        ${cost.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Duração:</p>
+                      <p className="text-lg font-bold text-blue-400">
+                        {formatTime(duration)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {skill.level < skill.maxLevel && (
+                    <Button
+                      onClick={() => handleStartUpgrade(skillId)}
+                      disabled={!canUpgradeSkill}
+                      className={`w-full py-2 rounded-lg font-bold transition-all ${
+                        canUpgradeSkill
+                          ? 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-white'
+                          : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {canUpgradeSkill ? 'Fazer Upgrade' : 'Requisitos Não Atendidos'}
+                    </Button>
+                  )}
+
+                  {skill.level >= skill.maxLevel && (
+                    <div className="p-3 bg-green-900/30 rounded-lg border border-green-500/30 text-center">
+                      <p className="text-green-400 font-bold">✓ Nível Máximo Atingido</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Attack Skill Component
 function AttackSkillSection() {
   const { skills: attackSkills, startUpgrade: attackStartUpgrade, finalizeUpgrade: attackFinalizeUpgrade, canUpgrade: attackCanUpgrade, getRemainingTime: attackGetRemainingTime, getAttackBonus, getSkillProgress } =
@@ -1496,7 +1749,7 @@ function AttackSkillSection() {
 export default function InvestmentSkillTreePage() {
   const { playerMoney, resetSkills } = useSkillTreeStore();
   const [expandedTrees, setExpandedTrees] = useState<Record<string, boolean>>({
-    inteligencia: true,
+    inteligencia: false,
     agilidade: true,
     ataque: true,
     defesa: true,
@@ -1571,6 +1824,47 @@ export default function InvestmentSkillTreePage() {
 
         {/* Skill Trees Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Inteligência Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleTree('inteligencia')}
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
+                style={{
+                  backgroundColor: `${TREE_COLORS['inteligencia'].bg}20`,
+                  borderBottom: expandedTrees['inteligencia']
+                    ? `2px solid ${TREE_COLORS['inteligencia'].border}`
+                    : 'none',
+                }}
+              >
+                <span className="text-lg font-bold">Inteligência</span>
+                {expandedTrees['inteligencia'] ? (
+                  <ChevronUp size={20} />
+                ) : (
+                  <ChevronDown size={20} />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {expandedTrees['inteligencia'] && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-6"
+                  >
+                    <IntelligenceSkillSection />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+
           {/* Agilidade Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
