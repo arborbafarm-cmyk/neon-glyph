@@ -1,318 +1,114 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useSkillTreeStore, SkillNode } from '@/store/skillTreeStore';
-import { useAgilitySkillTreeStore } from '@/store/agilitySkillTreeStore';
-import { useAttackSkillTreeStore } from '@/store/attackSkillTreeStore';
-import { useDefenseSkillTreeStore } from '@/store/defenseSkillTreeStore';
-import { useRespeitSkillTreeStore } from '@/store/respeitSkillTreeStore';
-import { useVigorSkillTreeStore } from '@/store/vigorSkillTreeStore';
-import { useIntelligenceSkillTreeStore } from '@/store/intelligenceSkillTreeStore';
-import { usePlayerStore } from '@/store/playerStore';
+import { useState, useEffect, useRef } from 'react';
+import { useInvestmentSkillTreeStore, type Skill } from '@/store/investmentSkillTreeStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import {
-  Brain,
-  Zap,
-  Sword,
-  Shield,
-  Crown,
-  Heart,
-  Lock,
-  Flame,
-  Target,
-  Ear,
-  Cpu,
-  Gauge,
-  Users,
-  AlertCircle,
-  Check,
-  ChevronUp,
-  ChevronDown,
-  Clock,
-  CheckCircle,
-} from 'lucide-react';
 
-const TREE_COLORS = {
-  inteligencia: { bg: '#1e3a8a', border: '#3b82f6', glow: '#60a5fa', icon: Brain },
-  agilidade: { bg: '#7c2d12', border: '#ea580c', glow: '#fb923c', icon: Zap },
-  ataque: { bg: '#7c1d1d', border: '#dc2626', glow: '#ef4444', icon: Sword },
-  defesa: { bg: '#1e3a3a', border: '#14b8a6', glow: '#2dd4bf', icon: Shield },
-  respeito: { bg: '#3f2d1f', border: '#d97706', glow: '#fbbf24', icon: Crown },
-  vigor: { bg: '#2d1f3f', border: '#a855f7', glow: '#d8b4fe', icon: Heart },
-};
+const CATEGORIES = [
+  { id: 'Inteligência', label: 'INTELIGÊNCIA', color: '#00eaff', icon: '🧠' },
+  { id: 'Agilidade', label: 'AGILIDADE', color: '#FFD700', icon: '⚡' },
+  { id: 'Ataque', label: 'ATAQUE', color: '#FF4500', icon: '💥' },
+  { id: 'Defesa', label: 'DEFESA', color: '#00FF00', icon: '🛡️' },
+  { id: 'Respeito', label: 'RESPEITO', color: '#FF69B4', icon: '👑' },
+  { id: 'Vigor', label: 'VIGOR', color: '#FF0000', icon: '❤️' },
+];
 
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
-  Brain,
-  Ear,
-  Cpu,
-  Zap,
-  Gauge,
-  Sword,
-  Flame,
-  Target,
-  Shield,
-  Lock,
-  Crown,
-  Users,
-  Heart,
-};
-
-interface SkillNodeProps {
-  skill: SkillNode;
+type SkillModalData = {
+  skill: Skill;
+  category: string;
+  cost: number;
+  duration: number;
   canUpgrade: boolean;
-  onUpgrade: (skillId: string) => void;
-  isUpgrading: boolean;
-  treeColor: (typeof TREE_COLORS)[keyof typeof TREE_COLORS];
-}
-
-const SkillNodeComponent: React.FC<SkillNodeProps> = (
-  {
-    skill,
-    canUpgrade,
-    onUpgrade,
-    isUpgrading,
-    treeColor,
-  }
-) => {
-  const [showTooltip, setShowTooltip] = useState(false);
-  const isLocked = !canUpgrade && skill.level === 0;
-  const isCompleted = skill.level >= skill.maxLevel;
-  const isAvailable = canUpgrade && !isCompleted;
-
-  const getStateColor = () => {
-    if (isCompleted) return 'from-green-500 to-green-600';
-    if (isAvailable) return `from-${treeColor.border} to-${treeColor.glow}`;
-    return 'from-gray-600 to-gray-700';
-  };
-
-  const IconComponent = ICON_MAP[skill.icon] || Brain;
-
-  return (
-    <div className="relative flex flex-col items-center">
-      <motion.div
-        className="relative"
-        whileHover={!isLocked ? { scale: 1.05 } : {}}
-        whileTap={!isLocked ? { scale: 0.95 } : {}}
-      >
-        <div
-          className={`relative w-24 h-24 rounded-lg cursor-pointer transition-all duration-300 ${
-            isLocked ? 'cursor-not-allowed opacity-60' : ''
-          }`}
-          style={{
-            background: isCompleted
-              ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-              : isAvailable
-                ? `linear-gradient(135deg, ${treeColor.border} 0%, ${treeColor.glow} 100%)`
-                : 'linear-gradient(135deg, #4b5563 0%, #2d3748 100%)',
-            boxShadow: isCompleted
-              ? '0 0 20px rgba(16, 185, 129, 0.6)'
-              : isAvailable
-                ? `0 0 20px ${treeColor.glow}80`
-                : '0 0 10px rgba(0, 0, 0, 0.5)',
-            border: `2px solid ${
-              isCompleted ? '#10b981' : isAvailable ? treeColor.border : '#4b5563'
-            }`,
-          }}
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
-          onClick={() => {
-            if (canUpgrade && !isCompleted) {
-              onUpgrade(skill.id);
-            }
-          }}
-        >
-          <div className="flex items-center justify-center w-full h-full">
-            <IconComponent
-              size={32}
-              className={`${
-                isCompleted ? 'text-white' : isAvailable ? 'text-white' : 'text-gray-400'
-              }`}
-            />
-          </div>
-
-          {isLocked && (
-            <div className="absolute top-1 right-1 bg-red-600 rounded-full p-1">
-              <Lock size={12} className="text-white" />
-            </div>
-          )}
-
-          {isCompleted && (
-            <div className="absolute top-1 right-1 bg-green-600 rounded-full p-1">
-              <Check size={12} className="text-white" />
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      <div className="mt-2 text-center">
-        <p className="text-xs font-bold text-white truncate w-24">{skill.name}</p>
-        <p
-          className="text-xs font-semibold"
-          style={{
-            color: isCompleted ? '#10b981' : isAvailable ? treeColor.glow : '#9ca3af',
-          }}
-        >
-          {skill.level}/{skill.maxLevel}
-        </p>
-      </div>
-
-      <AnimatePresence>
-        {showTooltip && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 z-50 w-48 bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg"
-          >
-            <p className="text-xs font-bold text-white mb-1">{skill.name}</p>
-            <p className="text-xs text-gray-300 mb-2">{skill.description}</p>
-
-            {!isCompleted && (
-              <div className="text-xs text-yellow-400 font-semibold mb-2">
-                Custo: ${(skill.baseCost * (skill.level + 1)).toLocaleString()}
-              </div>
-            )}
-
-            {skill.requires && skill.requires.length > 0 && (
-              <div className="text-xs text-orange-400 mb-2">
-                <p className="font-semibold">Requer:</p>
-                {skill.requires.map((req) => (
-                  <p key={req} className="text-orange-300">
-                    • {req}
-                  </p>
-                ))}
-              </div>
-            )}
-
-            {isCompleted && (
-              <div className="text-xs text-green-400 font-semibold">✓ Completo</div>
-            )}
-
-            {isLocked && (
-              <div className="text-xs text-red-400 font-semibold flex items-center gap-1">
-                <AlertCircle size={12} />
-                Bloqueado
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  remainingTime: number;
 };
 
-interface SkillTreeProps {
-  treeKey: keyof typeof TREE_COLORS;
-  title: string;
-}
-
-const SkillTree: React.FC<SkillTreeProps> = ({ treeKey, title }) => {
+export default function InvestmentSkillTreePage() {
   const {
     skills,
-    getSkillsByTree,
-    canUpgradeSkill,
+    dirtyMoney,
     upgradeSkill,
-    isUpgrading,
-  } = useSkillTreeStore();
+    finalizeUpgrade,
+    canUpgrade,
+    getRemainingTime,
+    getSkill,
+  } = useInvestmentSkillTreeStore();
 
-  const treeSkills = getSkillsByTree(treeKey);
-  const treeColor = TREE_COLORS[treeKey];
-
-  const handleUpgrade = (skillId: string) => {
-    upgradeSkill(skillId);
-  };
-
-  return (
-    <div className="flex flex-col items-center gap-8 p-6 bg-gradient-to-b from-gray-900 to-black rounded-lg border border-gray-800">
-      <div className="text-center">
-        <h3
-          className="text-2xl font-bold mb-2"
-          style={{ color: treeColor.glow }}
-        >
-          {title}
-        </h3>
-        <div
-          className="h-1 w-12 mx-auto rounded"
-          style={{ backgroundColor: treeColor.glow }}
-        />
-      </div>
-
-      <div className="flex flex-col gap-12 w-full">
-        {treeSkills.map((skill, index) => (
-          <motion.div
-            key={skill.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="flex flex-col items-center"
-          >
-            {index > 0 && (
-              <div
-                className="h-8 w-1 mb-4"
-                style={{
-                  background: `linear-gradient(180deg, ${treeColor.glow}80 0%, ${treeColor.glow}20 100%)`,
-                }}
-              />
-            )}
-
-            <SkillNodeComponent
-              skill={skill}
-              canUpgrade={canUpgradeSkill(skill.id)}
-              onUpgrade={handleUpgrade}
-              isUpgrading={isUpgrading}
-              treeColor={treeColor}
-            />
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ... keep existing code (AgilitySkillSection, DefenseSkillSection, VigorSkillSection, IntelligenceSkillSection, AttackSkillSection) ...
-
-// Respect Skill Component
-function RespeitSkillSection() {
-  const {
-    skills: respeitSkills,
-    startUpgrade: respeitStartUpgrade,
-    finalizeUpgrade: respeitFinalizeUpgrade,
-    canUpgrade: respeitCanUpgrade,
-    getRemainingTime: respeitGetRemainingTime,
-    getRespectBonus,
-    getSkillProgress,
-  } = useRespeitSkillTreeStore();
-
-  const { cleanMoney, dirtyMoney } = usePlayerStore();
-  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<SkillModalData | null>(null);
+  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const [upgradeTimers, setUpgradeTimers] = useState<Record<string, number>>({});
 
-  const totalMoney = cleanMoney + dirtyMoney;
-
+  // Update timers for upgrading skills
   useEffect(() => {
     const interval = setInterval(() => {
       const newTimers: Record<string, number> = {};
-      Object.keys(respeitSkills).forEach((skillId) => {
-        const remaining = respeitGetRemainingTime(skillId);
-        if (remaining > 0) {
-          newTimers[skillId] = remaining;
-        } else if (respeitSkills[skillId].upgrading && remaining <= 0) {
-          respeitFinalizeUpgrade(skillId);
+      Object.values(skills).forEach((skill) => {
+        if (skill.upgrading && skill.endTime) {
+          const remaining = Math.max(0, skill.endTime - Date.now());
+          newTimers[skill.id] = remaining;
+
+          if (remaining === 0) {
+            finalizeUpgrade(skill.id);
+          }
         }
       });
       setUpgradeTimers(newTimers);
     }, 100);
 
     return () => clearInterval(interval);
-  }, [respeitSkills, respeitGetRemainingTime, respeitFinalizeUpgrade]);
+  }, [skills, finalizeUpgrade]);
 
-  const handleStartUpgrade = (skillId: string) => {
-    const result = respeitStartUpgrade(skillId, totalMoney);
-    if (result.success) {
-      setSelectedSkill(skillId);
+  const handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale((prev) => Math.max(0.5, Math.min(3, prev * delta)));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 2) return;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startPan = { ...pan };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      setPan({
+        x: startPan.x + (moveEvent.clientX - startX),
+        y: startPan.y + (moveEvent.clientY - startY),
+      });
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleSkillClick = (skill: Skill) => {
+    const cost = skill.baseCost * Math.pow(skill.level + 1, 1.8);
+    const duration = skill.baseTime * Math.pow(skill.level + 1, 1.5);
+    const canUpgradeSkill = canUpgrade(skill.id);
+    const remainingTime = getRemainingTime(skill);
+
+    setSelectedSkill({
+      skill,
+      category: skill.category,
+      cost: Math.floor(cost),
+      duration: Math.floor(duration),
+      canUpgrade: canUpgradeSkill,
+      remainingTime,
+    });
+  };
+
+  const handleUpgradeClick = () => {
+    if (selectedSkill && canUpgrade(selectedSkill.skill.id)) {
+      upgradeSkill(selectedSkill.skill.id);
+      setSelectedSkill(null);
     }
   };
 
@@ -320,570 +116,387 @@ function RespeitSkillSection() {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    } else {
-      return `${seconds}s`;
+    if (days > 0) return `${days}d ${hours % 24}h`;
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+    return `${seconds}s`;
+  };
+
+  const formatMoney = (amount: number) => {
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
+    return `$${amount}`;
+  };
+
+  const getSkillState = (skill: Skill) => {
+    if (skill.upgrading) return 'upgrading';
+    if (skill.level >= skill.maxLevel) return 'complete';
+    if (canUpgrade(skill.id)) return 'available';
+    return 'locked';
+  };
+
+  const getStateColor = (state: string) => {
+    switch (state) {
+      case 'complete':
+        return '#00FF00';
+      case 'available':
+        return '#FFD700';
+      case 'upgrading':
+        return '#00eaff';
+      default:
+        return '#666666';
     }
   };
 
-  const getCost = (skillId: string) => {
-    const skill = respeitSkills[skillId];
-    return Math.ceil(skill.baseCost * Math.pow(skill.level + 1, 1.8));
+  const getCategorySkills = (categoryName: string) => {
+    return Object.values(skills)
+      .filter((s) => s.category === categoryName)
+      .sort((a, b) => {
+        const aNum = parseInt(a.id.split('-')[1]);
+        const bNum = parseInt(b.id.split('-')[1]);
+        return aNum - bNum;
+      });
   };
-
-  const getDuration = (skillId: string) => {
-    const skill = respeitSkills[skillId];
-    return Math.ceil(skill.baseTime * Math.pow(skill.level + 1, 1.5));
-  };
-
-  const totalRespect = getRespectBonus();
-  const skillOrder = ['respeito_1', 'respeito_2', 'respeito_3', 'respeito_4', 'respeito_5'];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-2xl font-bold text-orange-400">Árvore de Respeito</h3>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-orange-400">{totalRespect}</div>
-          <p className="text-xs text-gray-400">Nível Total</p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <Header />
+
+      <div className="relative w-full overflow-hidden bg-black/40">
+        {/* Background glow effect */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500 rounded-full blur-3xl"></div>
+        </div>
+
+        {/* Main content */}
+        <div
+          ref={containerRef}
+          className="relative w-full min-h-screen flex items-center justify-center overflow-hidden"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <motion.div
+            style={{
+              scale,
+              x: pan.x,
+              y: pan.y,
+            }}
+            className="w-full max-w-7xl"
+          >
+            {/* SVG Connections */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+              <defs>
+                <linearGradient id="grad-locked" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#666666" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#666666" stopOpacity="0.1" />
+                </linearGradient>
+                <linearGradient id="grad-available" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFD700" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#FFD700" stopOpacity="0.2" />
+                </linearGradient>
+                <linearGradient id="grad-complete" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00FF00" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#00FF00" stopOpacity="0.2" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            <div className="relative z-10 px-8 py-16">
+              {/* Title */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center mb-20"
+              >
+                <h1 className="font-heading text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 mb-4">
+                  IMPÉRIO DO CRIME
+                </h1>
+                <p className="text-cyan-400 text-lg font-paragraph">
+                  Árvore de Investimento - Meta de 2 Anos de Progressão
+                </p>
+              </motion.div>
+
+              {/* Money Display */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-center mb-12"
+              >
+                <div className="bg-black/60 border border-cyan-400/50 rounded-lg px-8 py-4 backdrop-blur-sm">
+                  <p className="text-cyan-400 font-paragraph text-sm">Dinheiro Sujo Disponível</p>
+                  <p className="text-2xl font-bold text-yellow-400 font-heading">
+                    {formatMoney(dirtyMoney)}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Categories Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-20">
+                {CATEGORIES.map((category, idx) => (
+                  <motion.div
+                    key={category.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="relative"
+                  >
+                    {/* Category Header */}
+                    <div className="text-center mb-8">
+                      <div className="text-4xl mb-2">{category.icon}</div>
+                      <h2
+                        className="font-heading text-2xl font-bold"
+                        style={{ color: category.color }}
+                      >
+                        {category.label}
+                      </h2>
+                    </div>
+
+                    {/* Skills Column */}
+                    <div className="space-y-4">
+                      {getCategorySkills(category.id).map((skill, skillIdx) => {
+                        const state = getSkillState(skill);
+                        const stateColor = getStateColor(state);
+                        const isUpgrading = skill.upgrading;
+                        const remainingTime = upgradeTimers[skill.id] || 0;
+
+                        return (
+                          <motion.button
+                            key={skill.id}
+                            onClick={() => handleSkillClick(skill)}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: skillIdx * 0.05 }}
+                            className="w-full relative group"
+                          >
+                            {/* Glow effect */}
+                            <div
+                              className="absolute inset-0 rounded-lg blur-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                              style={{
+                                backgroundColor: stateColor,
+                                animation: isUpgrading ? 'pulse 2s infinite' : 'none',
+                              }}
+                            ></div>
+
+                            {/* Card */}
+                            <div
+                              className="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 rounded-lg p-4 transition-all group-hover:scale-105 cursor-pointer"
+                              style={{
+                                borderColor: stateColor,
+                                boxShadow: `0 0 20px ${stateColor}40`,
+                              }}
+                            >
+                              {/* Level Badge */}
+                              <div className="absolute top-2 right-2 bg-black/80 rounded-full w-8 h-8 flex items-center justify-center border border-cyan-400/50">
+                                <span className="text-xs font-bold text-cyan-400">
+                                  {skill.level}/{skill.maxLevel}
+                                </span>
+                              </div>
+
+                              {/* Content */}
+                              <div className="text-left">
+                                <h3 className="font-heading font-bold text-sm text-white mb-1">
+                                  {skill.name}
+                                </h3>
+                                <p className="text-xs text-gray-300 mb-2">{skill.description}</p>
+
+                                {/* Status */}
+                                {isUpgrading ? (
+                                  <div className="text-xs text-cyan-400 font-bold">
+                                    ⏱️ {formatTime(remainingTime)}
+                                  </div>
+                                ) : state === 'complete' ? (
+                                  <div className="text-xs text-green-400 font-bold">✓ COMPLETO</div>
+                                ) : state === 'locked' ? (
+                                  <div className="text-xs text-gray-500 font-bold">🔒 BLOQUEADO</div>
+                                ) : (
+                                  <div className="text-xs text-yellow-400 font-bold">✓ DISPONÍVEL</div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Footer Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center"
+              >
+                <div className="inline-block bg-black/60 border border-yellow-600/50 rounded-lg px-8 py-4 backdrop-blur-sm">
+                  <p className="text-yellow-600 font-paragraph text-sm">PEQUENOS ESQUEMAS</p>
+                  <p className="text-gray-400 text-xs mt-1">Comece do zero e construa seu império</p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
-      {skillOrder.map((skillId, index) => {
-        const skill = respeitSkills[skillId];
-        const cost = getCost(skillId);
-        const duration = getDuration(skillId);
-        const remainingTime = upgradeTimers[skillId] || 0;
-        const canUpgradeSkill = respeitCanUpgrade(skillId, totalMoney);
-        const progress = getSkillProgress(skillId);
-
-        const isLocked = skill.requires && skill.requires.length > 0 && !canUpgradeSkill && skill.level === 0;
-
-        return (
+      {/* Skill Modal */}
+      <AnimatePresence>
+        {selectedSkill && (
           <motion.div
-            key={skillId}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => setSelectedSkill(selectedSkill === skillId ? null : skillId)}
-            className="cursor-pointer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedSkill(null)}
           >
-            <Card
-              className={`bg-gradient-to-r p-6 border-2 transition-all ${
-                selectedSkill === skillId
-                  ? 'border-cyan-400 shadow-lg shadow-cyan-400/50'
-                  : isLocked
-                    ? 'border-gray-600 opacity-60'
-                    : 'border-orange-500/50 hover:border-orange-400'
-              }`}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-cyan-400/50 rounded-xl p-8 max-w-md w-full backdrop-blur-sm"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="text-3xl">
-                    {index === 0 && '🏘️'}
-                    {index === 1 && '👥'}
-                    {index === 2 && '🕸️'}
-                    {index === 3 && '👑'}
-                    {index === 4 && '⚡'}
-                  </div>
-                  <div>
-                    <h3 className="font-heading text-2xl font-bold text-white">{skill.name}</h3>
-                    <p className="text-sm text-gray-400">
-                      Nível {skill.level} / {skill.maxLevel}
-                    </p>
-                  </div>
-                </div>
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedSkill(null)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
 
-                {isLocked && <Lock className="w-6 h-6 text-gray-500" />}
-                {!isLocked && skill.level === skill.maxLevel && (
-                  <div className="text-2xl">✅</div>
-                )}
-                {!isLocked && skill.level < skill.maxLevel && (
-                  <ChevronDown
-                    className={`w-6 h-6 transition-transform ${
-                      selectedSkill === skillId ? 'rotate-180' : ''
-                    }`}
-                  />
-                )}
+              {/* Header */}
+              <div className="mb-6">
+                <div className="text-3xl mb-2">{CATEGORIES.find((c) => c.id === selectedSkill.category)?.icon}</div>
+                <h2 className="font-heading text-2xl font-bold text-white mb-2">
+                  {selectedSkill.skill.name}
+                </h2>
+                <p className="text-gray-400 text-sm">{selectedSkill.skill.description}</p>
               </div>
 
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
-                  <motion.div
-                    className="bg-gradient-to-r from-orange-500 to-red-500 h-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
+              {/* Stats */}
+              <div className="space-y-3 mb-6 bg-black/40 rounded-lg p-4 border border-cyan-400/20">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Nível Atual:</span>
+                  <span className="font-bold text-cyan-400">
+                    {selectedSkill.skill.level} / {selectedSkill.skill.maxLevel}
+                  </span>
+                </div>
+
+                {selectedSkill.skill.upgrading ? (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Tempo Restante:</span>
+                      <span className="font-bold text-yellow-400">
+                        {formatTime(selectedSkill.remainingTime)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        initial={{ width: '100%' }}
+                        animate={{ width: '0%' }}
+                        transition={{
+                          duration: selectedSkill.remainingTime / 1000,
+                          ease: 'linear',
+                        }}
+                        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                      ></motion.div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Custo:</span>
+                      <span className="font-bold text-yellow-400">{formatMoney(selectedSkill.cost)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Tempo:</span>
+                      <span className="font-bold text-orange-400">
+                        {formatTime(selectedSkill.duration * 1000)}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Efeito:</span>
+                  <span className="font-bold text-green-400">{selectedSkill.skill.effect}</span>
                 </div>
               </div>
 
-              {/* Expanded Details */}
-              {selectedSkill === skillId && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-6 pt-6 border-t border-slate-600 space-y-4"
-                >
-                  {/* Description */}
-                  <div>
-                    <p className="text-sm text-gray-400 mb-2">Descrição:</p>
-                    <p className="text-white">
-                      {skillId === 'respeito_1' &&
-                        'Desbloqueia áreas iniciais e pequenos bônus de influência'}
-                      {skillId === 'respeito_2' &&
-                        'Libera NPCs locais e missões básicas'}
-                      {skillId === 'respeito_3' &&
-                        'Acesso a contatos estratégicos e operações melhores'}
-                      {skillId === 'respeito_4' &&
-                        'Libera novas regiões do mapa e bônus de autoridade'}
-                      {skillId === 'respeito_5' &&
-                        'Desbloqueio global de conteúdo avançado e bônus massivo de influência'}
-                    </p>
+              {/* Requirements */}
+              {selectedSkill.skill.requires && selectedSkill.skill.requires.length > 0 && (
+                <div className="mb-6 bg-black/40 rounded-lg p-4 border border-orange-400/20">
+                  <p className="text-gray-400 text-sm mb-2">Requisitos:</p>
+                  <div className="space-y-1">
+                    {selectedSkill.skill.requires.map((reqId) => {
+                      const reqSkill = getSkill(reqId);
+                      const isMet = reqSkill && reqSkill.level > 0;
+                      return (
+                        <div key={reqId} className="text-xs">
+                          <span className={isMet ? 'text-green-400' : 'text-red-400'}>
+                            {isMet ? '✓' : '✗'} {reqSkill?.name}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-
-                  {/* Upgrade Info */}
-                  {skill.level < skill.maxLevel && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-slate-700/50 p-4 rounded-lg">
-                        <p className="text-xs text-gray-400 mb-1">Custo do Próximo Upgrade</p>
-                        <p className="text-xl font-bold text-orange-400">${cost.toLocaleString()}</p>
-                      </div>
-                      <div className="bg-slate-700/50 p-4 rounded-lg">
-                        <p className="text-xs text-gray-400 mb-1">Tempo de Upgrade</p>
-                        <p className="text-xl font-bold text-cyan-400">{formatTime(duration)}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Upgrade Status */}
-                  {skill.upgrading && remainingTime > 0 && (
-                    <div className="bg-blue-900/30 border border-blue-500/50 p-4 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4 text-blue-400" />
-                        <p className="text-sm text-blue-400">Upgrade em Progresso</p>
-                      </div>
-                      <p className="text-2xl font-bold text-blue-300">{formatTime(remainingTime)}</p>
-                      <div className="w-full bg-slate-700 rounded-full h-2 mt-3 overflow-hidden">
-                        <motion.div
-                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-full"
-                          initial={{ width: 0 }}
-                          animate={{
-                            width: `${100 - (remainingTime / getDuration(skillId)) * 100}%`,
-                          }}
-                          transition={{ duration: 0.1 }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4">
-                    {skill.level < skill.maxLevel && !skill.upgrading && (
-                      <Button
-                        onClick={() => handleStartUpgrade(skillId)}
-                        disabled={!canUpgradeSkill}
-                        className={`flex-1 ${
-                          canUpgradeSkill
-                            ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
-                            : 'bg-gray-600 cursor-not-allowed'
-                        }`}
-                      >
-                        {canUpgradeSkill ? 'Iniciar Upgrade' : 'Requisitos Não Atendidos'}
-                      </Button>
-                    )}
-
-                    {skill.level === skill.maxLevel && (
-                      <Button disabled className="flex-1 bg-gray-600">
-                        Nível Máximo Atingido
-                      </Button>
-                    )}
-                  </div>
-                </motion.div>
+                </div>
               )}
-            </Card>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
 
-// ... keep existing code (AgilitySkillSection, DefenseSkillSection, VigorSkillSection, IntelligenceSkillSection, AttackSkillSection) ...
+              {/* Action Button */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setSelectedSkill(null)}
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-gray-400 hover:text-white"
+                >
+                  Fechar
+                </Button>
 
-export default function InvestmentSkillTreePage() {
-  const { playerMoney, resetSkills } = useSkillTreeStore();
-  const [expandedTrees, setExpandedTrees] = useState<Record<string, boolean>>({
-    inteligencia: false,
-    agilidade: true,
-    ataque: true,
-    defesa: true,
-    respeito: true,
-    vigor: true,
-  });
-
-  const toggleTree = (tree: string) => {
-    setExpandedTrees((prev) => ({
-      ...prev,
-      [tree]: !prev[tree],
-    }));
-  };
-
-  const treeLabels = {
-    inteligencia: 'Inteligência',
-    agilidade: 'Agilidade',
-    ataque: 'Ataque',
-    defesa: 'Defesa',
-    respeito: 'Respeito',
-    vigor: 'Vigor',
-  };
-
-  const AnimatePresence = ({ children }: any) => <>{children}</>;
-  const ChevronRight = ({ className }: any) => <ChevronDown className={className} />;
-
-  return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <Header />
-
-      <main className="flex-1 w-full max-w-[100rem] mx-auto px-4 py-12">
-        {/* Header Section */}
-        <div className="mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-            Centro de Investimento
-          </h1>
-          <p className="text-gray-300 text-lg mb-6">
-            Desenvolva suas habilidades e domine o jogo. Cada upgrade aumenta suas capacidades.
-          </p>
-
-          {/* Player Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <motion.div
-              className="bg-gradient-to-br from-yellow-900 to-yellow-950 border border-yellow-600 rounded-lg p-4"
-              whileHover={{ scale: 1.02 }}
-            >
-              <p className="text-yellow-300 text-sm font-semibold mb-1">Dinheiro Disponível</p>
-              <p className="text-3xl font-bold text-yellow-400">
-                ${playerMoney.toLocaleString()}
-              </p>
+                {selectedSkill.skill.upgrading ? (
+                  <Button
+                    disabled
+                    className="flex-1 bg-cyan-500/50 text-white cursor-not-allowed"
+                  >
+                    ⏱️ Evoluindo...
+                  </Button>
+                ) : selectedSkill.skill.level >= selectedSkill.skill.maxLevel ? (
+                  <Button disabled className="flex-1 bg-green-500/50 text-white cursor-not-allowed">
+                    ✓ Completo
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleUpgradeClick}
+                    disabled={!selectedSkill.canUpgrade}
+                    className={`flex-1 ${
+                      selectedSkill.canUpgrade
+                        ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                        : 'bg-gray-600 cursor-not-allowed'
+                    } text-white font-bold`}
+                  >
+                    {selectedSkill.canUpgrade ? '⚡ Evoluir' : '🔒 Indisponível'}
+                  </Button>
+                )}
+              </div>
             </motion.div>
-
-            <motion.div
-              className="bg-gradient-to-br from-green-900 to-green-950 border border-green-600 rounded-lg p-4"
-              whileHover={{ scale: 1.02 }}
-            >
-              <p className="text-green-300 text-sm font-semibold mb-1">Status</p>
-              <p className="text-2xl font-bold text-green-400">Ativo</p>
-            </motion.div>
-
-            <motion.button
-              onClick={resetSkills}
-              className="bg-gradient-to-br from-red-900 to-red-950 border border-red-600 rounded-lg p-4 hover:from-red-800 hover:to-red-900 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <p className="text-red-300 text-sm font-semibold mb-1">Ação</p>
-              <p className="text-lg font-bold text-red-400">Resetar Árvore</p>
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Skill Trees Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Agilidade Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
-              <button
-                onClick={() => toggleTree('agilidade')}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
-                style={{
-                  backgroundColor: `${TREE_COLORS['agilidade'].bg}20`,
-                  borderBottom: expandedTrees['agilidade']
-                    ? `2px solid ${TREE_COLORS['agilidade'].border}`
-                    : 'none',
-                }}
-              >
-                <span className="text-lg font-bold">Agilidade</span>
-                {expandedTrees['agilidade'] ? (
-                  <ChevronUp size={20} />
-                ) : (
-                  <ChevronDown size={20} />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {expandedTrees['agilidade'] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6"
-                  >
-                    {/* AgilitySkillSection component would go here */}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
           </motion.div>
-
-          {/* Ataque Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
-              <button
-                onClick={() => toggleTree('ataque')}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
-                style={{
-                  backgroundColor: `${TREE_COLORS['ataque'].bg}20`,
-                  borderBottom: expandedTrees['ataque']
-                    ? `2px solid ${TREE_COLORS['ataque'].border}`
-                    : 'none',
-                }}
-              >
-                <span className="text-lg font-bold">Ataque</span>
-                {expandedTrees['ataque'] ? (
-                  <ChevronUp size={20} />
-                ) : (
-                  <ChevronDown size={20} />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {expandedTrees['ataque'] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6"
-                  >
-                    {/* AttackSkillSection component would go here */}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
-          {/* Defesa Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
-              <button
-                onClick={() => toggleTree('defesa')}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
-                style={{
-                  backgroundColor: `${TREE_COLORS['defesa'].bg}20`,
-                  borderBottom: expandedTrees['defesa']
-                    ? `2px solid ${TREE_COLORS['defesa'].border}`
-                    : 'none',
-                }}
-              >
-                <span className="text-lg font-bold">Defesa</span>
-                {expandedTrees['defesa'] ? (
-                  <ChevronUp size={20} />
-                ) : (
-                  <ChevronDown size={20} />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {expandedTrees['defesa'] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6"
-                  >
-                    {/* DefenseSkillSection component would go here */}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
-          {/* Respeito Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-          >
-            <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
-              <button
-                onClick={() => toggleTree('respeito')}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
-                style={{
-                  backgroundColor: `${TREE_COLORS['respeito'].bg}20`,
-                  borderBottom: expandedTrees['respeito']
-                    ? `2px solid ${TREE_COLORS['respeito'].border}`
-                    : 'none',
-                }}
-              >
-                <span className="text-lg font-bold">Respeito</span>
-                {expandedTrees['respeito'] ? (
-                  <ChevronUp size={20} />
-                ) : (
-                  <ChevronDown size={20} />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {expandedTrees['respeito'] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6"
-                  >
-                    <RespeitSkillSection />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
-          {/* Vigor Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
-              <button
-                onClick={() => toggleTree('vigor')}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
-                style={{
-                  backgroundColor: `${TREE_COLORS['vigor'].bg}20`,
-                  borderBottom: expandedTrees['vigor']
-                    ? `2px solid ${TREE_COLORS['vigor'].border}`
-                    : 'none',
-                }}
-              >
-                <span className="text-lg font-bold">Vigor</span>
-                {expandedTrees['vigor'] ? (
-                  <ChevronUp size={20} />
-                ) : (
-                  <ChevronDown size={20} />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {expandedTrees['vigor'] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6"
-                  >
-                    {/* VigorSkillSection component would go here */}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
-          {/* Inteligência Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-          >
-            <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
-              <button
-                onClick={() => toggleTree('inteligencia')}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-900 transition-colors"
-                style={{
-                  backgroundColor: `${TREE_COLORS['inteligencia'].bg}20`,
-                  borderBottom: expandedTrees['inteligencia']
-                    ? `2px solid ${TREE_COLORS['inteligencia'].border}`
-                    : 'none',
-                }}
-              >
-                <span className="text-lg font-bold">Inteligência</span>
-                {expandedTrees['inteligencia'] ? (
-                  <ChevronUp size={20} />
-                ) : (
-                  <ChevronDown size={20} />
-                )}
-              </button>
-
-              <AnimatePresence>
-                {expandedTrees['inteligencia'] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6"
-                  >
-                    {/* IntelligenceSkillSection component would go here */}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Info Section */}
-        <motion.div
-          className="mt-12 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className="text-2xl font-bold mb-6 text-yellow-400">Como Funciona</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-lg font-bold text-blue-400 mb-3">Estados das Habilidades</h3>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-gray-600" />
-                  <span>Bloqueado - Requer pré-requisitos</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-yellow-500" />
-                  <span>Disponível - Pronto para upgrade</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-green-500" />
-                  <span>Completo - Máximo nível atingido</span>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-bold text-orange-400 mb-3">Sistema de Custo</h3>
-              <p className="text-sm text-gray-300 mb-3">
-                Cada upgrade custa: <span className="text-yellow-400 font-bold">baseCost × (nível + 1)</span>
-              </p>
-              <p className="text-sm text-gray-300">
-                Clique em uma habilidade para fazer upgrade se tiver dinheiro suficiente.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </main>
+        )}
+      </AnimatePresence>
 
       <Footer />
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.5;
+          }
+          50% {
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }
