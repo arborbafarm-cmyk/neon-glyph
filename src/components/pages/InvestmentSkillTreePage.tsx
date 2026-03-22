@@ -34,6 +34,7 @@ export default function InvestmentSkillTreePage() {
     canUpgrade,
     getRemainingTime,
     getSkill,
+    isSkillUnlocked,
   } = useInvestmentSkillTreeStore();
   
   const { dirtyMoney } = useDirtyMoneyStore();
@@ -147,6 +148,7 @@ export default function InvestmentSkillTreePage() {
   };
 
   const getSkillState = (skill: Skill) => {
+    if (!skill.isUnlocked) return 'locked';
     if (skill.upgrading) return 'upgrading';
     if (skill.level >= skill.maxLevel) return 'complete';
     if (canUpgrade(skill.id)) return 'available';
