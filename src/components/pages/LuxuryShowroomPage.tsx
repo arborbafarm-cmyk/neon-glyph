@@ -100,6 +100,18 @@ function themeByLevel(level: number) {
   };
 }
 
+function getItemVisual(level: number, itemIndex: number) {
+  const colors = [
+    { primary: '#FFD700', overlay: 'rgba(255,215,0,.22)', filter: 'brightness(1.1) saturate(1.2)' },
+    { primary: '#a26cff', overlay: 'rgba(162,108,255,.22)', filter: 'brightness(1.08) saturate(1.15)' },
+    { primary: '#d72e62', overlay: 'rgba(215,46,98,.22)', filter: 'brightness(1.12) saturate(1.25)' },
+    { primary: '#fff0a8', overlay: 'rgba(255,240,168,.22)', filter: 'brightness(1.15) saturate(1.1)' },
+    { primary: '#d7b053', overlay: 'rgba(215,176,83,.22)', filter: 'brightness(1.09) saturate(1.18)' },
+    { primary: '#ffffff', overlay: 'rgba(255,255,255,.18)', filter: 'brightness(1.2) saturate(1.05)' },
+  ];
+  return colors[itemIndex % colors.length];
+}
+
 function npcLine(tone: DialogTone, playerName: string, itemName?: string, skill?: string) {
   const name = playerName || 'Comandante';
   const lines: Record<DialogTone, string[]> = {
