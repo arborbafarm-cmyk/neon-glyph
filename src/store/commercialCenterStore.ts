@@ -14,58 +14,73 @@ export type LaunderingOperation = {
   businessId?: string; // Identificador único do comércio para operações independentes
 };
 
-export type BusinessType = 'lava-rapido' | 'bar-do-zé' | 'oficina-do-malandro' | 'balada-do-crime' | 'empresa-fantasma';
+export type BusinessType = 'pizzaria-mama' | 'lavanderia-povao' | 'restaurante-fino' | 'boate-luxo' | 'consultoria-elite';
 
 export const BUSINESSES = {
-  'lava-rapido': {
-    name: '🚗 Lava Rápido do Seu Zé',
+  'pizzaria-mama': {
+    name: 'Pizzaria da Mama',
+    tagline: 'A melhor pizza do Complexo',
     risk: 'low' as const,
-    baseTax: 0.15, // 15% taxa
-    baseConversion: 0.85,
-    time: 5 * 60 * 1000, // 5 minutes
-    description: 'Lavagem rápida com espuma e brilho',
+    baseTax: 0.40, // 40% taxa
+    baseConversion: 0.60,
+    time: 6 * 60 * 60 * 1000, // 6 hours
+    description: 'Transforme dinheiro sujo em receita de pizza',
     minRespect: 0,
-    emoji: '🚗',
+    emoji: '🍕',
+    operationsPerDay: 1,
+    minValue: 1000,
   },
-  'bar-do-zé': {
-    name: '🍺 Bar do Zé Cachaceiro',
+  'lavanderia-povao': {
+    name: 'Lavanderia Povão',
+    tagline: 'Lavamos tudo rápido',
     risk: 'low' as const,
-    baseTax: 0.12, // 12% taxa
-    baseConversion: 0.88,
-    time: 10 * 60 * 1000, // 10 minutes
-    description: 'Bebidas, conversa e dinheiro limpo',
+    baseTax: 0.50, // 50% taxa
+    baseConversion: 0.50,
+    time: 5 * 60 * 60 * 1000, // 5 hours
+    description: 'Roupas limpas, dinheiro mais limpo ainda',
     minRespect: 0,
-    emoji: '🍺',
+    emoji: '🧺',
+    operationsPerDay: 1,
+    minValue: 5000,
   },
-  'oficina-do-malandro': {
-    name: '🔧 Oficina do Malandro',
+  'restaurante-fino': {
+    name: 'Restaurante Fino',
+    tagline: 'Culinária de classe alta',
     risk: 'medium' as const,
-    baseTax: 0.18, // 18% taxa
-    baseConversion: 1.15,
-    time: 20 * 60 * 1000, // 20 minutes
-    description: 'Consertos que ninguém pergunta',
+    baseTax: 0.35, // 35% taxa
+    baseConversion: 0.65,
+    time: 8 * 60 * 60 * 1000, // 8 hours
+    description: 'Receitas sofisticadas para dinheiro sofisticado',
     minRespect: 0,
-    emoji: '🔧',
+    emoji: '🍽️',
+    operationsPerDay: 1,
+    minValue: 8000,
   },
-  'balada-do-crime': {
-    name: '🎉 Balada do Crime',
+  'boate-luxo': {
+    name: 'Boate Luxo',
+    tagline: 'Diversão de primeira classe',
     risk: 'medium' as const,
-    baseTax: 0.20, // 20% taxa
-    baseConversion: 1.40,
-    time: 30 * 60 * 1000, // 30 minutes
-    description: 'Música alta, bebida cara, dinheiro limpo',
+    baseTax: 0.45, // 45% taxa
+    baseConversion: 0.55,
+    time: 7 * 60 * 60 * 1000, // 7 hours
+    description: 'Bebidas premium, dinheiro limpo',
     minRespect: 0,
-    emoji: '🎉',
+    emoji: '🎭',
+    operationsPerDay: 1,
+    minValue: 10000,
   },
-  'empresa-fantasma': {
-    name: '👻 Empresa Fantasma S.A.',
+  'consultoria-elite': {
+    name: 'Consultoria Elite',
+    tagline: 'Assessoria para grandes negócios',
     risk: 'high' as const,
-    baseTax: 0.25, // 25% taxa
-    baseConversion: 1.90,
-    time: 60 * 60 * 1000, // 1 hour
-    description: 'Consultoria em operações especiais',
+    baseTax: 0.30, // 30% taxa
+    baseConversion: 0.70,
+    time: 10 * 60 * 60 * 1000, // 10 hours
+    description: 'Consultoria corporativa de alto nível',
     minRespect: 0,
-    emoji: '👻',
+    emoji: '💼',
+    operationsPerDay: 1,
+    minValue: 15000,
   },
 };
 

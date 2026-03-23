@@ -11,9 +11,10 @@ import {
   BusinessType,
 } from '@/store/commercialCenterStore';
 import { motion } from 'framer-motion';
-import { Clock, TrendingUp, DollarSign, Zap, Percent } from 'lucide-react';
+import { Clock, TrendingUp, DollarSign, Zap, Percent, ChevronRight } from 'lucide-react';
 import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
+import { NeonSign, CountdownTimer, CinematicBackground } from '@/components/CommercialCenterNeon';
 
 export default function CommercialCenterPage() {
   const playerStore = usePlayerStore();
@@ -25,7 +26,7 @@ export default function CommercialCenterPage() {
   const [dirtyMoney, setDirtyMoney] = useState(playerStore.dirtyMoney || 0);
   const [cleanMoney, setCleanMoney] = useState(playerStore.cleanMoney || 0);
   const [inputAmount, setInputAmount] = useState('');
-  const [selectedBusiness, setSelectedBusiness] = useState<BusinessType>('lava-rapido');
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessType>('pizzaria-mama');
   const [isProcessing, setIsProcessing] = useState(false);
   const [operations, setOperations] = useState(commercialStore.getActiveOperations());
   const [completedOperations, setCompletedOperations] = useState(
@@ -227,123 +228,130 @@ export default function CommercialCenterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white p-6">
-      {/* Header with balances */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl mx-auto mb-12"
-      >
-        <h1 className="font-heading text-5xl mb-8 text-center bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end bg-clip-text text-transparent">
-          🏪 Centro Comercial
-        </h1>
+    <CinematicBackground>
+      <div className="min-h-screen text-white p-6">
+        {/* Header with balances */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-7xl mx-auto mb-12"
+        >
+          <h1 className="font-heading text-6xl mb-2 text-center bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end bg-clip-text text-transparent">
+            CENTRO COMERCIAL
+          </h1>
+          <p className="text-center text-subtitle-neon-blue font-paragraph text-lg mb-8">
+            Transforme dinheiro sujo em receita legítima
+          </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Dirty Money */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-gradient-to-br from-red-900/30 to-red-950/30 border-2 border-red-500/50 rounded-lg p-6 backdrop-blur-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-400 text-sm font-paragraph mb-2">Dinheiro Sujo</p>
-                <p className="font-heading text-3xl text-red-400">
-                  ${dirtyMoney.toFixed(2)}
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Dirty Money */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gradient-to-br from-red-900/40 to-red-950/40 border-2 border-red-500/60 rounded-lg p-6 backdrop-blur-md shadow-lg shadow-red-500/20"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-400 text-sm font-paragraph mb-2">DINHEIRO SUJO</p>
+                  <p className="font-heading text-4xl text-red-400">
+                    ${dirtyMoney.toFixed(2)}
+                  </p>
+                </div>
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <DollarSign className="w-16 h-16 text-red-500/60" />
+                </motion.div>
               </div>
-              <DollarSign className="w-12 h-12 text-red-500/50" />
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* Clean Money */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-gradient-to-br from-green-900/30 to-green-950/30 border-2 border-green-500/50 rounded-lg p-6 backdrop-blur-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-400 text-sm font-paragraph mb-2">Dinheiro Limpo</p>
-                <p className="font-heading text-3xl text-green-400">
-                  ${cleanMoney.toFixed(2)}
-                </p>
+            {/* Clean Money */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gradient-to-br from-green-900/40 to-green-950/40 border-2 border-green-500/60 rounded-lg p-6 backdrop-blur-md shadow-lg shadow-green-500/20"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-400 text-sm font-paragraph mb-2">DINHEIRO LIMPO</p>
+                  <p className="font-heading text-4xl text-green-400">
+                    ${cleanMoney.toFixed(2)}
+                  </p>
+                </div>
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <TrendingUp className="w-16 h-16 text-green-500/60" />
+                </motion.div>
               </div>
-              <TrendingUp className="w-12 h-12 text-green-500/50" />
-            </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
 
-        {/* Skill Bonuses Info */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-paragraph">
-            <div>
-              <span className="text-blue-400 block text-xs mb-1">Inteligência</span>
-              <span className="text-slate-300">-{(riskReduction * 100).toFixed(0)}% risco</span>
-            </div>
-            <div>
-              <span className="text-purple-400 block text-xs mb-1">Respeito</span>
-              <span className="text-slate-300">Nível {respeitLevel}</span>
-            </div>
-            <div>
-              <span className="text-yellow-400 block text-xs mb-1">Operações Ativas</span>
-              <span className="text-slate-300">{operations.length}</span>
-            </div>
-            <div>
-              <span className="text-green-400 block text-xs mb-1">Upgrades</span>
-              <span className="text-slate-300">Taxa: -{(upgrades.taxReduction).toFixed(1)}%</span>
+          {/* Skill Bonuses Info */}
+          <div className="bg-slate-800/50 border border-subtitle-neon-blue/30 rounded-lg p-4 mb-8 backdrop-blur-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-paragraph">
+              <div>
+                <span className="text-blue-400 block text-xs mb-1">INTELIGÊNCIA</span>
+                <span className="text-slate-300">-{(riskReduction * 100).toFixed(0)}% risco</span>
+              </div>
+              <div>
+                <span className="text-purple-400 block text-xs mb-1">RESPEITO</span>
+                <span className="text-slate-300">Nível {respeitLevel}</span>
+              </div>
+              <div>
+                <span className="text-yellow-400 block text-xs mb-1">OPERAÇÕES ATIVAS</span>
+                <span className="text-slate-300">{operations.length}</span>
+              </div>
+              <div>
+                <span className="text-green-400 block text-xs mb-1">UPGRADES</span>
+                <span className="text-slate-300">Taxa: -{(upgrades.taxReduction).toFixed(1)}%</span>
+              </div>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      <div className="max-w-6xl mx-auto">
-        {/* Businesses Section */}
+        {/* Businesses Grid - Neon Signs */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="mb-12"
+          className="mb-16"
         >
-          <h2 className="font-heading text-3xl mb-6">Negócios Disponíveis</h2>
+          <h2 className="font-heading text-3xl mb-12 text-center text-subtitle-neon-blue">
+            COMÉRCIOS DISPONÍVEIS
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
             {(Object.entries(BUSINESSES) as [BusinessType, typeof BUSINESSES[BusinessType]][]).map(
               ([key, business]) => {
-                const isUnlocked = isBusinessUnlocked(key);
                 const isSelected = selectedBusiness === key;
                 const activeOpsCount = getActiveOperationsForBusiness(key);
 
                 return (
                   <motion.div
                     key={key}
-                    whileHover={isUnlocked ? { scale: 1.05, y: -5 } : {}}
-                    onClick={() => isUnlocked && setSelectedBusiness(key)}
-                    className={`rounded-lg p-6 cursor-pointer transition-all border-2 relative overflow-hidden ${
-                      isSelected
-                        ? 'border-logo-gold bg-gradient-to-br from-slate-800/80 to-slate-900/80 shadow-lg shadow-logo-gold/30'
-                        : 'border-slate-700 bg-slate-800/40 hover:border-slate-600'
-                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => setSelectedBusiness(key)}
+                    className="cursor-pointer"
                   >
-                    {/* Background animation */}
-                    {isSelected && (
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-logo-gradient-start/10 to-transparent"
-                        animate={{ opacity: [0.3, 0.6, 0.3] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                      />
-                    )}
+                    <NeonSign
+                      name={business.name}
+                      emoji={business.emoji}
+                      isActive={isSelected}
+                    />
 
-                    {/* Active operations badge */}
-                    {activeOpsCount > 0 && (
-                      <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-heading px-2 py-1 rounded">
-                        {activeOpsCount} ativa{activeOpsCount !== 1 ? 's' : ''}
-                      </div>
-                    )}
-
-                    <div className="relative z-10">
-                      <div className="text-4xl mb-2">{business.emoji}</div>
-                      <h3 className="font-heading text-lg mb-2">{business.name}</h3>
-                      <p className="text-slate-300 text-xs mb-4 font-paragraph">
-                        {business.description}
+                    {/* Business Details */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`mt-4 p-4 rounded-lg border transition-all ${
+                        isSelected
+                          ? 'border-subtitle-neon-blue/60 bg-slate-800/60 backdrop-blur-sm'
+                          : 'border-slate-700/40 bg-slate-900/30'
+                      }`}
+                    >
+                      <p className="text-xs text-slate-400 mb-3 font-paragraph italic">
+                        {business.tagline}
                       </p>
 
                       <div className="space-y-2 text-xs">
@@ -357,10 +365,18 @@ export default function CommercialCenterPage() {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-slate-400 flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" /> Retorno
+                            <DollarSign className="w-3 h-3" /> Mín.
                           </span>
                           <span className="text-blue-400 font-heading">
-                            {(business.baseConversion * 100).toFixed(0)}%
+                            ${business.minValue?.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Tempo
+                          </span>
+                          <span className="text-purple-400 font-heading">
+                            {Math.floor(business.time / (60 * 60 * 1000))}h
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -387,14 +403,16 @@ export default function CommercialCenterPage() {
                                 : 'Alto'}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> Tempo
-                          </span>
-                          <span className="text-purple-400 font-heading">{formatTime(business.time)}</span>
-                        </div>
                       </div>
-                    </div>
+
+                      {activeOpsCount > 0 && (
+                        <div className="mt-3 pt-3 border-t border-slate-700/50">
+                          <span className="text-xs text-blue-400 font-heading">
+                            {activeOpsCount} operação{activeOpsCount !== 1 ? 's' : ''} ativa{activeOpsCount !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      )}
+                    </motion.div>
                   </motion.div>
                 );
               }
@@ -405,21 +423,32 @@ export default function CommercialCenterPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-800/50 border border-slate-700 rounded-lg p-6"
+            className="bg-slate-800/60 border-2 border-subtitle-neon-blue/40 rounded-lg p-8 backdrop-blur-md max-w-2xl mx-auto"
           >
-            <h3 className="font-heading text-xl mb-4">Lavar Dinheiro</h3>
+            <h3 className="font-heading text-2xl mb-6 text-subtitle-neon-blue">
+              INICIAR OPERAÇÃO
+            </h3>
+
+            {selectedBusiness && (
+              <div className="mb-6 p-4 bg-slate-900/50 rounded border border-slate-700/50">
+                <p className="text-sm text-slate-300 mb-2">Comércio selecionado:</p>
+                <p className="font-heading text-lg text-subtitle-neon-blue">
+                  {BUSINESSES[selectedBusiness].emoji} {BUSINESSES[selectedBusiness].name}
+                </p>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-300 mb-2 font-paragraph">
-                  Valor a Lavar
+                  VALOR A LAVAR
                 </label>
                 <input
                   type="number"
                   value={inputAmount}
                   onChange={(e) => setInputAmount(e.target.value)}
                   placeholder="Digite o valor"
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-logo-gold"
+                  className="w-full bg-slate-700/50 border border-subtitle-neon-blue/40 rounded px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-subtitle-neon-blue focus:ring-1 focus:ring-subtitle-neon-blue/50"
                   disabled={isProcessing}
                 />
               </div>
@@ -427,9 +456,10 @@ export default function CommercialCenterPage() {
               <button
                 onClick={handleLaunderMoney}
                 disabled={isProcessing || !inputAmount}
-                className="w-full bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-heading py-3 rounded-lg transition-all"
+                className="w-full bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-heading py-3 rounded-lg transition-all flex items-center justify-center gap-2 group"
               >
-                {isProcessing ? 'Processando...' : 'Lavar Dinheiro'}
+                {isProcessing ? 'PROCESSANDO...' : 'LAVAR DINHEIRO'}
+                {!isProcessing && <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
               </button>
             </div>
           </motion.div>
@@ -441,11 +471,13 @@ export default function CommercialCenterPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="mb-12"
+            className="mb-16"
           >
-            <h2 className="font-heading text-3xl mb-6">Operações em Andamento</h2>
+            <h2 className="font-heading text-3xl mb-8 text-center text-subtitle-neon-blue">
+              OPERAÇÕES EM ANDAMENTO
+            </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {operations.map((op) => {
                 const business = BUSINESSES[op.businessType as BusinessType];
                 const remaining = timeRemaining[op.id] || 0;
@@ -456,26 +488,32 @@ export default function CommercialCenterPage() {
                     key={op.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-slate-800/50 border border-slate-700 rounded-lg p-4"
+                    className="bg-slate-800/60 border-2 border-subtitle-neon-blue/40 rounded-lg p-6 backdrop-blur-md overflow-hidden"
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h4 className="font-heading text-lg">{business.name}</h4>
-                        <p className="text-slate-400 text-sm font-paragraph">
-                          Investido: ${op.amount.toFixed(2)} → Retorno: ${op.returnAmount.toFixed(2)}
+                        <h4 className="font-heading text-xl text-subtitle-neon-blue">
+                          {business.emoji} {business.name}
+                        </h4>
+                        <p className="text-slate-400 text-sm font-paragraph mt-1">
+                          Investido: <span className="text-red-400 font-heading">${op.amount.toFixed(2)}</span>
+                          {' '} → Retorno: <span className="text-green-400 font-heading">${op.returnAmount.toFixed(2)}</span>
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="flex items-center gap-2 text-purple-400 font-heading">
-                          <Clock className="w-5 h-5" />
-                          {formatTime(remaining)}
-                        </div>
+                        <CountdownTimer
+                          endTime={op.endTime}
+                          onComplete={() => {
+                            setOperations(commercialStore.getActiveOperations());
+                            setCompletedOperations(commercialStore.getCompletedOperations());
+                          }}
+                        />
                       </div>
                     </div>
 
-                    <div className="w-full bg-slate-700/50 rounded-full h-2 mb-3 overflow-hidden">
+                    <div className="w-full bg-slate-700/50 rounded-full h-3 mb-4 overflow-hidden border border-slate-600/50">
                       <motion.div
-                        className="bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end h-full"
+                        className="bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end h-full shadow-lg shadow-logo-gradient-start/50"
                         initial={{ width: '100%' }}
                         animate={{ width: `${Math.max(0, progress)}%` }}
                         transition={{ duration: 1, ease: 'linear' }}
@@ -485,9 +523,10 @@ export default function CommercialCenterPage() {
                     {remaining === 0 && (
                       <button
                         onClick={() => handleCollectReward(op)}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-heading py-2 rounded transition-all"
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-heading py-3 rounded transition-all flex items-center justify-center gap-2 group"
                       >
-                        Coletar Recompensa
+                        COLETAR RECOMPENSA
+                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </button>
                     )}
                   </motion.div>
@@ -504,9 +543,11 @@ export default function CommercialCenterPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <h2 className="font-heading text-3xl mb-6">Operações Concluídas</h2>
+            <h2 className="font-heading text-3xl mb-8 text-center text-subtitle-neon-blue">
+              OPERAÇÕES CONCLUÍDAS
+            </h2>
 
-            <div className="space-y-2">
+            <div className="space-y-3 max-w-2xl mx-auto">
               {completedOperations.slice(0, 5).map((op) => {
                 const business = BUSINESSES[op.businessType as BusinessType];
 
@@ -515,12 +556,14 @@ export default function CommercialCenterPage() {
                     key={op.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-3 text-sm"
+                    className="bg-slate-800/40 border border-green-500/30 rounded-lg p-4 backdrop-blur-sm hover:border-green-500/60 transition-all"
                   >
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-300 font-paragraph">{business.name}</span>
-                      <span className="text-green-400 font-heading">
-                        ${op.returnAmount.toFixed(2)}
+                      <span className="text-slate-300 font-paragraph flex items-center gap-2">
+                        {business.emoji} {business.name}
+                      </span>
+                      <span className="text-green-400 font-heading text-lg">
+                        +${op.returnAmount.toFixed(2)}
                       </span>
                     </div>
                   </motion.div>
@@ -530,6 +573,6 @@ export default function CommercialCenterPage() {
           </motion.div>
         )}
       </div>
-    </div>
+    </CinematicBackground>
   );
 }
