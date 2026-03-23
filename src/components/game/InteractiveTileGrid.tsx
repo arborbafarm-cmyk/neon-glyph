@@ -4,7 +4,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@/store/playerStore';
-import GiroAsfaltoObject from '@/components/GiroAsfaltoObject';
 
 interface TileData {
   id: number;
@@ -609,6 +608,90 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
       );
     });
 
+    // ===== LOAD GIRO NO ASFALTO 3D MODEL (4x2 format) =====
+    // Position the giro no asfalto in a strategic location
+    const giroWidth = 4; // tiles wide
+    const giroDepth = 2; // tiles deep
+    const giroGridX = 8; // Starting grid position X
+    const giroGridZ = 9; // Starting grid position Z
+
+    // Calculate center position in world coordinates
+    const giroCenterGridX = giroGridX + giroWidth / 2;
+    const giroCenterGridZ = giroGridZ + giroDepth / 2;
+
+    const giroWorldX = startX + giroCenterGridX * tileSize;
+    const giroWorldZ = startZ + giroCenterGridZ * tileSize;
+
+    console.log('Giro no Asfalto Position:', {
+      gridX: giroGridX,
+      gridZ: giroGridZ,
+      worldX: giroWorldX,
+      worldZ: giroWorldZ,
+      gridSize: `${giroWidth}x${giroDepth}`,
+    });
+
+    gltfLoader.load(
+      'https://static.wixstatic.com/3d/50f4bf_54abdb76d21c4aa0995035679f4f632b.glb',
+      (gltf) => {
+        const model = gltf.scene;
+
+        // Create a group for the giro no asfalto object
+        const giroGroup = new THREE.Group();
+
+        // Position at center of platform
+        giroGroup.position.set(giroWorldX, 0, giroWorldZ);
+
+        // Calculate bounding box to determine proper scale
+        const bbox = new THREE.Box3().setFromObject(model);
+        const size = bbox.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+
+        // Scale to fit exactly 8 tiles (4x2 format)
+        const targetWidth = giroWidth * tileSize; // 4 units
+        const targetDepth = giroDepth * tileSize; // 2 units
+        const targetSize = Math.max(targetWidth, targetDepth); // 4 units
+        const scale = targetSize / maxDim;
+        model.scale.set(scale, scale, scale);
+
+        // Center the model within the group
+        bbox.setFromObject(model);
+        const center = bbox.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+
+        // Ensure model sits on the ground (y = 0)
+        bbox.setFromObject(model);
+        const bottomY = bbox.min.y;
+        model.position.y -= bottomY;
+
+        // Apply shadow properties recursively to all children
+        model.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            // Enhance material brightness for better visibility
+            if (child.material instanceof THREE.Material) {
+              if (child.material instanceof THREE.MeshStandardMaterial) {
+                child.material.emissiveIntensity = 0.3;
+                child.material.metalness = Math.max(0, child.material.metalness - 0.2);
+                child.material.roughness = Math.min(1, child.material.roughness + 0.15);
+              }
+            }
+          }
+        });
+
+        giroGroup.add(model);
+        giroGroup.userData = { clickable: true, type: 'giro-no-asfalto' };
+        scene.add(giroGroup);
+
+        giroAsfaltoGroupRef.current = giroGroup;
+        console.log('Giro no Asfalto 3D model loaded successfully');
+      },
+      undefined,
+      (error) => {
+        console.warn('Failed to load Giro no Asfalto 3D model:', error);
+      }
+    );
+
     // ===== LOAD DELEGACIA 3D MODEL (8 tiles - 2x4 format) =====
     // Position the delegacia in a strategic location (lower-right area)
     const delegaciaSize = 2; // 2 tiles wide
@@ -887,26 +970,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
         position: 'relative',
         overflow: 'hidden',
       }}
-    >
-      {sceneReady && sceneRef.current && cameraRef.current && (
-        <GiroAsfaltoObject
-          scene={sceneRef.current}
-          camera={cameraRef.current}
-          raycaster={raycasterRef.current}
-          tileSize={tileSize}
-          gridStartX={-(gridWidth * tileSize) / 2}
-          gridStartZ={-(gridHeight * tileSize) / 2}
-          onObjectLoaded={(group) => {
-            giroAsfaltoGroupRef.current = group;
-          }}
-          onBlockedTilesRegistered={(tiles) => {
-            tiles.forEach((tile) => {
-              blockedTilesRef.current.add(`${tile.x},${tile.z}`);
-            });
-          }}
-        />
-      )}
-    </div>
+    />
   );
 };
 
