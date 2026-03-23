@@ -14,7 +14,8 @@ import { motion } from 'framer-motion';
 import { Clock, TrendingUp, DollarSign, Zap, Percent, ChevronRight } from 'lucide-react';
 import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
-import { NeonSign, CountdownTimer, CinematicBackground } from '@/components/CommercialCenterNeon';
+import { CountdownTimer, CinematicBackground } from '@/components/CommercialCenterNeon';
+import { Image } from '@/components/ui/image';
 
 export default function CommercialCenterPage() {
   const playerStore = usePlayerStore();
@@ -199,9 +200,9 @@ export default function CommercialCenterPage() {
 
       // Show result
       if (isFailed) {
-        alert(`⚠️ Operação falhou! Você recebeu apenas $${reward.toFixed(2)}`);
+        alert(`Operação falhou! Você recebeu apenas $${reward.toFixed(2)}`);
       } else {
-        alert(`✅ Operação bem-sucedida! Você recebeu $${reward.toFixed(2)}`);
+        alert(`Operação bem-sucedida! Você recebeu $${reward.toFixed(2)}`);
       }
     } catch (error) {
       console.error('Error collecting reward:', error);
@@ -237,10 +238,10 @@ export default function CommercialCenterPage() {
           className="max-w-7xl mx-auto mb-12"
         >
           <h1 className="font-heading text-6xl mb-2 text-center bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end bg-clip-text text-transparent">
-            CENTRO COMERCIAL
+            CENTRO COMERCIAL DO VALE
           </h1>
           <p className="text-center text-subtitle-neon-blue font-paragraph text-lg mb-8">
-            Transforme dinheiro sujo em receita legítima
+            Transforme dinheiro sujo em receita legítima através de nossos comércios
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -310,7 +311,7 @@ export default function CommercialCenterPage() {
           </div>
         </motion.div>
 
-        {/* Businesses Grid - Neon Signs */}
+        {/* Commercial Center Building with Storefronts */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -321,102 +322,112 @@ export default function CommercialCenterPage() {
             COMÉRCIOS DISPONÍVEIS
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
-            {(Object.entries(BUSINESSES) as [BusinessType, typeof BUSINESSES[BusinessType]][]).map(
-              ([key, business]) => {
-                const isSelected = selectedBusiness === key;
-                const activeOpsCount = getActiveOperationsForBusiness(key);
+          {/* Building Container */}
+          <div className="relative max-w-6xl mx-auto mb-12">
+            {/* Background Building Image */}
+            <div className="relative rounded-lg overflow-hidden shadow-2xl shadow-orange-500/30 border-2 border-orange-500/40">
+              <Image
+                src="https://static.wixstatic.com/media/50f4bf_1452b172deb341eba2b065aa044ee8ce~mv2.png"
+                alt="Centro Comercial do Vale - Fachada Principal"
+                width={1200}
+                height={600}
+                className="w-full h-auto object-cover"
+              />
 
-                return (
-                  <motion.div
-                    key={key}
-                    whileHover={{ scale: 1.05 }}
-                    onClick={() => setSelectedBusiness(key)}
-                    className="cursor-pointer"
-                  >
-                    <NeonSign
-                      name={business.name}
-                      emoji={business.emoji}
-                      isActive={isSelected}
-                    />
+              {/* Storefronts Overlay Grid */}
+              <div className="absolute inset-0 grid grid-cols-5 gap-2 p-8 pointer-events-none">
+                {(Object.entries(BUSINESSES) as [BusinessType, typeof BUSINESSES[BusinessType]][]).map(
+                  ([key, business], index) => {
+                    const isSelected = selectedBusiness === key;
+                    const activeOpsCount = getActiveOperationsForBusiness(key);
 
-                    {/* Business Details */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`mt-4 p-4 rounded-lg border transition-all ${
-                        isSelected
-                          ? 'border-subtitle-neon-blue/60 bg-slate-800/60 backdrop-blur-sm'
-                          : 'border-slate-700/40 bg-slate-900/30'
-                      }`}
-                    >
-                      <p className="text-xs text-slate-400 mb-3 font-paragraph italic">
-                        {business.tagline}
-                      </p>
+                    return (
+                      <motion.div
+                        key={key}
+                        whileHover={{ scale: 1.05 }}
+                        onClick={() => setSelectedBusiness(key)}
+                        className="pointer-events-auto cursor-pointer h-full flex flex-col"
+                      >
+                        {/* Storefront Card */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`relative flex-1 rounded-lg border-2 transition-all backdrop-blur-sm overflow-hidden group ${
+                            isSelected
+                              ? 'border-logo-gradient-start bg-gradient-to-b from-orange-900/80 to-red-900/80 shadow-lg shadow-orange-500/60'
+                              : 'border-slate-600/60 bg-gradient-to-b from-slate-800/60 to-slate-900/60 hover:border-orange-500/80 shadow-lg shadow-slate-900/40'
+                          }`}
+                        >
+                          {/* Storefront Header - Sign */}
+                          <div className="bg-gradient-to-r from-orange-600 to-red-600 px-3 py-2 text-center border-b-2 border-orange-400/50">
+                            <h3 className="font-heading text-sm text-white truncate">
+                              {business.name}
+                            </h3>
+                          </div>
 
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400 flex items-center gap-1">
-                            <Percent className="w-3 h-3" /> Taxa
-                          </span>
-                          <span className="text-red-400 font-heading">
-                            {(business.baseTax * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400 flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" /> Mín.
-                          </span>
-                          <span className="text-blue-400 font-heading">
-                            ${business.minValue?.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> Tempo
-                          </span>
-                          <span className="text-purple-400 font-heading">
-                            {Math.floor(business.time / (60 * 60 * 1000))}h
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className={`flex items-center gap-1 ${
-                            business.risk === 'low'
-                              ? 'text-green-400'
-                              : business.risk === 'medium'
-                                ? 'text-yellow-400'
-                                : 'text-red-400'
-                          }`}>
-                            <Zap className="w-3 h-3" /> Risco
-                          </span>
-                          <span className={
-                            business.risk === 'low'
-                              ? 'text-green-400'
-                              : business.risk === 'medium'
-                                ? 'text-yellow-400'
-                                : 'text-red-400'
-                          }>
-                            {business.risk === 'low'
-                              ? 'Baixo'
-                              : business.risk === 'medium'
-                                ? 'Médio'
-                                : 'Alto'}
-                          </span>
-                        </div>
-                      </div>
+                          {/* Storefront Content */}
+                          <div className="flex-1 p-3 flex flex-col justify-between">
+                            {/* Tagline */}
+                            <p className="text-xs text-slate-200 font-paragraph italic text-center mb-2 line-clamp-2">
+                              {business.tagline}
+                            </p>
 
-                      {activeOpsCount > 0 && (
-                        <div className="mt-3 pt-3 border-t border-slate-700/50">
-                          <span className="text-xs text-blue-400 font-heading">
-                            {activeOpsCount} operação{activeOpsCount !== 1 ? 's' : ''} ativa{activeOpsCount !== 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      )}
-                    </motion.div>
-                  </motion.div>
-                );
-              }
-            )}
+                            {/* Business Stats */}
+                            <div className="space-y-1 text-xs">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">Taxa:</span>
+                                <span className="text-red-300 font-heading">
+                                  {(business.baseTax * 100).toFixed(0)}%
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">Tempo:</span>
+                                <span className="text-purple-300 font-heading">
+                                  {Math.floor(business.time / (60 * 60 * 1000))}h
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">Risco:</span>
+                                <span className={`font-heading ${
+                                  business.risk === 'low'
+                                    ? 'text-green-300'
+                                    : business.risk === 'medium'
+                                      ? 'text-yellow-300'
+                                      : 'text-red-300'
+                                }`}>
+                                  {business.risk === 'low'
+                                    ? 'Baixo'
+                                    : business.risk === 'medium'
+                                      ? 'Médio'
+                                      : 'Alto'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Active Operations Badge */}
+                            {activeOpsCount > 0 && (
+                              <div className="mt-2 pt-2 border-t border-slate-600/50">
+                                <span className="text-xs text-blue-300 font-heading block text-center">
+                                  {activeOpsCount} ativa{activeOpsCount !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Storefront Door Indicator */}
+                          <div className={`h-1 transition-all ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-logo-gradient-start to-logo-gradient-end'
+                              : 'bg-slate-600/40'
+                          }`} />
+                        </motion.div>
+                      </motion.div>
+                    );
+                  }
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Input and Launch */}
@@ -433,7 +444,7 @@ export default function CommercialCenterPage() {
               <div className="mb-6 p-4 bg-slate-900/50 rounded border border-slate-700/50">
                 <p className="text-sm text-slate-300 mb-2">Comércio selecionado:</p>
                 <p className="font-heading text-lg text-subtitle-neon-blue">
-                  {BUSINESSES[selectedBusiness].emoji} {BUSINESSES[selectedBusiness].name}
+                  {BUSINESSES[selectedBusiness].name}
                 </p>
               </div>
             )}
@@ -493,7 +504,7 @@ export default function CommercialCenterPage() {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h4 className="font-heading text-xl text-subtitle-neon-blue">
-                          {business.emoji} {business.name}
+                          {business.name}
                         </h4>
                         <p className="text-slate-400 text-sm font-paragraph mt-1">
                           Investido: <span className="text-red-400 font-heading">${op.amount.toFixed(2)}</span>
@@ -560,7 +571,7 @@ export default function CommercialCenterPage() {
                   >
                     <div className="flex justify-between items-center">
                       <span className="text-slate-300 font-paragraph flex items-center gap-2">
-                        {business.emoji} {business.name}
+                        {business.name}
                       </span>
                       <span className="text-green-400 font-heading text-lg">
                         +${op.returnAmount.toFixed(2)}
