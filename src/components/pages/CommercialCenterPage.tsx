@@ -144,11 +144,12 @@ export default function CommercialCenterPage() {
 
       {/* BANNER */}
       <div className="w-full pt-[120px] relative z-10">
-        <div className="banner-container w-full h-auto overflow-hidden bg-black flex items-center justify-center">
+        <div className="banner-container w-full bg-black flex items-center justify-center">
           <Image
             src="https://static.wixstatic.com/media/50f4bf_fd64ac461d5d41c2a6bc7639af7590ac~mv2.png"
             alt="Centro Comercial"
-            className="w-full h-auto object-contain"
+            className="w-full h-auto object-cover"
+            style={{ maxHeight: 'none' }}
           />
         </div>
       </div>
