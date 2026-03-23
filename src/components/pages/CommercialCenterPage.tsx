@@ -26,14 +26,6 @@ interface CompletedOperation {
 export default function CommercialCenterPage() {
   const [operations, setOperations] = useState<CommerceOperation[]>([
     {
-      id: 'commerce1',
-      name: 'Administradora de Bens',
-      value: 5000,
-      tax: 50,
-      duration: 18000, // 5 hours
-      isActive: false,
-    },
-    {
       id: 'commerce2',
       name: 'Administradora de Bens',
       value: 5000,
@@ -145,7 +137,7 @@ export default function CommercialCenterPage() {
   };
 
   useEffect(() => {
-    // Inject custom CSS for animations (no text-shadow or box-shadow)
+    // Inject custom CSS for neon effects and animations
     const style = document.createElement('style');
     style.textContent = `
       @keyframes gridMove {
@@ -154,21 +146,47 @@ export default function CommercialCenterPage() {
       }
 
       @keyframes pulse {
-        from { opacity: 0.8; }
-        to { opacity: 1; }
+        from {
+          text-shadow:
+            0 0 10px #00f0ff,
+            0 0 20px #00f0ff,
+            0 0 30px #00f0ff;
+          opacity: 0.9;
+        }
+        to {
+          text-shadow:
+            0 0 20px #00f0ff,
+            0 0 40px #00f0ff,
+            0 0 80px #00f0ff,
+            0 0 120px #00f0ff;
+          opacity: 1;
+        }
       }
 
       @keyframes neonBorder {
         0%, 100% {
           border-color: #00f0ff;
+          box-shadow: 0 0 10px #00f0ff, inset 0 0 10px rgba(0, 240, 255, 0.1);
         }
         50% {
           border-color: #9d00ff;
+          box-shadow: 0 0 20px #9d00ff, inset 0 0 15px rgba(157, 0, 255, 0.15);
         }
+      }
+
+      @keyframes progressFill {
+        0% { width: 0%; }
+        100% { width: 100%; }
       }
 
       .neon-sign {
         color: #00f0ff;
+        text-shadow:
+          0 0 5px #00f0ff,
+          0 0 10px #00f0ff,
+          0 0 20px #00f0ff,
+          0 0 40px #00f0ff,
+          0 0 80px #00f0ff;
         animation: pulse 3s infinite alternate;
         font-weight: 700;
         letter-spacing: 2px;
@@ -232,6 +250,7 @@ export default function CommercialCenterPage() {
         position: relative;
         overflow: hidden;
         border-bottom: 3px solid #00f0ff;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(0, 240, 255, 0.1);
         min-height: 600px;
         display: flex;
         align-items: flex-end;
@@ -262,15 +281,17 @@ export default function CommercialCenterPage() {
       }
 
       .commerce-card:hover {
-        border-color: #00f0ff;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
       }
 
       .commerce-card.active {
         border-color: #00ff00;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
       }
 
       .commerce-card.completed {
         border-color: #ffd700;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
       }
 
       .commerce-image {
@@ -310,6 +331,7 @@ export default function CommercialCenterPage() {
         height: 100%;
         background: linear-gradient(90deg, #00f0ff, #00ff00);
         transition: width 0.1s linear;
+        box-shadow: 0 0 10px #00f0ff;
       }
 
       .timer-display {
@@ -317,6 +339,7 @@ export default function CommercialCenterPage() {
         font-size: 1.25rem;
         font-weight: bold;
         color: #00f0ff;
+        text-shadow: 0 0 10px #00f0ff;
       }
 
       .history-table {
