@@ -36,8 +36,6 @@ export default function CommercialCenterPage() {
   ]);
 
   const [completedOps, setCompletedOps] = useState<CompletedOperation[]>([]);
-  const [dirtyMoney, setDirtyMoney] = useState(5000); // Example dirty money
-  const [cleanMoney, setCleanMoney] = useState(2000); // Example clean money
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -47,8 +45,6 @@ export default function CommercialCenterPage() {
         const state = JSON.parse(savedState);
         setOperations(state.operations || []);
         setCompletedOps(state.completedOps || []);
-        setDirtyMoney(state.dirtyMoney || 5000);
-        setCleanMoney(state.cleanMoney || 2000);
       } catch (e) {
         console.error('Failed to load state:', e);
       }
@@ -59,9 +55,9 @@ export default function CommercialCenterPage() {
   useEffect(() => {
     localStorage.setItem(
       'commerceState',
-      JSON.stringify({ operations, completedOps, dirtyMoney, cleanMoney })
+      JSON.stringify({ operations, completedOps })
     );
-  }, [operations, completedOps, dirtyMoney, cleanMoney]);
+  }, [operations, completedOps]);
 
   // Timer effect
   useEffect(() => {
@@ -78,9 +74,6 @@ export default function CommercialCenterPage() {
           if (timeLeft === 0) {
             const cleanValue = Math.floor(op.value * (op.tax / 100));
             const profit = cleanValue;
-
-            setCleanMoney((prev) => prev + cleanValue);
-            setDirtyMoney((prev) => Math.max(0, prev - op.value));
 
             setCompletedOps((prev) => [
               ...prev,
@@ -112,11 +105,6 @@ export default function CommercialCenterPage() {
     setOperations((prevOps) =>
       prevOps.map((op) => {
         if (op.id === opId && !op.isActive) {
-          if (dirtyMoney < op.value) {
-            alert('Dinheiro sujo insuficiente!');
-            return op;
-          }
-          setDirtyMoney((prev) => prev - op.value);
           return {
             ...op,
             isActive: true,
@@ -320,7 +308,7 @@ export default function CommercialCenterPage() {
       .commerce-image img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
 
       .commerce-content {
@@ -402,25 +390,12 @@ export default function CommercialCenterPage() {
 
       {/* BANNER */}
       <div className="w-full pt-[120px] relative z-10">
-        <div className="banner-container w-full bg-black">
+        <div className="banner-container w-full bg-black flex items-center justify-center">
           <Image
             src="https://static.wixstatic.com/media/50f4bf_fd64ac461d5d41c2a6bc7639af7590ac~mv2.png"
             alt="Centro Comercial"
-            className="h-auto w-auto"
-            style={{ maxHeight: 'none' }}
+            className="h-auto w-auto max-w-full max-h-[600px] object-contain"
           />
-        </div>
-      </div>
-
-      {/* MONEY DISPLAY */}
-      <div className="w-full px-4 py-6 relative z-10 border-b border-cyan-500">
-        <div className="max-w-[100rem] mx-auto flex justify-between items-center">
-          <div className="neon-sign text-sm md:text-base">
-            Dinheiro Sujo: {formatCurrency(dirtyMoney)}
-          </div>
-          <div className="neon-sign text-sm md:text-base">
-            Dinheiro Limpo: {formatCurrency(cleanMoney)}
-          </div>
         </div>
       </div>
 
