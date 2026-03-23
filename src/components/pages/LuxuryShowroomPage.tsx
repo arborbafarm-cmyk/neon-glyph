@@ -7,6 +7,7 @@ import BlingModal from '@/components/BlingModal';
 import LuxuryNPCDialog from '@/components/LuxuryNPCDialog';
 import Luxury3DShowroom from '@/components/Luxury3DShowroom';
 import CreditCardPurchaseAnimation from '@/components/CreditCardPurchaseAnimation';
+import LiveNPC from '@/components/LiveNPC';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 import { BaseCrudService } from '@/integrations';
@@ -146,15 +147,17 @@ export default function LuxuryShowroomPage() {
           height={1080}
         />
 
-        {/* NPC */}
-        <Image
-          src="https://static.wixstatic.com/media/50f4bf_8dc3c6fde14f4e06b7937591bf2c203d~mv2.png"
-          alt="NPC"
-          onClick={() => setShowItemsModal(true)}
-          className="absolute right-10 bottom-0 h-[80%] cursor-pointer transition-transform hover:scale-105 z-20"
-          width={400}
-          height={800}
-        />
+        {/* NPC - LIVE & INTERACTIVE */}
+        <div className="absolute right-10 bottom-0 h-[80%] z-20">
+          <LiveNPC
+            src="https://static.wixstatic.com/media/50f4bf_8dc3c6fde14f4e06b7937591bf2c203d~mv2.png"
+            alt="NPC"
+            onClick={() => setShowItemsModal(true)}
+            className="absolute right-0 bottom-0 h-full"
+            width={400}
+            height={800}
+          />
+        </div>
 
         {/* DIALOGO INICIAL */}
         <div className="relative z-30">
