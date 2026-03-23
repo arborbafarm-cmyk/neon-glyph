@@ -1,164 +1,141 @@
-import { Image } from '@/components/ui/image';
-import { motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-interface LiveNPCProps {
-  src: string;
-    alt: string;
-      onClick?: () => void;
-        className?: string;
-          width?: number;
-            height?: number;
+interface LuxuryNPCProps {
+  onNPCLoaded?: () => void;
+}
+
+export default function LuxuryNPC({ onNPCLoaded }: LuxuryNPCProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const npcRef = useRef<THREE.Group | null>(null);
+  const animationFrameRef = useRef<number>();
+  const isLoadedRef = useRef(false);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    sceneRef.current = scene;
+
+    // Camera setup - fixed position
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 1.5, 3);
+    camera.lookAt(0, 1, 0);
+    cameraRef.current = camera;
+
+    // Renderer setup with optimizations
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: true,
+      powerPreference: 'high-performance'
+    });
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+    renderer.shadowMap.autoUpdate = true;
+    containerRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    // Lighting setup - basic lighting for visibility
+    // Ambient light for overall illumination
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+
+    // Main directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+
+    // Load GLB model
+    const loader = new GLTFLoader();
+    
+    loader.load(
+      'https://static.wixstatic.com/3d/50f4bf_55eda8581fc04c02a39a33c94b588afc.glb',
+      (gltf) => {
+        const npc = gltf.scene;
+        // Position at center, slightly behind counter area
+        npc.position.set(0, 0, 0.5);
+        // Scale appropriately for full body visibility
+        npc.scale.set(1.5, 1.5, 1.5);
+
+        // Enable shadows on all meshes and optimize materials
+        npc.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            // Optimize materials
+            if (child.material) {
+              child.material.side = THREE.FrontSide;
             }
+          }
+        });
 
-            export default function LiveNPC({
-              src,
-                alt,
-                  onClick,
-                    className = '',
-                      width = 400,
-                        height = 800,
-                        }: LiveNPCProps) {
-                          const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-                            const [isHovered, setIsHovered] = useState(false);
-                              const [isPressed, setIsPressed] = useState(false);
-                                const [blink, setBlink] = useState(false);
+        scene.add(npc);
+        npcRef.current = npc;
+        isLoadedRef.current = true;
 
-                                  const containerRef = useRef<HTMLDivElement>(null);
+        if (onNPCLoaded) {
+          onNPCLoaded();
+        }
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading GLB model:', error);
+      }
+    );
 
-                                    // 👁️ BLINK
-                                      useEffect(() => {
-                                          let blinkTimeout: NodeJS.Timeout;
-                                              let nextBlink: NodeJS.Timeout;
+    // Animation loop - static rendering only
+    const animate = () => {
+      animationFrameRef.current = requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    };
 
-                                                  const schedule = () => {
-                                                        const delay = Math.random() * 3000 + 3000;
+    animate();
 
-                                                              nextBlink = setTimeout(() => {
-                                                                      setBlink(true);
+    // Handle window resize
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
 
-                                                                              blinkTimeout = setTimeout(() => {
-                                                                                        setBlink(false);
-                                                                                                  schedule();
-                                                                                                          }, 120);
-                                                                                                                }, delay);
-                                                                                                                    };
+    window.addEventListener('resize', handleResize);
 
-                                                                                                                        schedule();
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+      isLoadedRef.current = false;
+    };
+  }, [onNPCLoaded]);
 
-                                                                                                                            return () => {
-                                                                                                                                  clearTimeout(blinkTimeout);
-                                                                                                                                        clearTimeout(nextBlink);
-                                                                                                                                            };
-                                                                                                                                              }, []);
-
-                                                                                                                                                // 👀 MOUSE TRACKING
-                                                                                                                                                  useEffect(() => {
-                                                                                                                                                      const handleMouseMove = (e: MouseEvent) => {
-                                                                                                                                                            if (!containerRef.current) return;
-
-                                                                                                                                                                  const rect = containerRef.current.getBoundingClientRect();
-
-                                                                                                                                                                        const centerX = rect.left + rect.width / 2;
-                                                                                                                                                                              const centerY = rect.top + rect.height / 2;
-
-                                                                                                                                                                                    const deltaX = e.clientX - centerX;
-                                                                                                                                                                                          const deltaY = e.clientY - centerY;
-
-                                                                                                                                                                                                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                                                                                                                                                                                                      const maxDistance = Math.max(rect.width, rect.height);
-
-                                                                                                                                                                                                            const maxOffset = 5;
-                                                                                                                                                                                                                  const offset = Math.min((distance / maxDistance) * maxOffset, maxOffset);
-
-                                                                                                                                                                                                                        const dirX = deltaX / distance || 0;
-                                                                                                                                                                                                                              const dirY = deltaY / distance || 0;
-
-                                                                                                                                                                                                                                    setMousePosition({
-                                                                                                                                                                                                                                            x: dirX * offset * 0.4,
-                                                                                                                                                                                                                                                    y: dirY * offset * 0.4,
-                                                                                                                                                                                                                                                          });
-                                                                                                                                                                                                                                                              };
-
-                                                                                                                                                                                                                                                                  window.addEventListener('mousemove', handleMouseMove);
-                                                                                                                                                                                                                                                                      return () => window.removeEventListener('mousemove', handleMouseMove);
-                                                                                                                                                                                                                                                                        }, []);
-
-                                                                                                                                                                                                                                                                          // 🌬️ RESPIRAÇÃO
-                                                                                                                                                                                                                                                                            const breathing = {
-                                                                                                                                                                                                                                                                                animate: {
-                                                                                                                                                                                                                                                                                      y: [0, -1.5, 0],
-                                                                                                                                                                                                                                                                                            transition: {
-                                                                                                                                                                                                                                                                                                    duration: 5,
-                                                                                                                                                                                                                                                                                                            ease: 'easeInOut',
-                                                                                                                                                                                                                                                                                                                    repeat: Infinity,
-                                                                                                                                                                                                                                                                                                                          },
-                                                                                                                                                                                                                                                                                                                              },
-                                                                                                                                                                                                                                                                                                                                };
-
-                                                                                                                                                                                                                                                                                                                                  return (
-                                                                                                                                                                                                                                                                                                                                      <div
-                                                                                                                                                                                                                                                                                                                                            ref={containerRef}
-                                                                                                                                                                                                                                                                                                                                                  className="relative flex justify-center items-center"
-                                                                                                                                                                                                                                                                                                                                                        style={{ width, height }}
-                                                                                                                                                                                                                                                                                                                                                              onMouseEnter={() => setIsHovered(true)}
-                                                                                                                                                                                                                                                                                                                                                                    onMouseLeave={() => {
-                                                                                                                                                                                                                                                                                                                                                                            setIsHovered(false);
-                                                                                                                                                                                                                                                                                                                                                                                    setIsPressed(false);
-                                                                                                                                                                                                                                                                                                                                                                                          }}
-                                                                                                                                                                                                                                                                                                                                                                                                onMouseDown={() => setIsPressed(true)}
-                                                                                                                                                                                                                                                                                                                                                                                                      onMouseUp={() => setIsPressed(false)}
-                                                                                                                                                                                                                                                                                                                                                                                                          >
-                                                                                                                                                                                                                                                                                                                                                                                                                <motion.div variants={breathing} animate="animate">
-                                                                                                                                                                                                                                                                                                                                                                                                                        <motion.div
-                                                                                                                                                                                                                                                                                                                                                                                                                                  animate={{
-                                                                                                                                                                                                                                                                                                                                                                                                                                              scale: isPressed ? 0.97 : isHovered ? 1.05 : 1,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          filter: isHovered ? 'brightness(1.08)' : 'brightness(1)',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                      x: mousePosition.x,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  y: mousePosition.y,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      transition={{ duration: 0.3 }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              >
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        {/* SOMBRA */}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <div
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-6 rounded-full blur-2xl opacity-30"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          style={{
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        background:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        'radial-gradient(ellipse, rgba(0,0,0,0.4), transparent)',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              />
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        {/* NPC */}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <div className="relative">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Image
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            src={src}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          alt={alt}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        onClick={onClick}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      width={width}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    height={height}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  className={`cursor-pointer ${className}`}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              />
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          {/* BLINK */}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      {blink && (
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <motion.div
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    initial={{ scaleY: 1 }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    animate={{ scaleY: 0 }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    transition={{ duration: 0.12 }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    style={{
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      top: '22%',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        width: '35%',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          height: '12%',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            background: 'rgba(0,0,0,0.6)',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              borderRadius: '50%',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                transformOrigin: 'center',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          )}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </motion.div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </motion.div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      </div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        );
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+  return (
+    <div className="relative w-full h-full">
+      <div ref={containerRef} className="w-full h-full" />
+    </div>
+  );
+}
