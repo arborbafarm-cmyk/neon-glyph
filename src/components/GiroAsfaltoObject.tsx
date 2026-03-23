@@ -26,16 +26,17 @@ const GiroAsfaltoObject: React.FC<GiroAsfaltoObjectProps> = ({
 }) => {
   const groupRef = useRef<THREE.Group | null>(null);
   const navigate = useNavigate();
+  const clickListenerRef = useRef<((event: MouseEvent) => void) | null>(null);
 
   useEffect(() => {
     if (!scene) return;
 
     // ===== GIRO NO ASFALTO OBJECT CONFIGURATION =====
-    // 8 tiles in 2x4 format (2 tiles wide, 4 tiles deep)
-    const giroWidth = 2; // tiles
-    const giroDepth = 4; // tiles
-    const giroGridX = 10; // Starting grid position X
-    const giroGridZ = 8; // Starting grid position Z
+    // 8 tiles in 4x2 format (4 tiles wide, 2 tiles deep) - optimal for visual fit
+    const giroWidth = 4; // tiles wide
+    const giroDepth = 2; // tiles deep
+    const giroGridX = 8; // Starting grid position X
+    const giroGridZ = 9; // Starting grid position Z
 
     // Calculate center position in world coordinates
     // Grid coordinates are tile indices, so we need to convert to world space
@@ -87,10 +88,11 @@ const GiroAsfaltoObject: React.FC<GiroAsfaltoObjectProps> = ({
         const size = bbox.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
 
-        // Scale to fit exactly 8 tiles (2x4 format)
-        // Target size is the larger dimension of the 2x4 grid
-        const targetWidth = giroWidth * tileSize; // 2 units
-        const targetDepth = giroDepth * tileSize; // 4 units
+        // Scale to fit exactly 8 tiles (4x2 format)
+        // Calculate target dimensions for 4x2 grid
+        const targetWidth = giroWidth * tileSize; // 4 units
+        const targetDepth = giroDepth * tileSize; // 2 units
+        // Use the larger dimension to ensure object fits within 8 tiles
         const targetSize = Math.max(targetWidth, targetDepth); // 4 units
         const scale = targetSize / maxDim;
         model.scale.set(scale, scale, scale);
@@ -101,6 +103,7 @@ const GiroAsfaltoObject: React.FC<GiroAsfaltoObjectProps> = ({
         model.position.sub(center);
 
         // Ensure model sits on the ground (y = 0)
+        // Get the bottom of the model after scaling and centering
         bbox.setFromObject(model);
         const bottomY = bbox.min.y;
         model.position.y -= bottomY; // Lift model so bottom is at y = 0
@@ -111,12 +114,15 @@ const GiroAsfaltoObject: React.FC<GiroAsfaltoObjectProps> = ({
             child.castShadow = true;
             child.receiveShadow = true;
 
-            // Apply emissive material for better visibility
+            // Apply emissive material for better visibility in night scenario
             if (child.material instanceof THREE.Material) {
               if (child.material instanceof THREE.MeshStandardMaterial) {
-                child.material.emissiveIntensity = 0.25;
-                child.material.metalness = Math.max(0, child.material.metalness - 0.15);
-                child.material.roughness = Math.min(1, child.material.roughness + 0.1);
+                // Enhance visibility with emissive glow
+                child.material.emissiveIntensity = 0.3;
+                // Reduce metalness for better light absorption
+                child.material.metalness = Math.max(0, child.material.metalness - 0.2);
+                // Increase roughness for better shadow definition
+                child.material.roughness = Math.min(1, child.material.roughness + 0.15);
               }
             }
           }
@@ -173,21 +179,23 @@ const GiroAsfaltoObject: React.FC<GiroAsfaltoObjectProps> = ({
 
       raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
 
-      // Check if giro no asfalto was clicked
+      // Check if giro no asfalto was clicked using raycasting
       const intersects = raycaster.intersectObject(groupRef.current!, true);
 
       if (intersects.length > 0) {
-        console.log('Giro no Asfalto clicked!');
+        console.log('Giro no Asfalto clicked! Navigating to /giro-no-asfalto');
         navigate('/giro-no-asfalto');
       }
     };
 
     const canvas = (camera as any).domElement;
     if (canvas) {
+      clickListenerRef.current = onMouseClick;
       canvas.addEventListener('click', onMouseClick);
 
       return () => {
         canvas.removeEventListener('click', onMouseClick);
+        clickListenerRef.current = null;
       };
     }
   }, [camera, raycaster, navigate]);
