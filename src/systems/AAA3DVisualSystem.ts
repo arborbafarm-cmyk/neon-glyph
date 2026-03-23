@@ -1,60 +1,79 @@
 import * as THREE from 'three';
 
 /**
- * AAA 3D Visual System
+ * AAA 3D Visual System - ENHANCED
  * Transforms game buildings into AAA mobile game quality (GTA-style)
  * Handles: PBR materials, neon lighting, dynamic effects, cinematic atmosphere
+ * 
+ * CRITICAL RULES:
+ * - NEVER alter base color of entire model
+ * - NEVER apply solid color globally
+ * - NEVER replace original materials with flat color
+ * - Neon ONLY on details (max 10% of model)
+ * - Realistic materials: concrete, glass, metal
  */
 
 interface BuildingConfig {
   type: 'luxury' | 'casino' | 'qg' | 'delegacia' | 'commercial';
   neonColor: THREE.Color;
-  emissiveIntensity: number;
-  metalness: number;
-  roughness: number;
+  emissiveIntensity: number; // 1-2.5 for neon details only
+  metalness: number; // 0.5-0.8 for realistic materials
+  roughness: number; // 0.3-0.6 for realistic materials
   glowIntensity: number;
+  baseColorPreserve: boolean; // CRITICAL: preserve original base color
+  neonAreaLimit: number; // Max 10% of model
 }
 
 const BUILDING_CONFIGS: Record<string, BuildingConfig> = {
   luxury: {
     type: 'luxury',
-    neonColor: new THREE.Color(0xFFD700), // Gold elegant
-    emissiveIntensity: 0.8,
-    metalness: 0.7,
-    roughness: 0.3,
-    glowIntensity: 1.2,
+    neonColor: new THREE.Color(0xFFD700), // Gold elegant - ONLY on details
+    emissiveIntensity: 1.2, // Subtle, elegant
+    metalness: 0.6,
+    roughness: 0.4,
+    glowIntensity: 0.8,
+    baseColorPreserve: true,
+    neonAreaLimit: 0.08, // 8% - fine lines only
   },
   casino: {
     type: 'casino',
-    neonColor: new THREE.Color(0xFF1493), // Deep pink + purple
-    emissiveIntensity: 1.0,
-    metalness: 0.8,
-    roughness: 0.2,
-    glowIntensity: 1.5,
+    neonColor: new THREE.Color(0xFF1493), // Deep pink - ONLY on signs/edges
+    emissiveIntensity: 1.5,
+    metalness: 0.65,
+    roughness: 0.35,
+    glowIntensity: 1.2,
+    baseColorPreserve: true,
+    neonAreaLimit: 0.10, // 10% - letreiros e bordas
   },
   qg: {
     type: 'qg',
-    neonColor: new THREE.Color(0xFF0000), // Intense red
+    neonColor: new THREE.Color(0xFF4500), // Orange-red - ONLY strategic details
     emissiveIntensity: 1.0,
-    metalness: 0.9,
-    roughness: 0.15,
-    glowIntensity: 1.8,
+    metalness: 0.7,
+    roughness: 0.3,
+    glowIntensity: 1.0,
+    baseColorPreserve: true,
+    neonAreaLimit: 0.08, // 8% - doors, marks
   },
   delegacia: {
     type: 'delegacia',
-    neonColor: new THREE.Color(0x00BFFF), // Cold blue
-    emissiveIntensity: 0.7,
-    metalness: 0.6,
-    roughness: 0.35,
-    glowIntensity: 1.3,
+    neonColor: new THREE.Color(0x00BFFF), // Cold blue - institutional
+    emissiveIntensity: 0.8,
+    metalness: 0.55,
+    roughness: 0.45,
+    glowIntensity: 0.6,
+    baseColorPreserve: true,
+    neonAreaLimit: 0.06, // 6% - discrete institutional light
   },
   commercial: {
     type: 'commercial',
-    neonColor: new THREE.Color(0x00FF00), // Neon green
-    emissiveIntensity: 0.9,
-    metalness: 0.75,
-    roughness: 0.25,
-    glowIntensity: 1.4,
+    neonColor: new THREE.Color(0x00FF00), // Neon green - ONLY on signs
+    emissiveIntensity: 1.3,
+    metalness: 0.6,
+    roughness: 0.4,
+    glowIntensity: 1.0,
+    baseColorPreserve: true,
+    neonAreaLimit: 0.09, // 9% - placas e entrada
   },
 };
 
@@ -76,7 +95,7 @@ export class AAA3DVisualSystem {
   }
 
   /**
-   * Setup cinematic global lighting system
+   * Setup cinematic global lighting system - ENHANCED for realistic night urban
    */
   private setupCinematicLighting() {
     // Remove default lights
@@ -86,32 +105,32 @@ export class AAA3DVisualSystem {
       }
     });
 
-    // 1. Dark blue ambient light (night urban)
-    const ambientLight = new THREE.AmbientLight(0x1a2a4a, 0.3);
+    // 1. Dark blue ambient light (night urban) - REDUCED for contrast
+    const ambientLight = new THREE.AmbientLight(0x1a2a4a, 0.25);
     this.scene.add(ambientLight);
 
-    // 2. Lateral directional light for dramatic shadows
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    directionalLight.position.set(30, 40, 20);
+    // 2. Lateral directional light for dramatic shadows - ENHANCED
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(40, 50, 30);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 4096;
     directionalLight.shadow.mapSize.height = 4096;
     directionalLight.shadow.camera.far = 500;
-    directionalLight.shadow.camera.left = -100;
-    directionalLight.shadow.camera.right = 100;
-    directionalLight.shadow.camera.top = 100;
-    directionalLight.shadow.camera.bottom = -100;
+    directionalLight.shadow.camera.left = -120;
+    directionalLight.shadow.camera.right = 120;
+    directionalLight.shadow.camera.top = 120;
+    directionalLight.shadow.camera.bottom = -120;
     directionalLight.shadow.bias = -0.0001;
     this.scene.add(directionalLight);
 
     // 3. Warm fill light (orange/gold) for neon aesthetic
-    const fillLight = new THREE.DirectionalLight(0xFF6B35, 0.4);
-    fillLight.position.set(-30, 30, -20);
+    const fillLight = new THREE.DirectionalLight(0xFF6B35, 0.35);
+    fillLight.position.set(-40, 35, -25);
     this.scene.add(fillLight);
 
-    // 4. Rim light for edge definition
-    const rimLight = new THREE.DirectionalLight(0x00EAFF, 0.3);
-    rimLight.position.set(0, 20, -50);
+    // 4. Rim light for edge definition - ENHANCED
+    const rimLight = new THREE.DirectionalLight(0x00EAFF, 0.4);
+    rimLight.position.set(0, 25, -60);
     this.scene.add(rimLight);
   }
 
@@ -197,20 +216,47 @@ export class AAA3DVisualSystem {
   }
 
   /**
-   * Apply PBR material simulation
+   * Apply PBR material simulation - ENHANCED for realism
+   * CRITICAL: Preserve base colors, only enhance material properties
    */
   private applyPBRMaterials(group: THREE.Group, config: BuildingConfig) {
     group.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material instanceof THREE.Material) {
         const material = child.material as THREE.MeshStandardMaterial;
 
-        // Enhance metalness and roughness
-        material.metalness = Math.min(1, (material.metalness || 0) + config.metalness);
-        material.roughness = Math.max(0, (material.roughness || 0.5) - (1 - config.roughness));
+        // PRESERVE original base color - CRITICAL RULE
+        const originalColor = material.color.clone();
 
-        // Add subtle emissive base
-        material.emissive = config.neonColor;
-        material.emissiveIntensity = config.emissiveIntensity * 0.3;
+        // Apply realistic material properties
+        // Concrete: metalness 0.1-0.3, roughness 0.7-0.9
+        // Glass: metalness 0.3-0.5, roughness 0.1-0.3
+        // Metal: metalness 0.6-0.9, roughness 0.2-0.5
+        
+        const isGlass = child.name.toLowerCase().includes('glass') || 
+                       child.name.toLowerCase().includes('window');
+        const isMetal = child.name.toLowerCase().includes('metal') || 
+                       child.name.toLowerCase().includes('frame');
+
+        if (isGlass) {
+          material.metalness = 0.4;
+          material.roughness = 0.15;
+          material.transparent = true;
+          material.opacity = 0.85;
+        } else if (isMetal) {
+          material.metalness = Math.min(1, config.metalness);
+          material.roughness = Math.max(0, config.roughness);
+        } else {
+          // Concrete/walls - realistic
+          material.metalness = Math.min(0.3, config.metalness * 0.3);
+          material.roughness = Math.min(1, config.roughness + 0.3);
+        }
+
+        // NO global emissive on base materials - only on details
+        material.emissive = new THREE.Color(0x000000);
+        material.emissiveIntensity = 0;
+
+        // Restore original color
+        material.color.copy(originalColor);
 
         // Increase map intensity for better contrast
         if (material.map) {
@@ -224,10 +270,15 @@ export class AAA3DVisualSystem {
 
   /**
    * Add neon emissive details to windows and architectural elements
+   * CRITICAL: Neon ONLY on specific details, max 10% of model
    */
   private addNeonEmissive(group: THREE.Group, config: BuildingConfig) {
+    let neonAreaCount = 0;
+    const totalMeshes = this.countMeshes(group);
+    const maxNeonMeshes = Math.ceil(totalMeshes * config.neonAreaLimit);
+
     group.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof THREE.Mesh && neonAreaCount < maxNeonMeshes) {
         const material = child.material as THREE.MeshStandardMaterial;
 
         // Detect window-like materials (usually lighter or with specific names)
@@ -237,21 +288,26 @@ export class AAA3DVisualSystem {
           child.name.toLowerCase().includes('light');
 
         if (isWindow) {
+          // Windows get neon glow - ONLY if within area limit
           material.emissive = config.neonColor;
-          material.emissiveIntensity = config.emissiveIntensity;
+          material.emissiveIntensity = config.emissiveIntensity * 0.6;
           material.metalness = 0.3;
           material.roughness = 0.1;
+          neonAreaCount++;
         }
 
-        // Add glow to edges and details
+        // Add glow to edges and details - ONLY specific parts
         const isDetail =
           child.name.toLowerCase().includes('sign') ||
           child.name.toLowerCase().includes('detail') ||
-          child.name.toLowerCase().includes('edge');
+          child.name.toLowerCase().includes('edge') ||
+          child.name.toLowerCase().includes('neon') ||
+          child.name.toLowerCase().includes('logo');
 
-        if (isDetail) {
+        if (isDetail && neonAreaCount < maxNeonMeshes) {
           material.emissive = config.neonColor;
-          material.emissiveIntensity = config.emissiveIntensity * 0.7;
+          material.emissiveIntensity = config.emissiveIntensity;
+          neonAreaCount++;
         }
 
         material.needsUpdate = true;
@@ -260,18 +316,30 @@ export class AAA3DVisualSystem {
   }
 
   /**
-   * Add dynamic point lights to buildings
+   * Count total meshes in group
+   */
+  private countMeshes(group: THREE.Group): number {
+    let count = 0;
+    group.traverse((child) => {
+      if (child instanceof THREE.Mesh) count++;
+    });
+    return count;
+  }
+
+  /**
+   * Add dynamic point lights to buildings - ENHANCED
+   * Lights positioned strategically, not covering entire building
    */
   private addDynamicLighting(group: THREE.Group, config: BuildingConfig) {
-    // Main building light
-    const mainLight = new THREE.PointLight(config.neonColor, 2, 50);
-    mainLight.position.set(0, 5, 0);
+    // Main building light - positioned at top for dramatic effect
+    const mainLight = new THREE.PointLight(config.neonColor, 1.5, 40);
+    mainLight.position.set(0, 8, 0);
     mainLight.castShadow = true;
     group.add(mainLight);
 
-    // Secondary accent light
-    const accentLight = new THREE.PointLight(config.neonColor, 1.5, 40);
-    accentLight.position.set(3, 3, 3);
+    // Secondary accent light - positioned at corner
+    const accentLight = new THREE.PointLight(config.neonColor, 1.0, 30);
+    accentLight.position.set(4, 4, 4);
     group.add(accentLight);
 
     // Store lights for animation
@@ -279,7 +347,8 @@ export class AAA3DVisualSystem {
   }
 
   /**
-   * Update animations and dynamic effects
+   * Update animations and dynamic effects - ENHANCED
+   * Window blinking, subtle pulsation, realistic variations
    */
   update(deltaTime: number) {
     // Update building animations
@@ -288,28 +357,30 @@ export class AAA3DVisualSystem {
 
       const lights = this.buildingLights.get(group);
       if (lights) {
-        // Random blinking effect (0.5s - 2s)
-        const blinkCycle = 0.5 + (Math.sin(anim.time * 0.5) * 0.5 + 0.5) * 1.5;
+        // Realistic window blinking (some windows on/off)
+        const blinkCycle = 2 + (Math.sin(anim.time * 0.3) * 0.5 + 0.5) * 3; // 2-5 second cycles
         const blinkPhase = (anim.time % blinkCycle) / blinkCycle;
 
-        // Pulsing intensity
-        const pulse = Math.sin(anim.time * 2) * 0.3 + 0.7;
+        // Subtle pulsing intensity (simulating electrical variations)
+        const pulse = Math.sin(anim.time * 1.2) * 0.2 + 0.8; // 0.6-1.0 range
 
-        lights.forEach((light) => {
+        lights.forEach((light, index) => {
           if (light instanceof THREE.PointLight) {
-            // Apply blink
-            if (blinkPhase < 0.1 || (blinkPhase > 0.5 && blinkPhase < 0.6)) {
-              light.intensity *= 0.5;
+            // Apply realistic window blinking (not all at once)
+            if (index === 0 && (blinkPhase < 0.15 || (blinkPhase > 0.5 && blinkPhase < 0.65))) {
+              light.intensity *= 0.3; // Dim, not off
+            } else if (index === 1 && (blinkPhase < 0.08 || (blinkPhase > 0.6 && blinkPhase < 0.72))) {
+              light.intensity *= 0.4;
             }
 
-            // Apply pulse
+            // Apply subtle pulse (electrical variation)
             light.intensity *= pulse;
           }
         });
       }
 
-      // Idle animation (subtle breathing)
-      const breathe = Math.sin(anim.time * 0.5) * 0.02 + 1;
+      // Idle animation (subtle breathing - very minimal)
+      const breathe = Math.sin(anim.time * 0.3) * 0.01 + 1;
       group.scale.copy(group.userData.aaa3d.originalScale).multiplyScalar(breathe);
     });
 
@@ -333,7 +404,8 @@ export class AAA3DVisualSystem {
   }
 
   /**
-   * Handle hover effect (GTA-style)
+   * Handle hover effect (GTA-style) - ENHANCED
+   * Subtle scale, glow increase, no color change
    */
   onBuildingHover(group: THREE.Group, isHovering: boolean) {
     if (!group.userData.aaa3d) return;
@@ -342,23 +414,25 @@ export class AAA3DVisualSystem {
     aaa3d.isHovered = isHovering;
 
     if (isHovering) {
-      // Scale up
+      // Subtle scale up
       group.scale.multiplyScalar(1.05);
 
-      // Increase glow
+      // Increase glow slightly
       const lights = this.buildingLights.get(group);
       if (lights) {
         lights.forEach((light) => {
           if (light instanceof THREE.PointLight) {
-            light.intensity *= 1.3;
+            light.intensity *= 1.2;
           }
         });
       }
 
-      // Enhance emissive
+      // Subtle emissive enhancement (only on neon details)
       group.traverse((child) => {
         if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-          child.material.emissiveIntensity *= 1.2;
+          if (child.material.emissiveIntensity > 0) {
+            child.material.emissiveIntensity *= 1.15;
+          }
         }
       });
     } else {
@@ -370,7 +444,7 @@ export class AAA3DVisualSystem {
       if (lights) {
         lights.forEach((light) => {
           if (light instanceof THREE.PointLight) {
-            light.intensity /= 1.3;
+            light.intensity /= 1.2;
           }
         });
       }
@@ -378,49 +452,48 @@ export class AAA3DVisualSystem {
       // Restore emissive
       group.traverse((child) => {
         if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-          child.material.emissiveIntensity /= 1.2;
+          if (child.material.emissiveIntensity > 0) {
+            child.material.emissiveIntensity /= 1.15;
+          }
         }
       });
     }
   }
 
   /**
-   * Handle click effect (GTA-style)
+   * Handle click effect (GTA-style) - ENHANCED
+   * Subtle feedback without exaggeration
    */
   onBuildingClick(group: THREE.Group) {
     if (!group.userData.aaa3d) return;
 
     const originalScale = group.userData.aaa3d.originalScale.clone();
 
-    // Scale down
-    group.scale.multiplyScalar(0.95);
+    // Subtle scale down
+    group.scale.multiplyScalar(0.97);
 
-    // Flash effect
+    // Subtle flash effect
     const lights = this.buildingLights.get(group);
     if (lights) {
       lights.forEach((light) => {
         if (light instanceof THREE.PointLight) {
-          light.intensity *= 1.5;
+          light.intensity *= 1.2;
         }
       });
     }
 
-    // Micro rotation
-    group.rotation.z += 0.05;
-
-    // Animate back
+    // Animate back quickly
     setTimeout(() => {
       group.scale.copy(originalScale);
-      group.rotation.z -= 0.05;
 
       if (lights) {
         lights.forEach((light) => {
           if (light instanceof THREE.PointLight) {
-            light.intensity /= 1.5;
+            light.intensity /= 1.2;
           }
         });
       }
-    }, 100);
+    }, 80);
   }
 
   /**

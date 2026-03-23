@@ -107,10 +107,10 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
     // Set scene as ready immediately so GiroAsfaltoObject can be rendered
     setSceneReady(true);
 
-    // ===== SCENE SETUP =====
+    // ===== SCENE SETUP - NIGHT URBAN ATMOSPHERE =====
     const scene = new THREE.Scene();
     scene.background = null; // Transparent background to show page background
-    scene.fog = new THREE.Fog(0x000000, 100, 200);
+    scene.fog = new THREE.Fog(0x0a0f1a, 120, 250); // Enhanced fog for depth
     sceneRef.current = scene;
 
     // Initialize blocked tiles set
@@ -139,25 +139,34 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
     rendererRef.current = renderer;
     containerRef.current.appendChild(renderer.domElement);
 
-    // ===== LIGHTING =====
-    // Ambient light with warm tone matching São Paulo aesthetic
-    const ambientLight = new THREE.AmbientLight(0xffccaa, 1.2);
+    // ===== LIGHTING - CINEMATIC NIGHT URBAN =====
+    // Dark ambient light for night atmosphere
+    const ambientLight = new THREE.AmbientLight(0x1a2a4a, 0.25);
     scene.add(ambientLight);
 
-    // Directional light for better object visibility
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    directionalLight.position.set(gridTotalWidth / 2, maxDim * 0.8, gridTotalHeight / 2);
+    // Directional light for dramatic shadows
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(gridTotalWidth / 2 + 30, maxDim * 0.9, gridTotalHeight / 2 + 20);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.mapSize.width = 4096;
+    directionalLight.shadow.mapSize.height = 4096;
     directionalLight.shadow.camera.far = 500;
+    directionalLight.shadow.camera.left = -150;
+    directionalLight.shadow.camera.right = 150;
+    directionalLight.shadow.camera.top = 150;
+    directionalLight.shadow.camera.bottom = -150;
+    directionalLight.shadow.bias = -0.0001;
     scene.add(directionalLight);
 
-    // Point light for additional illumination
-    const pointLight = new THREE.PointLight(0xffffff, 2.0);
-    pointLight.position.set(gridTotalWidth / 2, maxDim * 1.2, gridTotalHeight / 2);
-    pointLight.castShadow = true;
-    scene.add(pointLight);
+    // Warm fill light (orange/gold)
+    const fillLight = new THREE.DirectionalLight(0xFF6B35, 0.35);
+    fillLight.position.set(gridTotalWidth / 2 - 40, maxDim * 0.7, gridTotalHeight / 2 - 30);
+    scene.add(fillLight);
+
+    // Rim light for edge definition
+    const rimLight = new THREE.DirectionalLight(0x00EAFF, 0.4);
+    rimLight.position.set(gridTotalWidth / 2, maxDim * 0.6, gridTotalHeight / 2 - 60);
+    scene.add(rimLight);
 
     // Initialize AAA 3D Visual System
     const aaa3dSystem = new AAA3DVisualSystem(scene, camera, renderer);
@@ -282,8 +291,8 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
       map: groundTexture,
       normalMap: normalMap,
       color: 0x6b5e4a, // Grayish-brown base color
-      metalness: 0.0, // No metallic shine
-      roughness: 0.9, // Very rough, dry earth appearance
+      metalness: 0.05, // Minimal metallic shine
+      roughness: 0.85, // Very rough, dry earth appearance
       side: THREE.FrontSide,
       emissive: 0x000000,
       emissiveIntensity: 0.0,
