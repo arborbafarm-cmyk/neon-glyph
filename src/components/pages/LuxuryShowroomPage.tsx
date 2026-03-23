@@ -14,7 +14,7 @@ type PurchaseMap = Record<number, boolean>;
 type DialogTone = 'welcome' | 'click' | 'purchase' | 'owned' | 'insufficient';
 
 const SHOWROOM_BG =
-  'https://static.wixstatic.com/media/50f4bf_e591cecf171a471cbfa4c0d91653f072~mv2.png';
+  'https://static.wixstatic.com/media/50f4bf_c55094f4ebfa49f9b7b851a1c7fa96b1~mv2.png';
 const NPC_IMG =
   'https://static.wixstatic.com/media/50f4bf_8dc3c6fde14f4e06b7937591bf2c203d~mv2.png';
 
