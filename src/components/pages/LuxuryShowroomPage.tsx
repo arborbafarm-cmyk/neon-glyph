@@ -409,14 +409,14 @@ export default function LuxuryShowroomPage() {
                   </div>
                 </div>
 
-                <div className="relative mt-4 flex min-h-[500px] items-end justify-between gap-4 overflow-hidden rounded-[30px] border border-white/10 bg-black/18 px-3 sm:px-6">
+                <div className="relative mt-4 flex min-h-[500px] items-end justify-between gap-6 overflow-hidden rounded-[30px] border border-white/10 bg-black/18 px-3 sm:px-6">
                   <div className="pointer-events-none absolute inset-0">
                     <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/88 to-transparent" />
                     <div className="absolute bottom-0 left-0 h-full w-full bg-[radial-gradient(circle_at_50%_96%,rgba(255,215,0,0.2),transparent_36%)]" />
                   </div>
 
-                  {/* DIALOG PANEL */}
-                  <div className="relative z-10 hidden max-w-[420px] self-center xl:block">
+                  {/* DIALOG PANEL - LEFT SIDE */}
+                  <div className="relative z-10 hidden w-full max-w-[380px] self-end xl:block">
                     <AnimatePresence mode="wait">
                       {showDialog && (
                         <motion.div
@@ -467,7 +467,7 @@ export default function LuxuryShowroomPage() {
                     </AnimatePresence>
                   </div>
 
-                  {/* NPC */}
+                  {/* NPC - RIGHT SIDE */}
                   <div className="relative z-10 flex h-full flex-1 items-end justify-end">
                     <motion.div
                       onMouseEnter={() => setNpcHover(true)}
