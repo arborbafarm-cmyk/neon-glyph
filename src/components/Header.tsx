@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Vault, Zap, Dice5, Menu, X, LogOut } from 'lucide-react';
+import { Vault, Zap, Dice5, Menu, X, LogOut, Move3D } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { useGameStore } from '@/store/gameStore';
 import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
@@ -8,6 +8,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useSpinVault } from '@/hooks/useSpinVault';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMember } from '@/integrations';
+import { useDragCustomizationStore } from '@/store/dragCustomizationStore';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -23,6 +24,7 @@ export default function Header() {
   const { spins, timeUntilNextGain, formatTime } = useSpinVault();
   const { actions, member } = useMember();
   const navigate = useNavigate();
+  const { isDragModeEnabled, toggleDragMode } = useDragCustomizationStore();
 
   const [customPlayerName, setCustomPlayerName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState(
@@ -186,6 +188,20 @@ export default function Header() {
         >
           PRÓXIMO GIRO: {formatTime(timeUntilNextGain)}
         </div>
+
+        {/* DRAG MODE BUTTON */}
+        <button
+          onClick={toggleDragMode}
+          className={`flex items-center gap-2 px-4 py-2 border font-heading text-xs uppercase tracking-widest rounded transition-all duration-300 ${
+            isDragModeEnabled
+              ? 'bg-[#00eaff]/20 text-[#00eaff] border-[#00eaff]'
+              : 'bg-white/10 text-white/60 border-white/30 hover:bg-white/20 hover:text-white/80'
+          }`}
+          title="Ativar/Desativar modo de personalização"
+        >
+          <Move3D className="w-4 h-4" />
+          <span className="hidden sm:inline">{isDragModeEnabled ? 'Personalizar' : 'Personalizar'}</span>
+        </button>
 
         {/* LOGOUT BUTTON */}
         <button
