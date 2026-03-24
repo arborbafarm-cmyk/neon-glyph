@@ -264,11 +264,7 @@ export default function CommercialCenterPage() {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(0, 240, 255, 0.05),
-          rgba(157, 0, 255, 0.05)
-        );
+        background: none;
         pointer-events: none;
       }
 
@@ -387,9 +383,16 @@ export default function CommercialCenterPage() {
     <div className="commercial-grid min-h-screen">
       {/* HEADER */}
 
+      {/* WELCOME TITLE */}
+      <div className="w-full pt-[120px] px-4 relative z-10">
+        <div className="max-w-[100rem] mx-auto mb-8">
+          <h1 className="neon-sign text-4xl md:text-5xl text-center">Bem-vindo ao Complexo</h1>
+        </div>
+      </div>
+
       {/* BANNER */}
-      <div className="w-full pt-[120px] relative z-10">
-        <div className="banner-container w-full bg-black flex items-center justify-center">
+      <div className="w-full relative z-10">
+        <div className="banner-container w-full flex items-center justify-center">
           <Image
             src="https://static.wixstatic.com/media/50f4bf_fd64ac461d5d41c2a6bc7639af7590ac~mv2.png"
             alt="Centro Comercial"
@@ -398,7 +401,7 @@ export default function CommercialCenterPage() {
         </div>
       </div>
       {/* OPERATIONS */}
-      <div className="w-full px-4 py-12 relative z-10">
+      <div className="w-full px-4 py-12 relative z-10 mt-[20%]">
         <div className="max-w-[100rem] mx-auto space-y-6">
           {/* Container 1 - Administradora de Bens */}
           {operations.map((op) => (
