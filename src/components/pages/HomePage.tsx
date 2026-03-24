@@ -39,7 +39,6 @@ export default function CinemaIntro() {
         {/* Linhas de interferência de TV antiga */}
         <div className="pointer-events-none absolute inset-0 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_2px,3px_100%]" />
       </div>
-
       <AnimatePresence mode="wait">
         {stage === 'intro' ? (
           <motion.div 
@@ -59,18 +58,6 @@ export default function CinemaIntro() {
               {phrases[textIndex]}
             </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-              className="text-center"
-            >
-              <h1 className="text-7xl font-[1000] leading-none tracking-tighter md:text-[12rem] uppercase italic">
-                DOMÍNIO
-                <span className="block text-red-700 drop-shadow-[0_0_15px_rgba(185,28,28,0.5)]">COMANDO</span>
-              </h1>
-            </motion.div>
-
             <motion.button
               whileHover={{ scale: 1.05, backgroundColor: "#fff", color: "#000" }}
               whileTap={{ scale: 0.95 }}
@@ -79,7 +66,16 @@ export default function CinemaIntro() {
             >
               TOMAR CONTROLE <Play fill="currentColor" size={20} />
             </motion.button>
-          </motion.div>
+          <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+              className="text-center"
+            >
+
+            </motion.div>
+
+            </motion.div>
         ) : (
           <motion.div 
             key="login"
@@ -130,7 +126,6 @@ export default function CinemaIntro() {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* FOOTER TÁTICO */}
       <div className="absolute bottom-6 left-6 z-40 hidden md:block">
         <div className="flex items-center gap-4 text-[10px] font-mono tracking-widest text-zinc-500 uppercase">
