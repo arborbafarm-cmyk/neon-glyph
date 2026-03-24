@@ -2,6 +2,8 @@
 import { Image } from '@/components/ui/image';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface CommerceOperation {
   id: string;
@@ -380,9 +382,9 @@ export default function CommercialCenterPage() {
   }, []);
 
   return (
-    <div className="commercial-grid min-h-screen">
-      {/* HEADER */}
-
+    <div className="commercial-grid min-h-screen flex flex-col">
+      <Header />
+      
       {/* WELCOME TITLE */}
       <div className="w-full pt-[120px] px-4 relative z-10">
         <div className="max-w-[100rem] mx-auto mb-8">
@@ -519,6 +521,7 @@ export default function CommercialCenterPage() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 }

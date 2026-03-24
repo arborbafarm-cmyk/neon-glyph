@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { SkillUpgradeAnimations, AnimatedConnection, CompletionBackgroundGlow } from '@/components/SkillUpgradeAnimations';
 
@@ -177,10 +178,10 @@ export default function InvestmentSkillTreePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex flex-col">
+      <Header />
 
-
-      <div className="relative w-full overflow-hidden bg-black/40">
+      <div className="relative w-full overflow-hidden bg-black/40 flex-1">
         {/* Background glow effect */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500 rounded-full blur-3xl"></div>
@@ -518,6 +519,55 @@ export default function InvestmentSkillTreePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.5;
+          }
+          50% {
+            opacity: 1;
+          }
+        }
+
+        @keyframes glow-pulse {
+          0%, 100% {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+          }
+        }
+
+        @keyframes breathing {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+        }
+
+        @keyframes energy-flow {
+          0% {
+            stroke-dasharray: 0 100%;
+          }
+          100% {
+            stroke-dasharray: 100% 0;
+          }
+        }
+
+        @keyframes particle-burst {
+          0% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(var(--tx), var(--ty)) scale(0);
+          }
+        }
+      `}</style>
 
       <Footer />
 
