@@ -1,26 +1,30 @@
-import React, { useEffect } from 'react';
-import { AAA3DVisualSystem } from 'path-to-aaa3d-visual-system';
+import React, { useEffect, useRef, useState } from 'react';
+import { Tile } from './Tile';
 
-const InteractiveTileGrid = () => {
-    // other state and logic
+const InteractiveTileGrid = ({ rows, columns }) => {
+    const [tiles, setTiles] = useState([]);
+    const [sceneReady, setSceneReady] = useState(false);
 
-    // line 110 change
-    setSceneReady(false);
+    const initializeTiles = () => {
+        const newTiles = [];
+        for (let row = 0; row < rows; row++) {
+            const tileRow = [];
+            for (let col = 0; col < columns; col++) {
+                tileRow.push(<Tile key={`${row}-${col}`} />);
+            }
+            newTiles.push(tileRow);
+        }
+        setTiles(newTiles);
+    };
 
     useEffect(() => {
-        try {
-            const visualSystem = new AAA3DVisualSystem();
-            // additional initialization logic
-        } catch (error) {
-            console.error('Error initializing AAA3DVisualSystem:', error);
-        }
-    }, []);
+        initializeTiles();
+        setSceneReady(false);
+        // Other side effects here
+        setSceneReady(true);
+    }, [rows, columns]);
 
-    return (
-        <div>
-            {/* render logic */}
-        </div>
-    );
+    return <div>{tiles.map((row, index) => <div key={index}>{row}</div>)}</div>;
 };
 
 export default InteractiveTileGrid;
