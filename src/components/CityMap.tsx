@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@/store/playerStore';
+import { useSelectedTilesStore } from '@/store/selectedTilesStore';
 
 interface Tile {
   id: string;
@@ -32,6 +33,8 @@ export default function CityMap() {
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const navigate = useNavigate();
   const playerLevel = usePlayerStore((state) => state.level);
+  const addTile = useSelectedTilesStore((state) => state.addTile);
+  const selectedTiles = useSelectedTilesStore((state) => state.selectedTiles);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -253,6 +256,13 @@ export default function CityMap() {
 
         selectedTileMeshRef.current = clickedMesh;
         setSelectedTile(tileData);
+
+        // Add tile to selected tiles store
+        addTile({
+          id: tileData.id,
+          x: tileData.x,
+          y: tileData.y,
+        });
 
         // Log to console
         console.log('Tile Selected:', {
