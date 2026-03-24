@@ -144,11 +144,11 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
 
     // ===== LIGHTING - RENOVATED CINEMATIC NIGHT URBAN =====
     // Enhanced dark ambient light for sophisticated night atmosphere
-    const ambientLight = new THREE.AmbientLight(0x1a2a4a, 0.3);
+    const ambientLight = new THREE.AmbientLight(0x1a2a4a, 0.6);
     scene.add(ambientLight);
 
     // Directional light for dramatic shadows with enhanced contrast
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.4);
     directionalLight.position.set(gridTotalWidth / 2 + 30, maxDim * 0.9, gridTotalHeight / 2 + 20);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 4096;
@@ -162,14 +162,19 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
     scene.add(directionalLight);
 
     // Warm fill light (orange/gold) - enhanced for depth
-    const fillLight = new THREE.DirectionalLight(0xFF6B35, 0.45);
+    const fillLight = new THREE.DirectionalLight(0xFF6B35, 0.7);
     fillLight.position.set(gridTotalWidth / 2 - 40, maxDim * 0.7, gridTotalHeight / 2 - 30);
     scene.add(fillLight);
 
     // Rim light for edge definition - enhanced neon glow
-    const rimLight = new THREE.DirectionalLight(0x00EAFF, 0.5);
+    const rimLight = new THREE.DirectionalLight(0x00EAFF, 0.8);
     rimLight.position.set(gridTotalWidth / 2, maxDim * 0.6, gridTotalHeight / 2 - 60);
     scene.add(rimLight);
+
+    // Additional point light for overall brightness
+    const pointLight = new THREE.PointLight(0xffffff, 0.6);
+    pointLight.position.set(gridTotalWidth / 2, maxDim * 0.5, gridTotalHeight / 2);
+    scene.add(pointLight);
 
     // Initialize AAA 3D Visual System
     const aaa3dSystem = new AAA3DVisualSystem(scene, camera, renderer);
@@ -880,12 +885,12 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
       }
     );
 
-    // ===== LOAD CENTRO COMERCIAL 3D MODEL (positioned at tile 40) =====
-    // Position the centro comercial at tile 40 (exact position marked with X)
+    // ===== LOAD CENTRO COMERCIAL 3D MODEL (positioned next to Centro Comunitário) =====
+    // Position the centro comercial next to the centro comunitário (investment center)
     const centroComercialSize = 4; // 4 tiles wide
     const centroComercialDepth = 2; // 2 tiles deep (8 tiles total)
-    const centroComercialGridX = 20; // Tile 40 X position (center)
-    const centroComercialGridZ = 10; // Tile 40 Z position (center)
+    const centroComercialGridX = 32; // Same X as centro comunitário
+    const centroComercialGridZ = 0; // Above centro comunitário with spacing
 
     // Convert grid coordinates to world coordinates
     const centroComercialCenterGridX = centroComercialGridX;
@@ -894,7 +899,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
     const centroComercialWorldX = startX + centroComercialCenterGridX * tileSize;
     const centroComercialWorldZ = startZ + centroComercialCenterGridZ * tileSize;
 
-    console.log('Centro Comercial Position (Tile 40):', {
+    console.log('Centro Comercial Position (Next to Investment Center):', {
       gridX: centroComercialGridX,
       gridZ: centroComercialGridZ,
       worldX: centroComercialWorldX,
@@ -970,11 +975,11 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
       }
     );
 
-    // ===== LOAD CENTRO COMUNITÁRIO 3D MODEL (8 tiles - right margin, next to Centro Comercial) =====
-    // Position the centro comunitário next to the centro comercial
+    // ===== LOAD CENTRO COMUNITÁRIO 3D MODEL (8 tiles - right margin, investment center) =====
+    // Position the centro comunitário (investment center) on the right margin
     const centroComunitarioSize = 4; // 4 tiles wide
     const centroComunitarioDepth = 2; // 2 tiles deep (8 tiles total)
-    const centroComunitarioGridX = 32; // Right margin (same as centro comercial)
+    const centroComunitarioGridX = 32; // Right margin
     const centroComunitarioGridZ = 5; // Below centro comercial with spacing
 
     // Convert grid coordinates to world coordinates
