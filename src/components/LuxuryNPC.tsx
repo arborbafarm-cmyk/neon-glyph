@@ -70,12 +70,12 @@ export default function LuxuryNPC({ onNPCLoaded }: LuxuryNPCProps) {
         const npc = gltf.scene;
         // Position at center, slightly behind counter area
         npc.position.set(0, 0, 0.5);
-        // Scale visibilityvisibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibilityibility
-        npc.scale.set(2.20, 2.20, 2.20);visibvisibvisibvisibilibilitbilit
+        // Scale to appropriate size
+        npc.scale.set(2.20, 2.20, 2.20);
 
         // Enable shadows on all meshes and optimize materials
         npc.traverse((child) => {
-          if (child instanceofTHREE.Mesh) {
+          if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             // Optimize materials
