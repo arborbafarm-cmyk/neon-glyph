@@ -400,12 +400,20 @@ export default function CommercialCenterPage() {
                 <span className="font-bold">{selectedTiles.length}</span> tile(s) selecionado(s)
                 {averagePosition && (
                   <span className="block text-sm mt-2">
-                    Posição média: X: {Math.round(averagePosition.x)}, Y: {Math.round(averagePosition.y)}
+                    Posição média: X: {Math.round(averagePosition.x)}, Z: {Math.round(averagePosition.y)}
+                    <br />
+                    <span className="text-xs text-cyan-400">Grid: 0-100 (X e Z)</span>
                   </span>
                 )}
               </p>
             </div>
           )}
+          {/* Grid info */}
+          <div className="mt-4 p-3 border border-cyan-500/50 rounded bg-cyan-500/5 text-center">
+            <p className="text-cyan-300 text-sm font-paragraph">
+              Centro Comercial posicionado em: <span className="font-bold">X: 50, Z: 50</span>
+            </p>
+          </div>
         </div>
       </div>
 
