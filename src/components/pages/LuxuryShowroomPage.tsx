@@ -445,15 +445,7 @@ export default function LuxuryShowroomPage() {
                 </AnimatePresence>
 
                 {/* NPC - BOTTOM */}
-                <div 
-                  className="relative flex flex-1 items-end justify-center"
-                  style={{
-                    backgroundImage: 'url(https://static.wixstatic.com/media/50f4bf_52531577271e41cd92e49365e89e4659~mv2.png)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
-                  }}
-                >
+                <div className="relative flex flex-1 items-end justify-center">
                   <motion.div
                     onMouseEnter={() => setNpcHover(true)}
                     onMouseLeave={() => {
