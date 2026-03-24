@@ -41,8 +41,8 @@ export const BRIBERY_ZONES: BriberyZone[] = [
     id: 'delegado',
     name: 'Delegacia',
     npcType: 'delegado',
-    centerX: 27,
-    centerZ: 4,
+    centerX: 5,
+    centerZ: 5,
     width: 5,
     height: 5,
     color: 0xFF6347, // Tomato Red
