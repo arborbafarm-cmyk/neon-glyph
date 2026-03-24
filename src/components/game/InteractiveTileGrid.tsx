@@ -880,16 +880,16 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
       }
     );
 
-    // ===== LOAD CENTRO COMERCIAL 3D MODEL (8 tiles - right margin) =====
-    // Position the centro comercial on the right margin of the grid
+    // ===== LOAD CENTRO COMERCIAL 3D MODEL (positioned at tiles 40, 80, 120, 160) =====
+    // Position the centro comercial at tile 40 (center position)
     const centroComercialSize = 4; // 4 tiles wide
     const centroComercialDepth = 2; // 2 tiles deep (8 tiles total)
-    const centroComercialGridX = 32; // Right margin
-    const centroComercialGridZ = 2; // Upper area
+    const centroComercialGridX = 40; // Tile 40
+    const centroComercialGridZ = 80; // Tile 80
 
     // Convert grid coordinates to world coordinates
-    const centroComercialCenterGridX = centroComercialGridX + centroComercialSize / 2;
-    const centroComercialCenterGridZ = centroComercialGridZ + centroComercialDepth / 2;
+    const centroComercialCenterGridX = centroComercialGridX;
+    const centroComercialCenterGridZ = centroComercialGridZ;
 
     const centroComercialWorldX = startX + centroComercialCenterGridX * tileSize;
     const centroComercialWorldZ = startZ + centroComercialCenterGridZ * tileSize;
@@ -912,6 +912,10 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
 
         // Position at center of platform
         centroComercialGroup.position.set(centroComercialWorldX, 0, centroComercialWorldZ);
+
+        // Rotate to face inward (towards the center of the platform)
+        // Rotate 180 degrees around Y axis to face inward
+        centroComercialGroup.rotation.y = Math.PI;
 
         // Calculate bounding box to determine proper scale
         const bbox = new THREE.Box3().setFromObject(model);
