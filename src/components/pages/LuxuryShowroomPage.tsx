@@ -341,7 +341,7 @@ export default function LuxuryShowroomPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-black">
+    <div className="flex min-h-screen flex-col bg-black pt-[140px]">
       <Header />
       <div className="relative flex-1 overflow-hidden" style={{ background: getBackgroundByLevel(level) }}>
         <div className="absolute inset-0">
