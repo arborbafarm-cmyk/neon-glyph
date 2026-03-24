@@ -347,7 +347,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
     const numberCtxTemplate = numberCanvasTemplate.getContext('2d')!;
 
     // Create a function to generate number texture for a specific tile
-    const createNumberTexture = (tileNumber: number) => {
+    const createNumberTexture = (tileNumber: number, isHighlighted: boolean = false) => {
       const numberCanvas = document.createElement('canvas');
       numberCanvas.width = 256;
       numberCanvas.height = 256;
@@ -356,20 +356,24 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
       // Transparent background
       numberCtx.clearRect(0, 0, numberCanvas.width, numberCanvas.height);
 
-      // Draw number
-      numberCtx.fillStyle = '#00eaff';
+      // Draw number with fluorescent red for tiles 40, 80, 120, 160
+      const color = isHighlighted ? '#FF00FF' : '#00eaff'; // Fluorescent magenta/red
+      numberCtx.fillStyle = color;
       numberCtx.font = 'bold 120px Arial';
       numberCtx.textAlign = 'center';
       numberCtx.textBaseline = 'middle';
       numberCtx.fillText(tileNumber.toString(), 128, 128);
 
       // Add glow effect
-      numberCtx.strokeStyle = '#00eaff';
-      numberCtx.lineWidth = 3;
+      numberCtx.strokeStyle = color;
+      numberCtx.lineWidth = isHighlighted ? 6 : 3;
       numberCtx.strokeText(tileNumber.toString(), 128, 128);
 
       return new THREE.CanvasTexture(numberCanvas);
     };
+
+    // Tiles to highlight in fluorescent red
+    const highlightedTiles = new Set([40, 80, 120, 160]);
 
     // Add text labels for every 5th tile to avoid clutter
     const labelInterval = 5;
@@ -381,14 +385,17 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
           const z = startZ + row * tileSize + tileSize / 2;
           const y = tileSize * 0.15; // Slightly above the tile
 
+          // Check if this tile should be highlighted
+          const isHighlighted = highlightedTiles.has(tileIndex);
+
           // Create a plane with the number texture
-          const numberTexture = createNumberTexture(tileIndex);
+          const numberTexture = createNumberTexture(tileIndex, isHighlighted);
           const numberMaterial = new THREE.MeshBasicMaterial({
             map: numberTexture,
             transparent: true,
             side: THREE.DoubleSide,
-            emissive: 0x00eaff,
-            emissiveIntensity: 0.5,
+            emissive: isHighlighted ? 0xFF00FF : 0x00eaff,
+            emissiveIntensity: isHighlighted ? 1.0 : 0.5,
           });
 
           const numberGeometry = new THREE.PlaneGeometry(tileSize * 0.8, tileSize * 0.8);
@@ -404,6 +411,64 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
         tileIndex++;
       }
     }
+
+    // ===== HIGHLIGHT TILES 40, 80, 120, 160 WITH FLUORESCENT RED BOXES =====
+    const highlightTiles = () => {
+      const highlightedTileIndices = [40, 80, 120, 160];
+      
+      highlightedTileIndices.forEach((tileIndex) => {
+        // Find the tile position
+        let currentIndex = 0;
+        for (let row = 0; row < gridHeight; row++) {
+          for (let col = 0; col < gridWidth; col++) {
+            if (currentIndex === tileIndex) {
+              const x = startX + col * tileSize + tileSize / 2;
+              const z = startZ + row * tileSize + tileSize / 2;
+              const y = tileSize * 0.05;
+
+              // Create a highlighted box geometry
+              const highlightGeometry = new THREE.BoxGeometry(tileSize * 0.95, tileSize * 0.1, tileSize * 0.95);
+              const highlightMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFF00FF, // Fluorescent magenta
+                emissive: 0xFF00FF,
+                emissiveIntensity: 1.0,
+                transparent: true,
+                opacity: 0.8,
+              });
+
+              const highlightMesh = new THREE.Mesh(highlightGeometry, highlightMaterial);
+              highlightMesh.position.set(x, y, z);
+              scene.add(highlightMesh);
+
+              // Add a glowing border using line segments
+              const borderGeometry = new THREE.BufferGeometry();
+              const borderPoints = [
+                // Top rectangle
+                startX + col * tileSize, tileSize * 0.08, startZ + row * tileSize,
+                startX + (col + 1) * tileSize, tileSize * 0.08, startZ + row * tileSize,
+                startX + (col + 1) * tileSize, tileSize * 0.08, startZ + (row + 1) * tileSize,
+                startX + col * tileSize, tileSize * 0.08, startZ + (row + 1) * tileSize,
+                startX + col * tileSize, tileSize * 0.08, startZ + row * tileSize,
+              ];
+
+              borderGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(borderPoints), 3));
+              const borderMaterial = new THREE.LineBasicMaterial({
+                color: 0xFF00FF,
+                linewidth: 3,
+                transparent: true,
+                opacity: 1.0,
+              });
+
+              const borderLine = new THREE.Line(borderGeometry, borderMaterial);
+              scene.add(borderLine);
+            }
+            currentIndex++;
+          }
+        }
+      });
+    };
+
+    highlightTiles();
 
     // ===== ADD GROUND PLANE WITH REALISTIC TEXTURE =====
     const groundGeometry = new THREE.PlaneGeometry(gridTotalWidth * 1.3, gridTotalHeight * 1.3);
@@ -880,26 +945,29 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
       }
     );
 
-    // ===== LOAD CENTRO COMERCIAL 3D MODEL (positioned at tile 40) =====
-    // Position the centro comercial at tile 40 (exact position marked with X)
+    // ===== LOAD CENTRO COMERCIAL 3D MODEL (positioned away from QG) =====
+    // Position the centro comercial at a location that doesn't overlap with QG
+    // QG is at gridX: 18-22, gridZ: 8-12 (4x4 tiles centered)
+    // Centro Comercial will be positioned to the RIGHT of the QG
     const centroComercialSize = 4; // 4 tiles wide
     const centroComercialDepth = 2; // 2 tiles deep (8 tiles total)
-    const centroComercialGridX = 20; // Tile 40 X position (center)
-    const centroComercialGridZ = 10; // Tile 40 Z position (center)
+    const centroComercialGridX = 24; // Positioned to the right of QG (avoiding overlap)
+    const centroComercialGridZ = 9; // Aligned vertically with QG
 
     // Convert grid coordinates to world coordinates
-    const centroComercialCenterGridX = centroComercialGridX;
-    const centroComercialCenterGridZ = centroComercialGridZ;
+    const centroComercialCenterGridX = centroComercialGridX + centroComercialSize / 2;
+    const centroComercialCenterGridZ = centroComercialGridZ + centroComercialDepth / 2;
 
     const centroComercialWorldX = startX + centroComercialCenterGridX * tileSize;
     const centroComercialWorldZ = startZ + centroComercialCenterGridZ * tileSize;
 
-    console.log('Centro Comercial Position (Tile 40):', {
+    console.log('Centro Comercial Position (Corrected):', {
       gridX: centroComercialGridX,
       gridZ: centroComercialGridZ,
       worldX: centroComercialWorldX,
       worldZ: centroComercialWorldZ,
       gridSize: `${centroComercialSize}x${centroComercialDepth}`,
+      note: 'Positioned to the right of QG to avoid overlap',
     });
 
     gltfLoader.load(
@@ -913,9 +981,8 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = (
         // Position at center of platform
         centroComercialGroup.position.set(centroComercialWorldX, 0, centroComercialWorldZ);
 
-        // Rotate to face inward (towards the center of the platform)
-        // Rotate 180 degrees around Y axis to face inward
-        centroComercialGroup.rotation.y = Math.PI;
+        // No rotation - face forward (0 degrees)
+        centroComercialGroup.rotation.y = 0;
 
         // Calculate bounding box to determine proper scale
         const bbox = new THREE.Box3().setFromObject(model);
