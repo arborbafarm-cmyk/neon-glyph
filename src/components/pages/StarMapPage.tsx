@@ -72,7 +72,7 @@ export default function StarMapPage() {
       });
     }
 
-    // Create nebula clouds
+    // Create nebula clouds - DISABLED (fog removed)
     interface Nebula {
       x: number;
       y: number;
@@ -84,38 +84,7 @@ export default function StarMapPage() {
       speed: number;
     }
 
-    const nebulas: Nebula[] = [
-      {
-        x: canvas.width * 0.3,
-        y: canvas.height * 0.2,
-        size: 400,
-        opacity: 0.15,
-        color: '#6b4ce6',
-        offsetX: 0,
-        offsetY: 0,
-        speed: 0.0005,
-      },
-      {
-        x: canvas.width * 0.7,
-        y: canvas.height * 0.6,
-        size: 500,
-        opacity: 0.12,
-        color: '#1e90ff',
-        offsetX: 0,
-        offsetY: 0,
-        speed: 0.0003,
-      },
-      {
-        x: canvas.width * 0.5,
-        y: canvas.height * 0.8,
-        size: 350,
-        opacity: 0.1,
-        color: '#00eaff',
-        offsetX: 0,
-        offsetY: 0,
-        speed: 0.0004,
-      },
-    ];
+    const nebulas: Nebula[] = [];
 
     let animationFrameId: number;
     let time = 0;
@@ -124,32 +93,8 @@ export default function StarMapPage() {
       time += 1;
 
       // Clear canvas with dark background
-      ctx.fillStyle = 'rgba(15, 20, 30, 0.95)';
+      ctx.fillStyle = 'rgba(15, 20, 30, 1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw nebulas with gradient
-      nebulas.forEach((nebula) => {
-        nebula.offsetX += nebula.speed;
-        nebula.offsetY += nebula.speed * 0.5;
-
-        const gradient = ctx.createRadialGradient(
-          nebula.x + nebula.offsetX,
-          nebula.y + nebula.offsetY,
-          0,
-          nebula.x + nebula.offsetX,
-          nebula.y + nebula.offsetY,
-          nebula.size
-        );
-
-        gradient.addColorStop(0, nebula.color);
-        gradient.addColorStop(0.5, nebula.color + '80');
-        gradient.addColorStop(1, 'transparent');
-
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = nebula.opacity;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
-      });
 
       // Draw pulsing stars
       stars.forEach((star) => {
