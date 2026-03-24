@@ -35,8 +35,8 @@ export default function LuxuryNPC({ onNPCLoaded }: LuxuryNPCProps) {
     cameraRef.current = camera;
 
     // Renderer setup with optimizations
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
       alpha: true,
       powerPreference: 'high-performance'
     });
@@ -63,7 +63,7 @@ export default function LuxuryNPC({ onNPCLoaded }: LuxuryNPCProps) {
 
     // Load GLB model
     const loader = new GLTFLoader();
-    
+
     loader.load(
       'https://static.wixstatic.com/3d/50f4bf_55eda8581fc04c02a39a33c94b588afc.glb',
       (gltf) => {
@@ -71,7 +71,7 @@ export default function LuxuryNPC({ onNPCLoaded }: LuxuryNPCProps) {
         // Position at center, slightly behind counter area
         npc.position.set(0, 0, 0.5);
         // Scale appropriately for full body visibility
-        npc.scale.set(1.65, 1.65, 1.65);
+        npc.scale.set(1.85, 1.85, 1.85);visibvisibvisibvisibilibilitbilit
 
         // Enable shadows on all meshes and optimize materials
         npc.traverse((child) => {
