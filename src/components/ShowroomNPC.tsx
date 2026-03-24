@@ -122,7 +122,7 @@ export default function ShowroomNPC() {
 
         // Position NPC centered, standing on floor
         model.position.set(0, 0, 0);
-        model.scale.set(2.20, 2.20, 2.20);
+        model.scale.set(3.2, 3.2, 3.2);
 
         // Ensure NPC faces forward
         model.rotation.y = 0;

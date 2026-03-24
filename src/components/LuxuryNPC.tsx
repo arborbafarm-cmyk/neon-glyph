@@ -70,8 +70,8 @@ export default function LuxuryNPC({ onNPCLoaded }: LuxuryNPCProps) {
         const npc = gltf.scene;
         // Position at center, slightly behind counter area
         npc.position.set(0, 0, 0.5);
-        // Scale to appropriate size
-        npc.scale.set(2.20, 2.20, 2.20);
+        // Scale to appropriate size - increased for better visibility
+        npc.scale.set(3.2, 3.2, 3.2);
 
         // Enable shadows on all meshes and optimize materials
         npc.traverse((child) => {
