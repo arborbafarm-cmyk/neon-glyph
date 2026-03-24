@@ -58,24 +58,24 @@ export default function CinemaIntro() {
               {phrases[textIndex]}
             </motion.p>
 
+            <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+                  className="text-center"
+                >
+
+                </motion.div>
+
             <motion.button
-              whileHover={{ scale: 1.05, backgroundColor: "#fff", color: "#000" }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setStage('login')}
-              className="mt-16 flex items-center gap-4 border-2 border-white px-10 py-4 text-xl font-black uppercase tracking-widest transition-all"
-            >
-              TOMAR CONTROLE <Play fill="currentColor" size={20} />
-            </motion.button>
-          <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-              className="text-center"
-            >
-
-            </motion.div>
-
-            </motion.div>
+          whileHover={{ scale: 1.05, backgroundColor: "#fff", color: "#000" }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setStage('login')}
+          className="mt-16 flex items-center gap-4 border-2 border-white px-10 py-4 text-xl font-black uppercase tracking-widest transition-all"
+        >
+          TOMAR CONTROLE <Play fill="currentColor" size={20} />
+        </motion.button>
+          </motion.div>
         ) : (
           <motion.div 
             key="login"
