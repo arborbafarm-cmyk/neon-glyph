@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Chrome, ShieldCheck, UserSecret, Play, AlertTriangle } from 'lucide-react'; // Ícones mais "agressivos"
+import { Chrome, ShieldCheck, Eye, Play, AlertTriangle } from 'lucide-react'; // Ícones mais "agressivos"
 import { useNavigate } from 'react-router-dom';
 
 const VIDEO_BG = 'https://video.wixstatic.com/video/50f4bf_570bf5fe87734b1cb3523fd958acce0e/720p/mp4/file.mp4';
@@ -120,7 +120,7 @@ export default function CinemaIntro() {
                     className="group flex items-center justify-between border border-white/20 p-4 transition-all hover:bg-white hover:text-black"
                    >
                      <span className="flex items-center gap-3 font-bold uppercase tracking-tighter">
-                       <UserSecret size={20} /> Entrar como Anônimo
+                       <Eye size={20} /> Entrar como Anônimo
                      </span>
                      <span className="opacity-0 transition-all group-hover:opacity-100">→</span>
                    </button>
