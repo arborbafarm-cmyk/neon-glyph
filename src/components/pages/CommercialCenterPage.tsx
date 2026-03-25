@@ -1,5 +1,6 @@
+
 import { Image } from '@/components/ui/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -11,10 +12,18 @@ import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
 import CommercialCenterHotspots from '@/components/CommercialCenterHotspots';
 import CommerceOperationModal from '@/components/CommerceOperationModal';
-import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
-import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
-import { usePlayerStore } from '@/store/playerStore';
-import { Building2, Landmark, Sparkles, ShieldCheck, Clock3, Banknote } from 'lucide-react';
+
+interface CommerceOperation {
+  id: string;
+  name: string;
+  value: number;
+  tax: number;
+  duration: number; // in seconds
+  startTime?: number;
+  isActive: boolean;
+  timeLeft?: number;
+  progress?: number;
+}
 
 interface CompletedOperation {
   id: string;
@@ -24,103 +33,167 @@ interface CompletedOperation {
   date: string;
 }
 
-const INITIAL_COMERCIOS_DATA: Comercios = {
-  pizzaria: {
-    nivelNegocio: 0,
-    nivelTaxa: 0,
-    ultimaDataUso: null,
-    emAndamento: false,
-    horarioFim: null,
-    valorAtual: 0,
-    taxaAplicada: 0,
-  },
-  admBens: {
-    nivelNegocio: 0,
-    nivelTaxa: 0,
-    ultimaDataUso: null,
-    emAndamento: false,
-    horarioFim: null,
-    valorAtual: 0,
-    taxaAplicada: 0,
-  },
-  lavanderia: {
-    nivelNegocio: 0,
-    nivelTaxa: 0,
-    ultimaDataUso: null,
-    emAndamento: false,
-    horarioFim: null,
-    valorAtual: 0,
-    taxaAplicada: 0,
-  },
-  academia: {
-    nivelNegocio: 0,
-    nivelTaxa: 0,
-    ultimaDataUso: null,
-    emAndamento: false,
-    horarioFim: null,
-    valorAtual: 0,
-    taxaAplicada: 0,
-  },
-  templo: {
-    nivelNegocio: 0,
-    nivelTaxa: 0,
-    ultimaDataUso: null,
-    emAndamento: false,
-    horarioFim: null,
-    valorAtual: 0,
-    taxaAplicada: 0,
-  },
-};
-
-function safeParseComercios(raw?: string | null): Comercios {
-  if (!raw) return INITIAL_COMERCIOS_DATA;
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      ...INITIAL_COMERCIOS_DATA,
-      ...parsed,
-    };
-  } catch {
-    return INITIAL_COMERCIOS_DATA;
-  }
-}
-
-function getResolvedPlayerId(member: any): string | null {
-  return member?._id || localStorage.getItem('currentPlayerId') || null;
-}
-
 export default function CommercialCenterPage() {
   const { member } = useMember();
-
-  const [comercios, setComercios] = useState<Comercios>(INITIAL_COMERCIOS_DATA);
+  const [comercios, setComercios] = useState<Comercios | null>(null);
   const [playerData, setPlayerData] = useState<Players | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [operations, setOperations] = useState<CommerceOperation[]>([
+    {
+      id: 'commerce2',
+      name: 'Administradora de Bens',
+      value: 5000,
+      tax: 50,
+      duration: 18000, // 5 hours
+      isActive: false,
+    },
+  ]);
+
+  const [completedOps, setCompletedOps] = useState<CompletedOperation[]>([]);
+
+  // Modal state
   const [activeCommerceModal, setActiveCommerceModal] = useState<ComercioKey | null>(null);
-  const [pageError, setPageError] = useState<string | null>(null);
-  const [completedOps] = useState<CompletedOperation[]>([]);
 
-  const { dirtyMoney, setDirtyMoney } = useDirtyMoneyStore();
-  const { cleanMoney, setCleanMoney } = useCleanMoneyStore();
-  const { setLevel, setPlayerId, setPlayerName } = usePlayerStore();
+  // Carregar dados do jogador
+  useEffect(() => {
+    const loadPlayerData = async () => {
+      if (!member?._id) return;
+      try {
+        let player = await BaseCrudService.getById<Players>('players', member._id);
+        
+        // Se o jogador não existe, criar um novo
+        if (!player) {
+          console.log('📝 Criando novo jogador para:', member._id);
+          const initialComerciosData = {
+            pizzaria: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+            admBens: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+            lavanderia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+            academia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+            templo: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+          };
+          
+          const newPlayer: Players = {
+            _id: member._id,
+            playerName: member.profile?.nickname || 'Jogador',
+            cleanMoney: 0,
+            dirtyMoney: 1000,
+            level: 1,
+            progress: 0,
+            comercios: JSON.stringify(initialComerciosData),
+            isGuest: false,
+            profilePicture: member.profile?.photo?.url,
+          };
+          
+          await BaseCrudService.create('players', newPlayer);
+          setPlayerData(newPlayer);
+          setComercios(initialComerciosData);
+          console.log('✅ Jogador criado com sucesso');
+        } else {
+          setPlayerData(player);
+          const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
+          if (!comerciosData) {
+            console.warn('⚠️ Comercios não encontrados, inicializando...');
+            const initialComerciosData = {
+              pizzaria: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+              admBens: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+              lavanderia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+              academia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+              templo: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
+            };
+            setComercios(initialComerciosData);
+            // Salvar no banco de dados
+            await BaseCrudService.update<Players>('players', {
+              _id: member._id,
+              comercios: JSON.stringify(initialComerciosData),
+            });
+          } else {
+            setComercios(comerciosData);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do jogador:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadPlayerData();
+  }, [member?._id]);
 
-  const playerId = getResolvedPlayerId(member);
+  // Atualizar dados periodicamente
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (!member?._id) return;
+      try {
+        const player = await BaseCrudService.getById<Players>('players', member._id);
+        if (player) {
+          setPlayerData(player);
+          const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
+          setComercios(comerciosData);
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar dados:', error);
+      }
+    }, 5000); // Atualizar a cada 5 segundos
 
-  const syncPlayerToStores = (player: Players) => {
-    setDirtyMoney(player.dirtyMoney || 0);
-    setCleanMoney(player.cleanMoney || 0);
-    setLevel(player.level || 1);
-    setPlayerId(player._id);
-    setPlayerName(player.playerName || 'Jogador');
+    return () => clearInterval(interval);
+  }, [member?._id]);
+
+  const handleIniciarLavagem = async (comercioKey: ComercioKey) => {
+    if (!member?._id || !playerData) return;
+    try {
+      const resultado = await comerciosService.iniciarLavagem(
+        member._id,
+        comercioKey,
+        playerData.dirtyMoney || 0
+      );
+      if (resultado.sucesso) {
+        const player = await BaseCrudService.getById<Players>('players', member._id);
+        if (player) {
+          setPlayerData(player);
+          const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
+          setComercios(comerciosData);
+        }
+      } else {
+        alert(resultado.mensagem);
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar lavagem:', error);
+      alert('Erro ao iniciar lavagem');
+    }
   };
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', {
+  const handleFinalizarLavagem = async (comercioKey: ComercioKey) => {
+    if (!member?._id) return;
+    try {
+      const resultado = await comerciosService.finalizarLavagem(member._id, comercioKey);
+      if (resultado.sucesso) {
+        const player = await BaseCrudService.getById<Players>('players', member._id);
+        if (player) {
+          setPlayerData(player);
+          const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
+          setComercios(comerciosData);
+        }
+      } else {
+        alert(resultado.mensagem);
+      }
+    } catch (error) {
+      console.error('Erro ao finalizar lavagem:', error);
+      alert('Erro ao finalizar lavagem');
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value || 0);
+    }).format(value);
+  };
 
   const openCommerceModal = (commerceId: string) => {
-    const commerceKeyMap: Record<string, ComercioKey> = {
+    console.log('RECEBIDO DO HOTSPOT:', commerceId);
+
+    // Map commerce IDs to ComercioKey
+    const commerceKeyMap: { [key: string]: ComercioKey } = {
       pizzaria: 'pizzaria',
       admBens: 'admBens',
       templo: 'templo',
@@ -129,158 +202,91 @@ export default function CommercialCenterPage() {
     };
 
     const comercioKey = commerceKeyMap[commerceId];
-    if (comercioKey) setActiveCommerceModal(comercioKey);
+    console.log('MAPEADO PARA:', comercioKey);
+
+    if (comercioKey) {
+      setActiveCommerceModal(comercioKey);
+    }
   };
 
   const closeCommerceModal = () => {
     setActiveCommerceModal(null);
   };
 
-  const refreshPlayer = async () => {
-    if (!playerId) return;
-
-    const player = await BaseCrudService.getById<Players>('players', playerId);
-    if (!player) throw new Error('Jogador não encontrado.');
-
-    setPlayerData(player);
-    syncPlayerToStores(player);
-    setComercios(safeParseComercios(player.comercios));
-  };
-
-  useEffect(() => {
-    const loadPlayerData = async () => {
-      const resolvedPlayerId = getResolvedPlayerId(member);
-      
-      if (!resolvedPlayerId) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Salvar playerId resolvido no localStorage
-      localStorage.setItem('currentPlayerId', resolvedPlayerId);
-
-      try {
-        setIsLoading(true);
-        setPageError(null);
-
-        let player = await BaseCrudService.getById<Players>('players', resolvedPlayerId);
-
-        if (!player) {
-          const newPlayer: Players = {
-            _id: resolvedPlayerId,
-            playerName: member?.profile?.nickname || 'Jogador',
-            cleanMoney: 1000000000,
-            dirtyMoney: 1000000000,
-            level: 1,
-            progress: 0,
-            comercios: JSON.stringify(INITIAL_COMERCIOS_DATA),
-            isGuest: false,
-            profilePicture: member?.profile?.photo?.url,
-          };
-
-          await BaseCrudService.create('players', newPlayer);
-          player = newPlayer;
-        } else if (!player.comercios) {
-          await BaseCrudService.update<Players>('players', {
-            _id: resolvedPlayerId,
-            comercios: JSON.stringify(INITIAL_COMERCIOS_DATA),
-          });
-
-          player = await BaseCrudService.getById<Players>('players', resolvedPlayerId);
-          if (!player) throw new Error('Falha ao atualizar comércios do jogador.');
-        }
-
-        setPlayerData(player);
-        syncPlayerToStores(player);
-        setComercios(safeParseComercios(player.comercios));
-      } catch (error) {
-        console.error('Erro ao carregar dados do jogador:', error);
-        setPageError('Não foi possível carregar o Centro Comercial.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPlayerData();
-  }, [playerId, member?.profile?.nickname, member?.profile?.photo?.url]);
-
-  useEffect(() => {
-    if (!playerId) return;
-
-    const interval = setInterval(async () => {
-      try {
-        await refreshPlayer();
-      } catch (error) {
-        console.error('Erro ao atualizar dados:', error);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [playerId]);
-
-  const handleIniciarLavagem = async (comercioKey: ComercioKey) => {
-    const resolvedPlayerId = getResolvedPlayerId(member);
-    if (!resolvedPlayerId) return;
-
-    try {
-      const resultado = await comerciosService.iniciarLavagem(
-        resolvedPlayerId,
-        comercioKey,
-        dirtyMoney
-      );
-
-      if (!resultado.sucesso) {
-        alert(resultado.mensagem);
-        return;
-      }
-
-      await refreshPlayer();
-    } catch (error) {
-      console.error('Erro ao iniciar lavagem:', error);
-      alert('Erro ao iniciar lavagem');
-    }
-  };
-
-  const handleFinalizarLavagem = async (comercioKey: ComercioKey) => {
-    const resolvedPlayerId = getResolvedPlayerId(member);
-    if (!resolvedPlayerId) return;
-
-    try {
-      const resultado = await comerciosService.finalizarLavagem(resolvedPlayerId, comercioKey);
-
-      if (!resultado.sucesso) {
-        alert(resultado.mensagem);
-        return;
-      }
-
-      await refreshPlayer();
-    } catch (error) {
-      console.error('Erro ao finalizar lavagem:', error);
-      alert('Erro ao finalizar lavagem');
-    }
-  };
-
   const handleStartOperation = async (comercioKey: ComercioKey) => {
-    await handleIniciarLavagem(comercioKey);
-    closeCommerceModal();
+    if (!playerData || !member?._id) {
+      throw new Error('Dados do jogador não disponíveis');
+    }
+    try {
+      console.log('🚀 Iniciando lavagem para:', comercioKey);
+      console.log('💰 Dinheiro sujo disponível:', playerData.dirtyMoney);
+      
+      const resultado = await comerciosService.iniciarLavagem(
+        member._id,
+        comercioKey,
+        playerData.dirtyMoney || 0
+      );
+      
+      console.log('📊 Resultado da operação:', resultado);
+      
+      if (resultado.sucesso) {
+        console.log('✅ Lavagem iniciada com sucesso');
+        // Atualizar dados do jogador
+        const player = await BaseCrudService.getById<Players>('players', member._id);
+        if (player) {
+          setPlayerData(player);
+          const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
+          setComercios(comerciosData);
+          closeCommerceModal();
+        }
+      } else {
+        console.error('❌ Erro ao iniciar lavagem:', resultado.mensagem);
+        throw new Error(resultado.mensagem);
+      }
+    } catch (error) {
+      console.error('💥 Erro na operação:', error);
+      throw error;
+    }
   };
 
   const handleCompleteOperation = async (comercioKey: ComercioKey) => {
-    await handleFinalizarLavagem(comercioKey);
-    closeCommerceModal();
+    if (!playerData || !member?._id) {
+      throw new Error('Dados do jogador não disponíveis');
+    }
+    try {
+      console.log('🏁 Finalizando lavagem para:', comercioKey);
+      
+      const resultado = await comerciosService.finalizarLavagem(member._id, comercioKey);
+      
+      console.log('📊 Resultado da finalização:', resultado);
+      
+      if (resultado.sucesso) {
+        console.log('✅ Lavagem finalizada com sucesso. Dinheiro limpo ganho:', resultado.cleanMoneyGanho);
+        // Atualizar dados do jogador
+        const player = await BaseCrudService.getById<Players>('players', member._id);
+        if (player) {
+          setPlayerData(player);
+          const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
+          setComercios(comerciosData);
+          closeCommerceModal();
+        }
+      } else {
+        console.error('❌ Erro ao finalizar lavagem:', resultado.mensagem);
+        throw new Error(resultado.mensagem);
+      }
+    } catch (error) {
+      console.error('💥 Erro na operação:', error);
+      throw error;
+    }
   };
 
-  const activeCommerceData = useMemo(() => {
-    if (!activeCommerceModal) return null;
-    return comercios?.[activeCommerceModal] || null;
-  }, [activeCommerceModal, comercios]);
-
   useEffect(() => {
+    // Inject custom CSS for neon effects and animations
     const style = document.createElement('style');
     style.textContent = `
       @keyframes gridMove {
         from { background-position: 0 0; }
-        to { background-position: 120px 120px; }
+        to { background-position: 100px 100px; }
       }
 
       @keyframes pulse {
@@ -289,15 +295,32 @@ export default function CommercialCenterPage() {
             0 0 10px #00f0ff,
             0 0 20px #00f0ff,
             0 0 30px #00f0ff;
-          opacity: 0.92;
+          opacity: 0.9;
         }
         to {
           text-shadow:
-            0 0 18px #00f0ff,
-            0 0 38px #00f0ff,
-            0 0 70px #00f0ff;
+            0 0 20px #00f0ff,
+            0 0 40px #00f0ff,
+            0 0 80px #00f0ff,
+            0 0 120px #00f0ff;
           opacity: 1;
         }
+      }
+
+      @keyframes neonBorder {
+        0%, 100% {
+          border-color: #00f0ff;
+          box-shadow: 0 0 10px #00f0ff, inset 0 0 10px rgba(0, 240, 255, 0.1);
+        }
+        50% {
+          border-color: #9d00ff;
+          box-shadow: 0 0 20px #9d00ff, inset 0 0 15px rgba(157, 0, 255, 0.15);
+        }
+      }
+
+      @keyframes progressFill {
+        0% { width: 0%; }
+        100% { width: 100%; }
       }
 
       .neon-sign {
@@ -306,17 +329,15 @@ export default function CommercialCenterPage() {
           0 0 5px #00f0ff,
           0 0 10px #00f0ff,
           0 0 20px #00f0ff,
-          0 0 40px #00f0ff;
+          0 0 40px #00f0ff,
+          0 0 80px #00f0ff;
         animation: pulse 3s infinite alternate;
         font-weight: 700;
         letter-spacing: 2px;
       }
 
       .commercial-grid {
-        background:
-          radial-gradient(circle at top, rgba(0,240,255,0.08), transparent 24%),
-          radial-gradient(circle at bottom right, rgba(157,0,255,0.10), transparent 22%),
-          linear-gradient(to bottom, #070012, #05040f 35%, #000814 100%);
+        background: linear-gradient(to bottom, #0a0015, #000814);
         position: relative;
         overflow: hidden;
       }
@@ -324,38 +345,141 @@ export default function CommercialCenterPage() {
       .commercial-grid::before {
         content: '';
         position: absolute;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: repeating-linear-gradient(
           45deg,
           transparent,
-          transparent 12px,
-          rgba(0, 240, 255, 0.025) 12px,
-          rgba(0, 240, 255, 0.025) 24px
+          transparent 10px,
+          rgba(0, 240, 255, 0.03) 10px,
+          rgba(0, 240, 255, 0.03) 20px
         );
-        animation: gridMove 70s linear infinite;
+        animation: gridMove 60s linear infinite;
         pointer-events: none;
+      }
+
+      .container-neon {
+        border: 2px solid #00f0ff;
+        background: rgba(10, 0, 30, 0.6);
+        backdrop-filter: blur(10px);
+        animation: neonBorder 4s ease-in-out infinite;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .container-neon::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 240, 255, 0.1),
+          transparent
+        );
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
       }
 
       .banner-container {
         position: relative;
         overflow: hidden;
-        border: 1px solid rgba(0,240,255,0.28);
-        border-radius: 24px;
-        box-shadow:
-          0 0 30px rgba(0, 240, 255, 0.18),
-          inset 0 0 20px rgba(0, 240, 255, 0.08);
-        min-height: 620px;
+        border-bottom: 3px solid #00f0ff;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(0, 240, 255, 0.1);
+        min-height: 600px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .banner-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: none;
+        pointer-events: none;
+      }
+
+      .commerce-card {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 0;
+        transition: all 0.3s ease;
+        min-height: 280px;
+      }
+
+      .commerce-card:hover {
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+      }
+
+      .commerce-card.active {
+        border-color: #00ff00;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+      }
+
+      .commerce-card.completed {
+        border-color: #ffd700;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      }
+
+      .commerce-image {
+        width: 100%;
+        height: 100%;
+        border-right: 3px solid #00f0ff;
+        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.35));
+        background: rgba(0, 0, 0, 0.3);
       }
 
-      .panel-glass {
-        border: 1px solid rgba(0,240,255,0.22);
-        background: rgba(8, 16, 35, 0.55);
-        backdrop-filter: blur(12px);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      .commerce-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .commerce-content {
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(0, 240, 255, 0.2);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00f0ff, #00ff00);
+        transition: width 0.1s linear;
+        box-shadow: 0 0 10px #00f0ff;
+      }
+
+      .timer-display {
+        font-family: 'Courier New', monospace;
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #00f0ff;
+        text-shadow: 0 0 10px #00f0ff;
       }
 
       .history-table {
@@ -368,157 +492,84 @@ export default function CommercialCenterPage() {
       .history-table td {
         padding: 0.75rem;
         text-align: left;
-        border-bottom: 1px solid rgba(0,240,255,0.28);
-        color: #9fe7ff;
+        border-bottom: 1px solid #00f0ff;
+        color: #00f0ff;
       }
 
       .history-table th {
-        background: rgba(0, 240, 255, 0.08);
+        background: rgba(0, 240, 255, 0.1);
         font-weight: bold;
       }
 
       .history-table tr:hover {
         background: rgba(0, 240, 255, 0.05);
       }
-    `;
 
+      @media (max-width: 768px) {
+        .commerce-card {
+          grid-template-columns: 150px 1fr;
+          min-height: 220px;
+        }
+
+        .commerce-content {
+          padding: 1.5rem;
+        }
+      }
+    `;
     document.head.appendChild(style);
-    return () => document.head.removeChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
   }, []);
 
   return (
     <div className="commercial-grid min-h-screen flex flex-col">
       <Header />
-
-      <div className="w-full px-4 relative z-10">
+      
+      {/* WELCOME TITLE */}
+      <div className="w-full pt-[120px] px-4 relative z-10">
         <div className="max-w-[100rem] mx-auto mb-8">
-          <div className="panel-glass rounded-2xl px-6 py-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div>
-              <h1 className="neon-sign text-3xl md:text-5xl">
-                CENTRO COMERCIAL
-              </h1>
-              <p className="text-cyan-100/80 mt-2 text-sm md:text-base">
-                Administração dos comércios usados para lavagem de dinheiro, expansão operacional e retorno financeiro.
-              </p>
-            </div>
+          <h1 className="neon-sign text-4xl md:text-5xl text-center">Bem-vindo ao Complexo</h1>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto">
-              <div className="panel-glass rounded-xl px-4 py-3 flex items-center gap-2 text-cyan-200">
-                <Building2 className="w-4 h-4" />
-                <span className="text-sm font-semibold">5 comércios</span>
-              </div>
-
-              <div className="panel-glass rounded-xl px-4 py-3 flex items-center gap-2 text-cyan-200">
-                <Landmark className="w-4 h-4" />
-                <span className="text-sm font-semibold">Lavagem estratégica</span>
-              </div>
-
-              <div className="panel-glass rounded-xl px-4 py-3 flex items-center gap-2 text-cyan-200">
-                <ShieldCheck className="w-4 h-4" />
-                <span className="text-sm font-semibold">Controle do complexo</span>
-              </div>
-            </div>
+      {/* BANNER */}
+      <div className="w-full relative z-10">
+        <div className="banner-container w-full flex items-center justify-center relative px-4">
+          <div className="relative w-full max-w-[1100px] mx-auto z-0">
+            <Image
+              src="https://static.wixstatic.com/media/50f4bf_fd64ac461d5d41c2a6bc7639af7590ac~mv2.png"
+              alt="Centro Comercial"
+              className="block h-auto w-full max-h-[600px] object-contain border-none"
+            />
+            <CommercialCenterHotspots onCommerceClick={openCommerceModal} />
           </div>
         </div>
       </div>
 
-      <div className="w-full relative z-10 px-4">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="banner-container w-full relative">
-            <div className="absolute top-4 left-4 z-20 panel-glass rounded-xl px-3 py-2 flex items-center gap-2 text-cyan-100 text-xs md:text-sm">
-              <Sparkles className="w-4 h-4 text-cyan-300" />
-              Clique nas placas do prédio para abrir cada operação
+      {/* PLAYER INFO */}
+      {playerData && (
+        <div className="w-full px-4 py-6 relative z-10 border-b border-cyan-500/30">
+          <div className="max-w-[100rem] mx-auto flex justify-between items-center">
+            <div className="text-cyan-300">
+              <span className="text-sm text-gray-400">Dinheiro Sujo:</span>
+              <span className="ml-2 font-bold text-green-400">${playerData.dirtyMoney || 0}</span>
             </div>
-
-            <div className="relative w-full max-w-[1100px] mx-auto z-0 px-4">
-              <Image
-                src="https://static.wixstatic.com/media/50f4bf_fd64ac461d5d41c2a6bc7639af7590ac~mv2.png"
-                alt="Centro Comercial"
-                className="block h-auto w-full max-h-[600px] object-contain border-none"
-              />
-              <CommercialCenterHotspots onCommerceClick={openCommerceModal} />
+            <div className="text-cyan-300">
+              <span className="text-sm text-gray-400">Dinheiro Limpo:</span>
+              <span className="ml-2 font-bold text-yellow-400">${playerData.cleanMoney || 0}</span>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="w-full px-4 py-6 relative z-10">
-        <div className="max-w-[100rem] mx-auto grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="panel-glass rounded-2xl px-5 py-5">
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Dinheiro Sujo</span>
-            <div className="mt-2 text-2xl font-black text-green-400">
-              {formatCurrency(dirtyMoney)}
-            </div>
-          </div>
-
-          <div className="panel-glass rounded-2xl px-5 py-5">
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Dinheiro Limpo</span>
-            <div className="mt-2 text-2xl font-black text-yellow-400">
-              {formatCurrency(cleanMoney)}
-            </div>
-          </div>
-
-          <div className="panel-glass rounded-2xl px-5 py-5">
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Status</span>
-            <div className="mt-2 text-lg font-black text-cyan-300">
-              {isLoading ? 'Carregando' : pageError ? 'Erro' : 'Operacional'}
-            </div>
-          </div>
-
-          <div className="panel-glass rounded-2xl px-5 py-5">
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Jogador</span>
-            <div className="mt-2 text-lg font-black text-white">
-              {playerData?.playerName || 'COMANDANTE'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full px-4 py-2 relative z-10">
-        <div className="max-w-[100rem] mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="panel-glass rounded-2xl px-5 py-4">
-            <div className="flex items-center gap-2 text-cyan-300 font-bold">
-              <Clock3 className="w-4 h-4" />
-              Ritmo operacional
-            </div>
-            <p className="text-sm text-slate-300 mt-2">
-              Cada comércio opera com tempo, taxa e retorno próprios. Quanto melhor o negócio, melhor a eficiência.
-            </p>
-          </div>
-
-          <div className="panel-glass rounded-2xl px-5 py-4">
-            <div className="flex items-center gap-2 text-cyan-300 font-bold">
-              <Banknote className="w-4 h-4" />
-              Conversão de capital
-            </div>
-            <p className="text-sm text-slate-300 mt-2">
-              O valor lavado sai do dinheiro sujo e retorna como dinheiro limpo após a conclusão da operação.
-            </p>
-          </div>
-
-          <div className="panel-glass rounded-2xl px-5 py-4">
-            <div className="flex items-center gap-2 text-cyan-300 font-bold">
-              <ShieldCheck className="w-4 h-4" />
-              Limite diário
-            </div>
-            <p className="text-sm text-slate-300 mt-2">
-              Cada comércio respeita limite diário e só pode ser reutilizado conforme a lógica definida no sistema.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full px-4 py-10 relative z-10">
+      {/* OPERATIONS */}
+      <div className="w-full px-4 py-12 relative z-10">
         <div className="max-w-[100rem] mx-auto">
-          {pageError ? (
-            <div className="panel-glass rounded-2xl px-6 py-12 text-center text-red-300">
-              {pageError}
-            </div>
-          ) : isLoading ? (
-            <div className="panel-glass rounded-2xl px-6 py-12 text-center text-cyan-300">
-              Carregando comércios...
-            </div>
-          ) : (
+          {isLoading ? (
+            <div className="text-center text-cyan-300">Carregando comércios...</div>
+          ) : comercios ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {COMERCIOS_KEYS.map((key) => (
                 <ComercioCard
@@ -527,17 +578,20 @@ export default function CommercialCenterPage() {
                   data={comercios[key]}
                   onIniciar={() => handleIniciarLavagem(key)}
                   onFinalizar={() => handleFinalizarLavagem(key)}
-                  dirtyMoney={dirtyMoney}
+                  dirtyMoney={playerData?.dirtyMoney || 0}
                 />
               ))}
             </div>
+          ) : (
+            <div className="text-center text-cyan-300">Erro ao carregar comércios</div>
           )}
         </div>
       </div>
 
-{completedOps.length > 0 && (
-        <div className="w-full px-4 py-10 relative z-10">
-          <div className="max-w-[100rem] mx-auto panel-glass rounded-2xl p-6">
+      {/* HISTORY */}
+      {completedOps.length > 0 && (
+        <div className="w-full px-4 py-12 relative z-10 border-t border-cyan-500">
+          <div className="max-w-[100rem] mx-auto">
             <h2 className="neon-sign text-2xl mb-6">Histórico de Operações</h2>
             <table className="history-table">
               <thead>
@@ -565,22 +619,32 @@ export default function CommercialCenterPage() {
         </div>
       )}
 
-      {activeCommerceModal && activeCommerceData && (
+      {/* Commerce Operation Modal */}
+      {activeCommerceModal && (
         <CommerceOperationModal
           isOpen={true}
           commerceId={activeCommerceModal}
-          commerceData={activeCommerceData}
-          dirtyMoney={dirtyMoney}
-          cleanMoney={cleanMoney}
+          commerceData={
+            comercios?.[activeCommerceModal] || {
+              nivelNegocio: 1,
+              nivelTaxa: 1,
+              emAndamento: false,
+              ultimaDataUso: '',
+              horarioFim: null,
+            }
+          }
+          dirtyMoney={playerData?.dirtyMoney || 0}
+          cleanMoney={playerData?.cleanMoney || 0}
           onClose={closeCommerceModal}
           onStartOperation={handleStartOperation}
           onCompleteOperation={handleCompleteOperation}
         />
       )}
 
+      {/* TEMPORARY TEST BUTTON */}
       <Button
         onClick={() => setActiveCommerceModal('pizzaria')}
-        className="fixed bottom-10 right-10 z-[9999] bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-[0_0_24px_rgba(255,120,0,0.35)]"
+        className="fixed bottom-10 right-10 z-[9999] bg-orange-500 hover:bg-orange-600 text-white font-bold"
       >
         TESTAR MODAL
       </Button>

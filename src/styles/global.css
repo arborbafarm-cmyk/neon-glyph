@@ -5,17 +5,6 @@
 /* Import skill animations */
 @import './skill-animations.css';
 
-/* Fix for fixed header - add padding to body */
-body {
-  padding-top: 92px;
-}
-
-@media (max-width: 768px) {
-  body {
-    padding-top: 92px;
-  }
-}
-
 /* Override font paths to fix loading */
 /* heading - league spartan */
 /* vietnamese */

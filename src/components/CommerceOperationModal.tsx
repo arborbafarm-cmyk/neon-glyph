@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { X, Clock3, DollarSign, Landmark, BadgeDollarSign, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
 import {
@@ -37,10 +36,11 @@ export default function CommerceOperationModal({
 }: CommerceOperationModalProps) {
   const { dirtyMoney: storeDirtyMoney } = useDirtyMoneyStore();
   const { cleanMoney: storeCleanMoney } = useCleanMoneyStore();
-
-  const dirtyMoney = propDirtyMoney ?? storeDirtyMoney;
-  const cleanMoney = propCleanMoney ?? storeCleanMoney;
-
+  
+  // Usar valores das props (que vêm do jogador) como prioridade, fallback para stores
+  const dirtyMoney = propDirtyMoney || storeDirtyMoney;
+  const cleanMoney = propCleanMoney || storeCleanMoney;
+  
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isStarting, setIsStarting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -50,13 +50,12 @@ export default function CommerceOperationModal({
     if (!isOpen || !commerceData?.emAndamento || !commerceData?.horarioFim) return;
 
     const updateTimer = () => {
-      const remaining = Math.max(0, Number(commerceData.horarioFim) - Date.now());
+      const remaining = Math.max(0, commerceData.horarioFim! - Date.now());
       setTimeLeft(Math.ceil(remaining / 1000));
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 250);
-
     return () => clearInterval(interval);
   }, [isOpen, commerceData?.emAndamento, commerceData?.horarioFim]);
 
@@ -67,7 +66,7 @@ export default function CommerceOperationModal({
   const tempoLavagem = calcularTempoLavagem(commerceId, commerceData.nivelNegocio);
   const taxaAplicada = calcularTaxaAplicada(commerceId, commerceData.nivelTaxa);
   const descontoEfetivo = COMERCIOS_CONFIG[commerceId].taxaBase - taxaAplicada;
-  const cleanMoneyGanho = Math.floor(valorLavagem * (1 - taxaAplicada / 100));
+  const cleanMoneyGanho = Math.floor(valorLavagem * (taxaAplicada / 100));
 
   const hoje = new Date().toDateString();
   const jaUsouHoje = commerceData.ultimaDataUso === hoje;
@@ -76,14 +75,10 @@ export default function CommerceOperationModal({
   let statusColor = 'text-emerald-400';
   let statusBg = 'from-emerald-500/20 to-emerald-300/10 border-emerald-400/40';
 
-  if (commerceData.emAndamento && timeLeft > 0) {
+  if (commerceData.emAndamento) {
     status = 'Lavagem em andamento';
     statusColor = 'text-amber-300';
     statusBg = 'from-amber-500/20 to-orange-300/10 border-amber-400/40';
-  } else if (commerceData.emAndamento && timeLeft === 0) {
-    status = 'Pronto para finalizar';
-    statusColor = 'text-emerald-300';
-    statusBg = 'from-emerald-500/20 to-cyan-300/10 border-emerald-400/40';
   } else if (jaUsouHoje && !commerceData.emAndamento) {
     status = 'Limite diário atingido';
     statusColor = 'text-red-300';
@@ -98,16 +93,19 @@ export default function CommerceOperationModal({
   const canComplete =
     !!commerceData.emAndamento &&
     !!commerceData.horarioFim &&
-    Date.now() >= Number(commerceData.horarioFim);
+    Date.now() >= commerceData.horarioFim;
 
   const handleStartClick = async () => {
+    console.log('🎯 Botão "Iniciar Lavagem" clicado para:', commerceId);
     setError('');
     setIsStarting(true);
-
     try {
+      console.log('📞 Chamando onStartOperation...');
       await onStartOperation(commerceId);
+      console.log('✅ onStartOperation completado com sucesso');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao iniciar lavagem';
+      console.error('❌ Erro ao iniciar lavagem:', errorMsg);
       setError(errorMsg);
     } finally {
       setIsStarting(false);
@@ -115,23 +113,26 @@ export default function CommerceOperationModal({
   };
 
   const handleCompleteClick = async () => {
+    console.log('🏁 Botão "Finalizar Lavagem" clicado para:', commerceId);
     setError('');
     setIsCompleting(true);
-
     try {
+      console.log('📞 Chamando onCompleteOperation...');
       await onCompleteOperation(commerceId);
+      console.log('✅ onCompleteOperation completado com sucesso');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao finalizar lavagem';
+      console.error('❌ Erro ao finalizar lavagem:', errorMsg);
       setError(errorMsg);
     } finally {
       setIsCompleting(false);
     }
   };
-const formatTime = (seconds: number): string => {
-    const safeSeconds = Math.max(0, seconds);
-    const hours = Math.floor(safeSeconds / 3600);
-    const minutes = Math.floor((safeSeconds % 3600) / 60);
-    const secs = safeSeconds % 60;
+
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
 
     if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
     if (minutes > 0) return `${minutes}m ${secs}s`;
@@ -156,12 +157,7 @@ const formatTime = (seconds: number): string => {
     value: string;
     valueClass?: string;
   }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="rounded-2xl border border-cyan-400/20 bg-slate-950/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-    >
+    <div className="rounded-2xl border border-cyan-400/20 bg-slate-950/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">
         {icon}
         <span>{title}</span>
@@ -169,31 +165,18 @@ const formatTime = (seconds: number): string => {
       <div className={`mt-3 text-lg md:text-xl font-black ${valueClass}`}>
         {value}
       </div>
-    </motion.div>
+    </div>
   );
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
+      <div
         className="fixed inset-0 z-40 bg-black/85 backdrop-blur-md"
         onClick={onClose}
       />
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6"
-      >
-        <div
-          className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-cyan-400/30 bg-[linear-gradient(180deg,rgba(6,12,24,0.98)_0%,rgba(12,20,36,0.98)_100%)] shadow-[0_0_60px_rgba(0,240,255,0.18)]"
-          onClick={(e) => e.stopPropagation()}
-        >
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6">
+        <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-cyan-400/30 bg-[linear-gradient(180deg,rgba(6,12,24,0.98)_0%,rgba(12,20,36,0.98)_100%)] shadow-[0_0_60px_rgba(0,240,255,0.18)]">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,240,255,0.08),transparent_35%),radial-gradient(circle_at_bottom,rgba(157,0,255,0.08),transparent_35%)]" />
 
           <div className="relative border-b border-cyan-400/20 bg-black/20 px-5 py-4 md:px-8 md:py-5">
@@ -207,9 +190,9 @@ const formatTime = (seconds: number): string => {
                 </h2>
 
                 <div className={`mt-3 inline-flex items-center gap-2 rounded-full border bg-gradient-to-r px-3 py-1 text-xs font-bold uppercase tracking-wider ${statusBg} ${statusColor}`}>
-                  {commerceData.emAndamento && timeLeft > 0 ? (
+                  {commerceData.emAndamento ? (
                     <Clock3 className="h-4 w-4" />
-                  ) : jaUsouHoje && !commerceData.emAndamento ? (
+                  ) : jaUsouHoje ? (
                     <AlertTriangle className="h-4 w-4" />
                   ) : (
                     <CheckCircle2 className="h-4 w-4" />
@@ -230,13 +213,9 @@ const formatTime = (seconds: number): string => {
 
           <div className="relative px-5 py-5 md:px-8 md:py-7">
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-5 rounded-2xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm font-medium text-red-200"
-              >
+              <div className="mb-5 rounded-2xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm font-medium text-red-200">
                 {error}
-              </motion.div>
+              </div>
             )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -282,13 +261,9 @@ const formatTime = (seconds: number): string => {
                 valueClass="text-emerald-400"
               />
             </div>
-{commerceData.emAndamento && timeLeft > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="relative mt-6 overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6"
-              >
+
+            {commerceData.emAndamento && (
+              <div className="relative mt-6 overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6">
                 <div className="absolute inset-0 pointer-events-none bubble-layer" />
 
                 <div className="mx-auto flex max-w-xl flex-col items-center">
@@ -508,23 +483,18 @@ const formatTime = (seconds: number): string => {
                     50% { transform: translate(16px,12px) rotate(-200deg) scale(1.05); }
                   }
                 `}</style>
-              </motion.div>
+              </div>
             )}
 
             {commerceData.emAndamento && timeLeft === 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="mt-6 rounded-3xl border border-emerald-400/30 bg-gradient-to-r from-emerald-950/40 to-cyan-950/30 p-5 text-center shadow-[0_0_30px_rgba(16,185,129,0.12)]"
-              >
+              <div className="mt-6 rounded-3xl border border-emerald-400/30 bg-gradient-to-r from-emerald-950/40 to-cyan-950/30 p-5 text-center shadow-[0_0_30px_rgba(16,185,129,0.12)]">
                 <p className="text-xl font-black uppercase text-emerald-300">
                   Operação concluída
                 </p>
                 <p className="mt-2 text-sm text-emerald-100/80">
                   Clique em <strong>Finalizar Lavagem</strong> para receber o dinheiro limpo.
                 </p>
-              </motion.div>
+              </div>
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -579,7 +549,7 @@ const formatTime = (seconds: number): string => {
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     </>
   );
 }
