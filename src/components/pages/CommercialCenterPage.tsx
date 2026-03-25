@@ -469,9 +469,7 @@ export default function CommercialCenterPage() {
               alt="Centro Comercial"
               className="block h-auto w-full max-h-[600px] object-contain border-none"
             />
-            <div className="absolute inset-0 z-20 w-full h-full pointer-events-none">
-              <CommercialCenterHotspots onCommerceClick={openCommerceModal} />
-            </div>
+            <CommercialCenterHotspots onCommerceClick={openCommerceModal} />
           </div>
         </div>
       </div>
