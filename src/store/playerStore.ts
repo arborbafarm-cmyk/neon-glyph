@@ -8,10 +8,8 @@ interface PlayerState {
   isGuest: boolean;
   profilePicture: string | null;
   barracoLevel: number;
-
-  // compatibilidade com páginas antigas
   playerMoney: number;
-
+  
   setPlayerId: (id: string) => void;
   setPlayerName: (name: string) => void;
   setLevel: (level: number) => void;
@@ -19,71 +17,42 @@ interface PlayerState {
   setIsGuest: (isGuest: boolean) => void;
   setProfilePicture: (url: string | null) => void;
   setBarracoLevel: (level: number) => void;
-
-  // compatibilidade com páginas antigas
   setPlayerMoney: (money: number) => void;
   addPlayerMoney: (amount: number) => void;
-  syncMoney: () => void;
-
+  
   loadPlayerData: (data: Partial<PlayerState>) => void;
   resetPlayer: () => void;
 }
 
-export const usePlayerStore = create<PlayerState>((set, get) => ({
+export const usePlayerStore = create<PlayerState>((set) => ({
   playerId: null,
   playerName: 'COMANDANTE',
-  level: 1,
+  level: 10,
   progress: 0,
   isGuest: false,
   profilePicture: null,
   barracoLevel: 1,
-
-  // compatibilidade
-  playerMoney: 0,
-
-  setPlayerId: (id) => set({ playerId: id }),
-  setPlayerName: (name) => set({ playerName: name }),
-  setLevel: (level) => set({ level: Math.min(100, Math.max(1, level)) }),
-  setProgress: (progress) => set({ progress }),
-  setIsGuest: (isGuest) => set({ isGuest }),
-  setProfilePicture: (url) => set({ profilePicture: url }),
-  setBarracoLevel: (level) => set({ barracoLevel: Math.max(1, level) }),
-
-  setPlayerMoney: (money) => set({ playerMoney: Math.max(0, money) }),
-  addPlayerMoney: (amount) =>
-    set((state) => ({
-      playerMoney: Math.max(0, state.playerMoney + amount),
-    })),
-
-  syncMoney: () => set((state) => ({ playerMoney: state.playerMoney })),
-
-  loadPlayerData: (data) =>
-    set((state) => ({
-      ...state,
-      ...data,
-      level:
-        typeof data.level === 'number'
-          ? Math.min(100, Math.max(1, data.level))
-          : state.level,
-      barracoLevel:
-        typeof data.barracoLevel === 'number'
-          ? Math.max(1, data.barracoLevel)
-          : state.barracoLevel,
-      playerMoney:
-        typeof data.playerMoney === 'number'
-          ? Math.max(0, data.playerMoney)
-          : state.playerMoney,
-    })),
-
-  resetPlayer: () =>
-    set({
-      playerId: null,
-      playerName: 'COMANDANTE',
-      level: 1,
-      progress: 0,
-      isGuest: false,
-      profilePicture: null,
-      barracoLevel: 1,
-      playerMoney: 0,
-    }),
+  playerMoney: 50000,
+  
+  setPlayerId: (id: string) => set({ playerId: id }),
+  setPlayerName: (name: string) => set({ playerName: name }),
+  setLevel: (level: number) => set({ level: Math.min(100, Math.max(1, level)) }),
+  setProgress: (progress: number) => set({ progress }),
+  setIsGuest: (isGuest: boolean) => set({ isGuest }),
+  setProfilePicture: (url: string | null) => set({ profilePicture: url }),
+  setBarracoLevel: (level: number) => set({ barracoLevel: Math.max(1, level) }),
+  setPlayerMoney: (money: number) => set({ playerMoney: Math.max(0, money) }),
+  addPlayerMoney: (amount: number) => set((state) => ({ playerMoney: Math.max(0, state.playerMoney + amount) })),
+  
+  loadPlayerData: (data: Partial<PlayerState>) => set(data),
+  resetPlayer: () => set({
+    playerId: null,
+    playerName: 'COMANDANTE',
+    level: 1,
+    progress: 0,
+    isGuest: false,
+    profilePicture: null,
+    barracoLevel: 1,
+    playerMoney: 50000,
+  }),
 }));
