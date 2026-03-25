@@ -1,10 +1,12 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Chrome, ShieldCheck, Eye, Play, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@/store/playerStore';
 import { usePlayerInitialization } from '@/hooks/usePlayerInitialization';
 import { useMember } from '@/integrations';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const VIDEO_BG = 'https://video.wixstatic.com/video/50f4bf_570bf5fe87734b1cb3523fd958acce0e/720p/mp4/file.mp4';
 
@@ -34,9 +36,10 @@ export default function HomePage() {
   }, [stage]);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black font-sans text-white select-none">
+    <div className="relative min-h-screen w-screen overflow-hidden bg-black font-sans text-white select-none">
+      <Header />
       {/* BACKGROUND CRU E AGRESSIVO */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 top-[90px]">
         <video autoPlay muted loop playsInline className="h-full w-full object-cover scale-110 opacity-50 grayscale-[0.3]">
           <source src={VIDEO_BG} type="video/mp4" />
         </video>
@@ -54,7 +57,7 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 1.5, filter: "blur(10px)" }}
-            className="relative z-20 flex h-full flex-col items-center justify-center px-4"
+            className="relative z-20 flex h-full flex-col items-center justify-center px-4 mt-[90px]"
           >
             {/* Texto de Boot Sequencial */}
             <motion.p 
@@ -89,7 +92,7 @@ export default function HomePage() {
             key="login"
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative z-30 flex h-full items-center justify-center p-6"
+            className="relative z-30 flex h-full items-center justify-center p-6 mt-[90px]"
           >
             <div className="grid w-full max-w-5xl grid-cols-1 gap-0 border border-white/10 bg-black/90 md:grid-cols-2 shadow-[0_0_100px_rgba(0,0,0,1)]">
               {/* Lado Esquerdo: Identidade Visual */}
@@ -154,6 +157,7 @@ export default function HomePage() {
           <div>Lat: -23.5505 | Lon: -46.6333</div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
