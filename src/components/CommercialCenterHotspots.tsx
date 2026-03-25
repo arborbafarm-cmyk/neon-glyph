@@ -69,7 +69,10 @@ export default function CommercialCenterHotspots({
         <button
           key={hotspot.id}
           type="button"
-          onClick={() => onCommerceClick(hotspot.id)}
+          onClick={() => {
+            console.log('CLICK HOTSPOT:', hotspot.id);
+            onCommerceClick(hotspot.id);
+          }}
           onMouseEnter={() => setHoveredHotspot(hotspot.id)}
           onMouseLeave={() => setHoveredHotspot(null)}
           className={`absolute pointer-events-auto transition-all duration-200 ${

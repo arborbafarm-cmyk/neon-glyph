@@ -162,6 +162,8 @@ export default function CommercialCenterPage() {
   };
 
   const openCommerceModal = (commerceId: string) => {
+    console.log('RECEBIDO DO HOTSPOT:', commerceId);
+
     // Map commerce IDs to ComercioKey
     const commerceKeyMap: { [key: string]: ComercioKey } = {
       pizzaria: 'pizzaria',
@@ -172,6 +174,8 @@ export default function CommercialCenterPage() {
     };
 
     const comercioKey = commerceKeyMap[commerceId];
+    console.log('MAPEADO PARA:', comercioKey);
+
     if (comercioKey) {
       setActiveCommerceModal(comercioKey);
     }
@@ -563,11 +567,19 @@ export default function CommercialCenterPage() {
       )}
 
       {/* Commerce Operation Modal */}
-      {activeCommerceModal && comercios?.[activeCommerceModal] && (
+      {activeCommerceModal && (
         <CommerceOperationModal
           isOpen={true}
           commerceId={activeCommerceModal}
-          commerceData={comercios[activeCommerceModal]}
+          commerceData={
+            comercios?.[activeCommerceModal] || {
+              nivelNegocio: 1,
+              nivelTaxa: 1,
+              emAndamento: false,
+              ultimaDataUso: '',
+              horarioFim: null,
+            }
+          }
           dirtyMoney={playerData?.dirtyMoney || 0}
           cleanMoney={playerData?.cleanMoney || 0}
           onClose={closeCommerceModal}
@@ -575,6 +587,14 @@ export default function CommercialCenterPage() {
           onCompleteOperation={handleCompleteOperation}
         />
       )}
+
+      {/* TEMPORARY TEST BUTTON */}
+      <Button
+        onClick={() => setActiveCommerceModal('pizzaria')}
+        className="fixed bottom-10 right-10 z-[9999] bg-orange-500 hover:bg-orange-600 text-white font-bold"
+      >
+        TESTAR MODAL
+      </Button>
 
       <Footer />
     </div>
