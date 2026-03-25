@@ -6,26 +6,29 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useMember } from '@/integrations';
 import { comerciosService } from '@/services/comerciosService';
-import { Comercios, COMERCIOS_KEYS, ComercioKey } from '@/types/comercios';
+import { Comercios, COMERCIOS_KEYS, ComercioKey, getInitialComercioData } from '@/types/comercios';
 import ComercioCard from '@/components/ComercioCard';
 import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
 import CommercialCenterHotspots from '@/components/CommercialCenterHotspots';
 import CommerceOperationModal from '@/components/CommerceOperationModal';
 
-// Helper function to safely parse comercios data
-const safeParseComercios = (comerciosData: any): Comercios | null => {
-  if (!comerciosData) return null;
+const INITIAL_COMERCIOS_DATA = getInitialComercioData();
+
+function safeParseComercios(raw?: string | null): Comercios {
+  if (!raw) return INITIAL_COMERCIOS_DATA;
+
   try {
-    if (typeof comerciosData === 'string') {
-      return JSON.parse(comerciosData);
-    }
-    return comerciosData;
+    const parsed = JSON.parse(raw);
+    return {
+      ...INITIAL_COMERCIOS_DATA,
+      ...parsed,
+    };
   } catch (error) {
     console.error('Erro ao fazer parse de comercios:', error);
-    return null;
+    return INITIAL_COMERCIOS_DATA;
   }
-};
+}
 
 interface CommerceOperation {
   id: string;
@@ -49,7 +52,7 @@ interface CompletedOperation {
 
 export default function CommercialCenterPage() {
   const { member } = useMember();
-  const [comercios, setComercios] = useState<Comercios | null>(null);
+  const [comercios, setComercios] = useState<Comercios>(INITIAL_COMERCIOS_DATA);
   const [playerData, setPlayerData] = useState<Players | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [operations, setOperations] = useState<CommerceOperation[]>([
