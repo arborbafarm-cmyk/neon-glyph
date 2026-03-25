@@ -6,6 +6,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useSpinVault } from "@/hooks/useSpinVault";
 import { useNavigate } from "react-router-dom";
 import { usePlayerInitialization } from "@/hooks/usePlayerInitialization";
+import { Droplet } from "lucide-react";
 
 const LOGO_SRC = "https://static.wixstatic.com/media/50f4bf_01590cb08b7048babbfed83e2830a27c~mv2.png";
 
@@ -84,11 +85,21 @@ export default function Header() {
 
               <Stat label="NÍVEL" value={level} />
               <Stat label="PODER" value="1.2M" />
-              <Stat label="DINHEIRO SUJO" value={`$${formatMoney(dirtyMoney)}`} />
-              <Stat label="DINHEIRO LIMPO" value={`$${formatMoney(cleanMoney)}`} />
+              <Stat label="DINHEIRO SUJO" value={`${formatMoney(dirtyMoney)}`} />
+              <Stat label="DINHEIRO LIMPO" value={`${formatMoney(cleanMoney)}`} />
               <Stat label="GIROS" value={spins} />
 
             </div>
+
+            {/* Lavagem Button */}
+            <button
+              onClick={() => navigate('/money-laundering')}
+              className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-4 py-2 rounded-lg text-white font-semibold transition-all text-sm"
+              title="Operações de Lavagem"
+            >
+              <Droplet className="w-4 h-4" />
+              Lavagem
+            </button>
           </div>
 
           {/* 🔥 DIREITA - TIMER */}

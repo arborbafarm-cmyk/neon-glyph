@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Chrome, ShieldCheck, Eye, Play, AlertTriangle } from 'lucide-react'; // Ícones mais "agressivos"
 import { useNavigate } from 'react-router-dom';
+import { usePlayerStore } from '@/store/playerStore';
+import { usePlayerInitialization } from '@/hooks/usePlayerInitialization';
 
 const VIDEO_BG = 'https://video.wixstatic.com/video/50f4bf_570bf5fe87734b1cb3523fd958acce0e/720p/mp4/file.mp4';
 
@@ -9,6 +11,10 @@ export default function CinemaIntro() {
   const navigate = useNavigate();
   const [stage, setStage] = useState<'intro' | 'login'>('intro');
   const [textIndex, setTextIndex] = useState(0);
+  
+  // Initialize player data
+  usePlayerInitialization();
+  const playerName = usePlayerStore((state) => state.playerName);
 
   const phrases = [
     "COORDENADAS: 22.9068° S, 43.1729° W",
@@ -120,6 +126,31 @@ export default function CinemaIntro() {
                      </span>
                      <span className="opacity-0 transition-all group-hover:opacity-100">→</span>
                    </button>
+
+                   {/* Test Money Laundering Button */}
+                   {playerName && playerName !== 'COMANDANTE' && (
+                     <>
+                       <button 
+                        onClick={() => navigate('/money-laundering')}
+                        className="group flex items-center justify-between border border-cyan-500/50 bg-cyan-900/20 p-4 transition-all hover:bg-cyan-500 hover:text-black"
+                       >
+                         <span className="flex items-center gap-3 font-bold uppercase tracking-tighter text-cyan-400">
+                           💧 Operações de Lavagem
+                         </span>
+                         <span className="opacity-0 transition-all group-hover:opacity-100">→</span>
+                       </button>
+
+                       <button 
+                        onClick={() => navigate('/test-money-laundering')}
+                        className="group flex items-center justify-between border border-purple-500/50 bg-purple-900/20 p-4 transition-all hover:bg-purple-500 hover:text-black"
+                       >
+                         <span className="flex items-center gap-3 font-bold uppercase tracking-tighter text-purple-400">
+                           🧪 Teste Completo
+                         </span>
+                         <span className="opacity-0 transition-all group-hover:opacity-100">→</span>
+                       </button>
+                     </>
+                   )}
                 </div>
               </div>
             </div>

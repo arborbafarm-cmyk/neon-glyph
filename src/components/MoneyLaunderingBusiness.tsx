@@ -36,11 +36,23 @@ export default function MoneyLaunderingBusiness({
   const activeOp = getActiveOperation(businessId);
   const canOperate = canOperateToday(businessId);
 
+  // Sync with active operation
   useEffect(() => {
     if (activeOp && activeOp.status === 'processing') {
       setIsProcessing(true);
+    } else if (!activeOp && isProcessing) {
+      setIsProcessing(false);
+    }
+  }, [activeOp?.businessId, activeOp?.status]);
+
+  // Update timer every 100ms
+  useEffect(() => {
+    if (!isProcessing || !activeOp) return;
+
+    const interval = setInterval(() => {
       const elapsed = (Date.now() - new Date(activeOp.startedAt).getTime()) / 1000;
       const remaining = Math.max(0, activeOp.completionTime - elapsed);
+      
       setTimeRemaining(remaining);
 
       if (remaining <= 0) {
@@ -48,24 +60,10 @@ export default function MoneyLaunderingBusiness({
         setCompletedAmount(activeOp.cleanedAmount);
         setTimeRemaining(0);
       }
-    }
-  }, [activeOp]);
-
-  useEffect(() => {
-    if (!isProcessing || timeRemaining <= 0) return;
-
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          setIsProcessing(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    }, 100); // Update every 100ms for smooth animation
 
     return () => clearInterval(interval);
-  }, [isProcessing]);
+  }, [isProcessing, activeOp]);
 
   const handleLaunder = () => {
     if (!canOperate || isProcessing || launderAmount <= 0 || launderAmount > currentMaxValue) {
