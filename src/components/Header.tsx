@@ -7,7 +7,15 @@ import { useSpinVault } from "@/hooks/useSpinVault";
 import { useNavigate } from "react-router-dom";
 import { usePlayerInitialization } from "@/hooks/usePlayerInitialization";
 import { useMember } from "@/integrations";
-import { Droplet, Shield, Zap, Coins, Gem, Crown, Flame } from "lucide-react";
+import {
+  Droplet,
+  Shield,
+  Zap,
+  Coins,
+  Gem,
+  Crown,
+  Pencil,
+} from "lucide-react";
 
 const LOGO_SRC =
   "https://static.wixstatic.com/media/50f4bf_01590cb08b7048babbfed83e2830a27c~mv2.png";
@@ -25,6 +33,8 @@ export default function Header() {
   const [avatarUrl, setAvatarUrl] = useState(
     "https://static.wixstatic.com/media/50f4bf_a888df3d639f415b853110e459edba8c~mv2.png"
   );
+  const [editingName, setEditingName] = useState(false);
+  const [tempName, setTempName] = useState(playerName || "COMANDANTE");
 
   useEffect(() => {
     const savedName = localStorage.getItem("playerName");
@@ -34,45 +44,52 @@ export default function Header() {
     if (savedAvatar) setAvatarUrl(savedAvatar);
   }, [setPlayerName]);
 
+  useEffect(() => {
+    setTempName(playerName || "COMANDANTE");
+  }, [playerName]);
+
+  const savePlayerName = () => {
+    const finalName = tempName.trim() || "COMANDANTE";
+    setPlayerName(finalName);
+    localStorage.setItem("playerName", finalName);
+    setEditingName(false);
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-2 md:px-4 pt-2">
+    <header className="fixed top-0 left-0 right-0 z-50 px-2 md:px-3 pt-1">
       <div
-        className="mx-auto max-w-[1680px] overflow-hidden rounded-[28px] border shadow-[0_0_50px_rgba(0,0,0,0.55)]"
+        className="mx-auto max-w-[1680px] overflow-hidden rounded-[20px] border shadow-[0_0_26px_rgba(0,0,0,0.45)]"
         style={{
-          borderColor: "rgba(212,175,55,0.35)",
+          borderColor: "rgba(212,175,55,0.30)",
           background:
-            "linear-gradient(90deg, rgba(8,5,5,0.98) 0%, rgba(32,10,10,0.98) 28%, rgba(20,8,8,0.98) 60%, rgba(8,5,5,0.98) 100%)",
+            "linear-gradient(90deg, rgba(8,5,5,0.97) 0%, rgba(28,10,10,0.97) 32%, rgba(14,8,8,0.97) 68%, rgba(8,5,5,0.97) 100%)",
         }}
       >
         <div className="relative">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,180,0,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(255,0,0,0.08),transparent_25%),linear-gradient(to_bottom,rgba(255,255,255,0.02),transparent)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,180,0,0.06),transparent_20%),radial-gradient(circle_at_bottom_right,rgba(255,0,0,0.05),transparent_24%)]" />
 
-          <div className="relative px-3 md:px-5 py-3 md:py-4">
-            <div className="flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-4">
+          <div className="relative px-3 md:px-4 py-2">
+            <div className="flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-2">
               {/* LOGO */}
-              <div className="flex items-center justify-center 2xl:justify-start min-w-[220px]">
-                <div className="relative">
-                  <div className="absolute inset-0 blur-3xl bg-yellow-500/20" />
-                  <Image
-                    src={LOGO_SRC}
-                    alt="Logo"
-                    width={230}
-                    height={92}
-                    className="relative object-contain drop-shadow-[0_0_22px_rgba(255,200,0,0.22)]"
-                  />
-                </div>
+              <div className="flex items-center justify-center 2xl:justify-start min-w-[160px]">
+                <Image
+                  src={LOGO_SRC}
+                  alt="Logo"
+                  width={150}
+                  height={58}
+                  className="object-contain drop-shadow-[0_0_16px_rgba(255,200,0,0.18)]"
+                />
               </div>
 
               {/* BLOCO CENTRAL */}
               <div className="flex-1">
-                <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] backdrop-blur-xl px-3 md:px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_30px_rgba(0,0,0,0.2)]">
-                  <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+                <div className="rounded-[18px] border border-white/10 bg-white/[0.04] backdrop-blur-lg px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                  <div className="flex flex-col xl:flex-row xl:items-center gap-3">
                     {/* IDENTIDADE */}
-                    <div className="flex items-center gap-4 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="relative shrink-0">
-                        <div className="absolute inset-0 rounded-full blur-2xl bg-yellow-400/35" />
-                        <div className="absolute -inset-[3px] rounded-full bg-gradient-to-br from-yellow-300 via-yellow-500 to-red-500 opacity-80" />
-                        <div className="relative w-[82px] h-[82px] rounded-full overflow-hidden border-[3px] border-black/60 shadow-[0_0_30px_rgba(255,200,0,0.35)]">
+                        <div className="absolute inset-0 rounded-full blur-xl bg-yellow-400/25" />
+                        <div className="relative w-[56px] h-[56px] rounded-full overflow-hidden border-[2px] border-yellow-500 shadow-[0_0_18px_rgba(255,200,0,0.25)]">
                           <Image
                             src={avatarUrl}
                             className="w-full h-full object-cover"
@@ -82,55 +99,73 @@ export default function Header() {
                       </div>
 
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Crown className="w-5 h-5 text-yellow-300 shrink-0" />
-                          <div className="text-yellow-300 font-black text-xl md:text-2xl truncate tracking-wide drop-shadow-[0_0_10px_rgba(255,200,0,0.18)]">
-                            {playerName || "Jogador"}
-                          </div>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Crown className="w-4 h-4 text-yellow-300 shrink-0" />
+
+                          {editingName ? (
+                            <input
+                              value={tempName}
+                              onChange={(e) => setTempName(e.target.value.slice(0, 18))}
+                              onBlur={savePlayerName}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") savePlayerName();
+                                if (e.key === "Escape") {
+                                  setTempName(playerName || "COMANDANTE");
+                                  setEditingName(false);
+                                }
+                              }}
+                              autoFocus
+                              className="bg-black/70 border border-yellow-500/60 rounded-md px-2 py-1 text-yellow-300 font-black text-base outline-none w-[160px] md:w-[200px]"
+                            />
+                          ) : (
+                            <div
+                              className="flex items-center gap-2 min-w-0 cursor-pointer group"
+                              onClick={() => setEditingName(true)}
+                              title="Clique para editar o nome"
+                            >
+                              <span className="text-yellow-300 font-black text-base md:text-lg truncate tracking-wide max-w-[160px] md:max-w-[220px]">
+                                {playerName || "COMANDANTE"}
+                              </span>
+                              <Pencil className="w-3.5 h-3.5 text-yellow-300/70 group-hover:text-yellow-200 shrink-0" />
+                            </div>
+                          )}
                         </div>
 
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <div className="inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white text-[10px] md:text-xs px-3 py-1 font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(255,0,0,0.18)]">
-                            <Shield className="w-3.5 h-3.5" />
-                            COMANDANTE DE ELITE
-                          </div>
-
-                          <div className="inline-flex items-center gap-1 rounded-md border border-yellow-500/30 bg-yellow-500/10 text-yellow-200 text-[10px] md:text-xs px-2 py-1 font-bold uppercase tracking-[0.14em]">
-                            <Flame className="w-3.5 h-3.5" />
-                            OSTENTAÇÃO ATIVA
-                          </div>
+                        <div className="mt-1 inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white text-[10px] px-2.5 py-1 font-black uppercase tracking-[0.14em]">
+                          <Shield className="w-3.5 h-3.5" />
+                          COMANDANTE DE ELITE
                         </div>
                       </div>
                     </div>
 
                     {/* STATS */}
-                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
                       <StatCard
-                        icon={<Zap className="w-4 h-4" />}
+                        icon={<Zap className="w-3.5 h-3.5" />}
                         label="Nível"
                         value={String(level)}
                         tone="yellow"
                       />
                       <StatCard
-                        icon={<Shield className="w-4 h-4" />}
+                        icon={<Shield className="w-3.5 h-3.5" />}
                         label="Poder"
                         value="1.2M"
                         tone="red"
                       />
                       <StatCard
-                        icon={<Coins className="w-4 h-4" />}
-                        label="Dinheiro Sujo"
+                        icon={<Coins className="w-3.5 h-3.5" />}
+                        label="Sujo"
                         value={formatMoney(dirtyMoney)}
                         tone="green"
                       />
                       <StatCard
-                        icon={<Coins className="w-4 h-4" />}
-                        label="Dinheiro Limpo"
+                        icon={<Coins className="w-3.5 h-3.5" />}
+                        label="Limpo"
                         value={formatMoney(cleanMoney)}
                         tone="cyan"
                       />
                       <StatCard
-                        icon={<Gem className="w-4 h-4" />}
+                        icon={<Gem className="w-3.5 h-3.5" />}
                         label="Giros"
                         value={String(spins)}
                         tone="purple"
@@ -142,7 +177,7 @@ export default function Header() {
                       <div className="shrink-0">
                         <button
                           onClick={() => navigate("/money-laundering")}
-                          className="w-full xl:w-auto flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-white font-black tracking-[0.08em] border border-cyan-300/20 bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-700 hover:from-cyan-500 hover:via-sky-500 hover:to-blue-600 shadow-[0_0_24px_rgba(0,180,255,0.25)] transition-all"
+                          className="w-full xl:w-auto flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-white font-black tracking-[0.06em] border border-cyan-300/20 bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-700 hover:from-cyan-500 hover:via-sky-500 hover:to-blue-600 shadow-[0_0_18px_rgba(0,180,255,0.20)] transition-all text-sm"
                           title="Operações de Lavagem"
                         >
                           <Droplet className="w-4 h-4" />
@@ -155,17 +190,17 @@ export default function Header() {
               </div>
 
               {/* TIMER */}
-              <div className="min-w-[250px]">
-                <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(0,0,0,0.4),rgba(255,255,255,0.02))] px-4 py-4 backdrop-blur-xl text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                  <div className="text-[10px] md:text-xs uppercase tracking-[0.22em] text-slate-300">
-                    Próximo ganho de giros
+              <div className="min-w-[180px]">
+                <div className="rounded-[18px] border border-white/10 bg-black/30 px-3 py-2.5 backdrop-blur-lg text-center">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-slate-300">
+                    Próximo giro
                   </div>
 
-                  <div className="flex gap-2 justify-center mt-3">
+                  <div className="flex gap-2 justify-center mt-2">
                     {formatTimer(formatTime(timeUntilNextGain)).map((t, i) => (
                       <div
                         key={i}
-                        className="min-w-[62px] rounded-xl px-3 py-3 text-xl font-black text-white border shadow-[0_0_18px_rgba(0,0,0,0.28)]"
+                        className="min-w-[44px] rounded-lg px-2.5 py-2 text-base font-black text-white border"
                         style={{
                           background:
                             "linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(20,20,20,0.95) 100%)",
@@ -177,8 +212,8 @@ export default function Header() {
                     ))}
                   </div>
 
-                  <div className="text-[11px] mt-2 text-slate-400">
-                    Tempo até próximo giro
+                  <div className="text-[10px] mt-1.5 text-slate-400">
+                    Tempo restante
                   </div>
                 </div>
               </div>
@@ -186,7 +221,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
       </div>
     </header>
   );
@@ -204,37 +239,22 @@ function StatCard({
   tone: "yellow" | "red" | "green" | "cyan" | "purple";
 }) {
   const toneClasses = {
-    yellow: {
-      label: "text-yellow-300",
-      glow: "shadow-[0_0_18px_rgba(255,200,0,0.08)]",
-    },
-    red: {
-      label: "text-red-300",
-      glow: "shadow-[0_0_18px_rgba(255,0,0,0.08)]",
-    },
-    green: {
-      label: "text-green-300",
-      glow: "shadow-[0_0_18px_rgba(0,255,120,0.08)]",
-    },
-    cyan: {
-      label: "text-cyan-300",
-      glow: "shadow-[0_0_18px_rgba(0,200,255,0.08)]",
-    },
-    purple: {
-      label: "text-fuchsia-300",
-      glow: "shadow-[0_0_18px_rgba(180,0,255,0.08)]",
-    },
+    yellow: "text-yellow-300",
+    red: "text-red-300",
+    green: "text-green-300",
+    cyan: "text-cyan-300",
+    purple: "text-fuchsia-300",
   };
 
   return (
-    <div
-      className={`rounded-2xl border border-white/10 bg-black/30 px-3 py-3 text-center ${toneClasses[tone].glow} shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]`}
-    >
-      <div className={`flex items-center justify-center gap-1 text-[11px] uppercase tracking-[0.14em] ${toneClasses[tone].label}`}>
+    <div className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <div
+        className={`flex items-center justify-center gap-1 text-[10px] uppercase tracking-[0.12em] ${toneClasses[tone]}`}
+      >
         {icon}
         <span>{label}</span>
       </div>
-      <div className="mt-2 text-white font-black text-lg tracking-wide">
+      <div className="mt-1 text-white font-black text-sm md:text-base tracking-wide">
         {value}
       </div>
     </div>
