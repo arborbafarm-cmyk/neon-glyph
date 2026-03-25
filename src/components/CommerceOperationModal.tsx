@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Clock3, ShieldDollar, Landmark, BadgeDollarSign, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { X, Clock3, DollarSign, Landmark, BadgeDollarSign, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   ComercioKey,
@@ -214,7 +214,7 @@ export default function CommerceOperationModal({
               />
 
               <StatCard
-                icon={<ShieldDollar className="h-4 w-4" />}
+                icon={<DollarSign className="h-4 w-4" />}
                 title="Taxa base"
                 value={`${COMERCIOS_CONFIG[commerceId].taxaBase}%`}
                 valueClass="text-orange-300"
@@ -228,7 +228,7 @@ export default function CommerceOperationModal({
               />
 
               <StatCard
-                icon={<ShieldDollar className="h-4 w-4" />}
+                icon={<DollarSign className="h-4 w-4" />}
                 title="Taxa final"
                 value={`${taxaAplicada.toFixed(1)}%`}
                 valueClass="text-yellow-300"

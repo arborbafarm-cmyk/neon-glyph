@@ -13,7 +13,7 @@ interface CommercialCenterHotspotsProps {
   onCommerceClick: (commerceId: string) => void;
 }
 
-const SHOW_HOTSPOTS = true;
+const SHOW_HOTSPOTS = false;
 
 const HOTSPOTS: Hotspot[] = [
   {
