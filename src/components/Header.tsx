@@ -6,6 +6,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useSpinVault } from "@/hooks/useSpinVault";
 import { useNavigate } from "react-router-dom";
 import { usePlayerInitialization } from "@/hooks/usePlayerInitialization";
+import { useMember } from "@/integrations";
 import { Droplet } from "lucide-react";
 
 const LOGO_SRC = "https://static.wixstatic.com/media/50f4bf_01590cb08b7048babbfed83e2830a27c~mv2.png";
