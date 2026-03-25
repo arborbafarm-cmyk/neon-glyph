@@ -1,6 +1,8 @@
 import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
 import { Comercios, ComercioKey, getInitialComercioData, COMERCIOS_CONFIG, calcularValorLavagem, calcularTempoLavagem, calcularTaxaAplicada } from '@/types/comercios';
+import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
+import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 
 export const comerciosService = {
   async getPlayerComercios(playerId: string): Promise<Comercios> {
@@ -79,6 +81,10 @@ export const comerciosService = {
         dirtyMoney: novosDirtyMoney,
       });
 
+      // Atualizar store de dinheiro sujo
+      const dirtyMoneyStore = useDirtyMoneyStore.getState();
+      dirtyMoneyStore.setDirtyMoney(novosDirtyMoney);
+
       return { sucesso: true, mensagem: 'Lavagem iniciada com sucesso' };
     } catch (error) {
       console.error('Erro ao iniciar lavagem:', error);
@@ -126,6 +132,10 @@ export const comerciosService = {
         cleanMoney: novoCleanMoney,
       });
 
+      // Atualizar store de dinheiro limpo
+      const cleanMoneyStore = useCleanMoneyStore.getState();
+      cleanMoneyStore.setCleanMoney(novoCleanMoney);
+
       return { sucesso: true, cleanMoneyGanho, mensagem: 'Lavagem finalizada com sucesso' };
     } catch (error) {
       console.error('Erro ao finalizar lavagem:', error);
@@ -171,6 +181,10 @@ export const comerciosService = {
         cleanMoney: novoCleanMoney,
       });
 
+      // Atualizar store de dinheiro limpo
+      const cleanMoneyStore = useCleanMoneyStore.getState();
+      cleanMoneyStore.setCleanMoney(novoCleanMoney);
+
       return { sucesso: true, mensagem: 'Capacidade atualizada com sucesso' };
     } catch (error) {
       console.error('Erro ao fazer upgrade de capacidade:', error);
@@ -215,6 +229,10 @@ export const comerciosService = {
         comercios: JSON.stringify(comercios),
         cleanMoney: novoCleanMoney,
       });
+
+      // Atualizar store de dinheiro limpo
+      const cleanMoneyStore = useCleanMoneyStore.getState();
+      cleanMoneyStore.setCleanMoney(novoCleanMoney);
 
       return { sucesso: true, mensagem: 'Eficiência atualizada com sucesso' };
     } catch (error) {

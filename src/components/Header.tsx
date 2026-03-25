@@ -8,12 +8,14 @@ import { useNavigate } from "react-router-dom";
 import { useMember } from "@/integrations";
 import { LogOut } from "lucide-react";
 import { usePlayerInitialization } from "@/hooks/usePlayerInitialization";
+import { BaseCrudService } from "@/integrations";
+import { Players } from "@/entities";
 
 const LOGO_SRC = "https://static.wixstatic.com/media/50f4bf_01590cb08b7048babbfed83e2830a27c~mv2.png";
 
 export default function Header() {
-  const { dirtyMoney } = useDirtyMoneyStore();
-  const { cleanMoney } = useCleanMoneyStore();
+  const { dirtyMoney, setDirtyMoney } = useDirtyMoneyStore();
+  const { cleanMoney, setCleanMoney } = useCleanMoneyStore();
   const { playerName, setPlayerName, resetPlayer, level } = usePlayerStore();
   const { spins, timeUntilNextGain, formatTime } = useSpinVault();
   const { actions, member } = useMember();
@@ -35,6 +37,28 @@ export default function Header() {
     if (savedName) setPlayerName(savedName);
     if (savedAvatar) setAvatarUrl(savedAvatar);
   }, []);
+
+  // Sincronizar dados do jogador com os stores
+  useEffect(() => {
+    const syncPlayerData = async () => {
+      if (!member?._id) return;
+      try {
+        const player = await BaseCrudService.getById<Players>('players', member._id);
+        if (player) {
+          setDirtyMoney(player.dirtyMoney || 0);
+          setCleanMoney(player.cleanMoney || 0);
+        }
+      } catch (error) {
+        console.error('Erro ao sincronizar dados do jogador:', error);
+      }
+    };
+
+    // Sincronizar imediatamente e depois a cada 2 segundos
+    syncPlayerData();
+    const interval = setInterval(syncPlayerData, 2000);
+
+    return () => clearInterval(interval);
+  }, [member?._id, setDirtyMoney, setCleanMoney]);
 
   const handleLogout = async () => {
     localStorage.clear();
