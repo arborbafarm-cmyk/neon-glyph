@@ -5,7 +5,6 @@ import { Image } from '@/components/ui/image';
 
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
-import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useSpinVaultStore } from '@/store/spinVaultStore';
 import RoyalGreeting from '@/components/RoyalGreeting';
@@ -36,7 +35,6 @@ export default function BarracoPage() {
   const [imageKey, setImageKey] = useState(0);
   const [levelUpAnimation, setLevelUpAnimation] = useState(false);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
-  const { cleanMoney, removeCleanMoney } = useCleanMoneyStore();
   const { setLevel, setBarracoLevel } = usePlayerStore();
   const { setBarracoLevel: setSpinVaultBarracoLevel } = useSpinVaultStore();
 
@@ -167,8 +165,8 @@ export default function BarracoPage() {
     const evolutionCost = calculateEvolutionCost(player.level || 1);
 
     // Check if player has enough clean money
-    if (cleanMoney < evolutionCost) {
-      setError(`Dinheiro limpo insuficiente. Necessário: R$ ${evolutionCost.toLocaleString('pt-BR')}, Disponível: R$ ${cleanMoney.toLocaleString('pt-BR')}`);
+    if ((player.cleanMoney || 0) < evolutionCost) {
+      setError(`Dinheiro limpo insuficiente. Necessário: R$ ${evolutionCost.toLocaleString('pt-BR')}, Disponível: R$ ${(player.cleanMoney || 0).toLocaleString('pt-BR')}`);
       return;
     }
 
@@ -176,13 +174,11 @@ export default function BarracoPage() {
       setEvolving(true);
       setError(null);
 
-      // Deduct the cost from clean money vault
-      removeCleanMoney(evolutionCost);
-
-      // Update player level
-      await BaseCrudService.update<Players>('players', {
+      // Update player level and deduct cleanMoney
+      const updatedPlayer = await BaseCrudService.update<Players>('players', {
         _id: player._id,
         level: nextLevel,
+        cleanMoney: (player.cleanMoney || 0) - evolutionCost,
         lastUpdated: new Date().toISOString(),
       });
 

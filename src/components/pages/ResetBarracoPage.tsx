@@ -4,7 +4,6 @@ import { Players } from '@/entities';
 
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
-import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 
 const BASE_EVOLUTION_COST = 500;
 const COST_MULTIPLIER = 1.1;
@@ -14,7 +13,6 @@ export default function ResetBarracoPage() {
   const [resetting, setResetting] = useState(false);
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
-  const { setCleanMoney } = useCleanMoneyStore();
 
   useEffect(() => {
     resetBarraco();
@@ -62,17 +60,15 @@ export default function ResetBarracoPage() {
       
       setMessage(`Custo do nível 99→100: R$ ${costToLevel100.toLocaleString('pt-BR')}`);
 
-      // Reset player level to 1
+      // Reset player level to 1 and restore cleanMoney
       await BaseCrudService.update<Players>('players', {
         _id: playerId,
         level: 1,
+        cleanMoney: (playerData.cleanMoney || 0) + costToLevel100,
         lastUpdated: new Date().toISOString(),
       });
 
       setMessage(`✓ Barraco resetado para nível 1`);
-
-      // Restore the money
-      setCleanMoney(costToLevel100);
       
       setMessage(`✓ Dinheiro limpo restaurado: R$ ${costToLevel100.toLocaleString('pt-BR')}`);
       setSuccess(true);

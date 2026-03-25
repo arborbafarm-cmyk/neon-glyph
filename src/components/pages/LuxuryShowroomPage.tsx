@@ -5,7 +5,6 @@ import { Image } from '@/components/ui/image';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { usePlayerStore } from '@/store/playerStore';
-import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
 import { getLuxurySystem, getBackgroundByLevel } from '@/data/luxoItems';
@@ -159,13 +158,12 @@ export default function LuxuryShowroomPage() {
   const [blink, setBlink] = useState(false);
   const [npcHover, setNpcHover] = useState(false);
   const [npcDrift, setNpcDrift] = useState({ x: 0, y: 0 });
+  const [playerData, setPlayerData] = useState<Players | null>(null);
 
   const playerName = usePlayerStore((s) => s.playerName) || 'COMANDANTE';
   const barracoLevel = usePlayerStore((s) => s.barracoLevel);
   const playerLevel = usePlayerStore((s) => s.level);
   const setBarracoLevel = usePlayerStore((s) => s.setBarracoLevel);
-  const cleanMoney = useCleanMoneyStore((s) => s.cleanMoney);
-  const removeCleanMoney = useCleanMoneyStore((s) => s.removeCleanMoney);
 
   useEffect(() => {
     const loadPlayerData = async () => {
@@ -180,8 +178,11 @@ export default function LuxuryShowroomPage() {
           }
         }
         if (playerId) {
-          const playerData = await BaseCrudService.getById<Players>('players', playerId);
-          if (playerData?.level) setBarracoLevel(playerData.level);
+          const player = await BaseCrudService.getById<Players>('players', playerId);
+          if (player) {
+            setPlayerData(player);
+            if (player.level) setBarracoLevel(player.level);
+          }
         }
       } catch (err) {
         console.error('Erro ao carregar dados do jogador:', err);
@@ -294,27 +295,37 @@ export default function LuxuryShowroomPage() {
   };
 
   const handleBuy = () => {
-    if (!selectedItem) return;
+    if (!selectedItem || !playerData) return;
     if (purchasedItems[selectedItem.id]) {
       setShowItemShowcase(false);
       openNpcDialog('owned');
       return;
     }
-    if (cleanMoney < selectedItem.price) {
+    if ((playerData.cleanMoney || 0) < selectedItem.price) {
       setShowItemShowcase(false);
       openNpcDialog('insufficient');
       return;
     }
     setShowCard(true);
-    setTimeout(() => {
-      removeCleanMoney(selectedItem.price);
-      setPurchasedItems((prev) => ({ ...prev, [selectedItem.id]: true }));
-      setShowCard(false);
-      setShowItemShowcase(false);
-      setFlash(true);
-      setTimeout(() => setFlash(false), 650);
-      openNpcDialog('purchase', selectedItem.name, skillLabels[selectedItem.skill]);
-      setShowHint(true);
+    setTimeout(async () => {
+      try {
+        // Deduct cleanMoney from player data
+        const updatedPlayer = await BaseCrudService.update<Players>('players', {
+          _id: playerData._id,
+          cleanMoney: (playerData.cleanMoney || 0) - selectedItem.price,
+        });
+        setPlayerData(updatedPlayer);
+        setPurchasedItems((prev) => ({ ...prev, [selectedItem.id]: true }));
+        setShowCard(false);
+        setShowItemShowcase(false);
+        setFlash(true);
+        setTimeout(() => setFlash(false), 650);
+        openNpcDialog('purchase', selectedItem.name, skillLabels[selectedItem.skill]);
+        setShowHint(true);
+      } catch (err) {
+        console.error('Erro ao processar compra:', err);
+        setShowCard(false);
+      }
     }, 2800);
   };
 

@@ -11,8 +11,6 @@ import {
   calcularTaxaAplicada,
 } from '@/types/comercios';
 import { ComercioData } from '@/types/comercios';
-import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
-import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 
 interface CommerceOperationModalProps {
   isOpen: boolean;
@@ -35,12 +33,9 @@ export default function CommerceOperationModal({
   onStartOperation,
   onCompleteOperation,
 }: CommerceOperationModalProps) {
-  const { dirtyMoney: storeDirtyMoney } = useDirtyMoneyStore();
-  const { cleanMoney: storeCleanMoney } = useCleanMoneyStore();
-  
-  // Usar valores das props (que vêm do jogador) como prioridade, fallback para stores
-  const dirtyMoney = propDirtyMoney || storeDirtyMoney;
-  const cleanMoney = propCleanMoney || storeCleanMoney;
+  // Usar valores das props (que vêm do jogador) como prioridade
+  const dirtyMoney = propDirtyMoney;
+  const cleanMoney = propCleanMoney;
   
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isStarting, setIsStarting] = useState(false);

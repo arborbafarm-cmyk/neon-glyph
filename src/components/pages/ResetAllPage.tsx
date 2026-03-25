@@ -4,8 +4,6 @@ import { Players } from '@/entities';
 
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
-import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
-import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 import { useGameStore } from '@/store/gameStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useBriberyStore } from '@/store/briberyStore';
@@ -15,8 +13,6 @@ export default function ResetAllPage() {
   const [resetting, setResetting] = useState(false);
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
-  const { setCleanMoney } = useCleanMoneyStore();
-  const { setDirtyMoney } = useDirtyMoneyStore();
   const { reset: resetGameStore } = useGameStore();
   const { setLevel: setPlayerLevel } = usePlayerStore();
   const { reset: resetBriberyStore } = useBriberyStore();
@@ -57,10 +53,12 @@ export default function ResetAllPage() {
 
       setMessage('Resetando nível global para 1...');
 
-      // Reset player level to 1 in database
+      // Reset player level to 1 in database with initial money values
       await BaseCrudService.update<Players>('players', {
         _id: playerId,
         level: 1,
+        cleanMoney: 1000000000,
+        dirtyMoney: 1000000000,
         lastUpdated: new Date().toISOString(),
       });
 
@@ -69,8 +67,6 @@ export default function ResetAllPage() {
       // Reset all stores
       setMessage('Resetando lojas...');
       setPlayerLevel(1);
-      setCleanMoney(1000000000);
-      setDirtyMoney(1000000000);
       resetGameStore();
       resetBriberyStore();
 
