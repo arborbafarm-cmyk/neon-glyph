@@ -8,7 +8,8 @@ import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 
 const TEST_MODE = true;
-const TEST_MONEY_VALUE = 1000000000;
+const TEST_DIRTY_MONEY = 1000000000;
+const TEST_CLEAN_MONEY = 0;
 
 export const usePlayerInitialization = () => {
   const { member } = useMember();
@@ -36,7 +37,6 @@ export const usePlayerInitialization = () => {
 
         let player = await BaseCrudService.getById<Players>('players', member._id);
 
-        // Se o jogador não existe, criar novo
         if (!player) {
           console.log('📝 Criando novo jogador para:', member._id);
 
@@ -45,8 +45,8 @@ export const usePlayerInitialization = () => {
           const newPlayer: Players = {
             _id: member._id,
             playerName: member.profile?.nickname || 'Jogador',
-            cleanMoney: TEST_MODE ? TEST_MONEY_VALUE : 0,
-            dirtyMoney: TEST_MODE ? TEST_MONEY_VALUE : 1000,
+            cleanMoney: TEST_MODE ? TEST_CLEAN_MONEY : 0,
+            dirtyMoney: TEST_MODE ? TEST_DIRTY_MONEY : 1000,
             level: 1,
             progress: 0,
             comercios: JSON.stringify(comercios),
@@ -73,27 +73,24 @@ export const usePlayerInitialization = () => {
         let updatedFields: Partial<Players> = {};
         let needsUpdate = false;
 
-        // Inicializa comércios se não existirem
         if (!player.comercios) {
           console.log('📝 Inicializando comércios para jogador existente');
           updatedFields.comercios = JSON.stringify(getInitialComercioData());
           needsUpdate = true;
         }
 
-        // Modo teste: sempre força 1 bilhão ao entrar
         if (TEST_MODE) {
-          if (player.dirtyMoney !== TEST_MONEY_VALUE) {
-            updatedFields.dirtyMoney = TEST_MONEY_VALUE;
+          if (player.dirtyMoney !== TEST_DIRTY_MONEY) {
+            updatedFields.dirtyMoney = TEST_DIRTY_MONEY;
             needsUpdate = true;
           }
 
-          if (player.cleanMoney !== TEST_MONEY_VALUE) {
-            updatedFields.cleanMoney = TEST_MONEY_VALUE;
+          if (player.cleanMoney !== TEST_CLEAN_MONEY) {
+            updatedFields.cleanMoney = TEST_CLEAN_MONEY;
             needsUpdate = true;
           }
         }
 
-        // Persistir atualização se necessário
         if (needsUpdate) {
           await BaseCrudService.update<Players>('players', {
             _id: member._id,
@@ -108,7 +105,6 @@ export const usePlayerInitialization = () => {
           return;
         }
 
-        // Sincroniza stores
         setPlayerId(player._id);
         setPlayerName(player.playerName || 'Jogador');
         setLevel(player.level || 1);
