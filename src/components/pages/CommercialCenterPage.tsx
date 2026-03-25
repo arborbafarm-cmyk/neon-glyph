@@ -463,13 +463,14 @@ export default function CommercialCenterPage() {
       {/* BANNER */}
       <div className="w-full relative z-10">
         <div className="banner-container w-full flex items-center justify-center relative">
-          <Image
-            src="https://static.wixstatic.com/media/50f4bf_fd64ac461d5d41c2a6bc7639af7590ac~mv2.png"
-            alt="Centro Comercial"
-            className="h-auto w-auto max-w-full max-h-[600px] object-contain border border-none"
-          />
-          {/* Hotspots overlay */}
-          <CommercialCenterHotspots onCommerceClick={openCommerceModal} />
+          <div className="relative w-full max-w-[1100px] mx-auto">
+            <Image
+              src="https://static.wixstatic.com/media/50f4bf_fd64ac461d5d41c2a6bc7639af7590ac~mv2.png"
+              alt="Centro Comercial"
+              className="block h-auto w-full max-h-[600px] object-contain"
+            />
+            <CommercialCenterHotspots onCommerceClick={openCommerceModal} />
+          </div>
         </div>
       </div>
 
@@ -490,7 +491,7 @@ export default function CommercialCenterPage() {
       )}
 
       {/* OPERATIONS */}
-      <div className="w-full px-4 py-12 relative z-10 mt-[20%]">
+      <div className="w-full px-4 py-12 relative z-10">
         <div className="max-w-[100rem] mx-auto">
           {isLoading ? (
             <div className="text-center text-cyan-300">Carregando comércios...</div>
@@ -545,16 +546,18 @@ export default function CommercialCenterPage() {
       )}
 
       {/* Commerce Operation Modal */}
-      <CommerceOperationModal
-        isOpen={activeCommerceModal !== null}
-        commerceId={activeCommerceModal}
-        commerceData={activeCommerceModal && comercios ? comercios[activeCommerceModal] : null}
-        dirtyMoney={playerData?.dirtyMoney || 0}
-        cleanMoney={playerData?.cleanMoney || 0}
-        onClose={closeCommerceModal}
-        onStartOperation={handleStartOperation}
-        onCompleteOperation={handleCompleteOperation}
-      />
+      {activeCommerceModal && comercios?.[activeCommerceModal] && (
+        <CommerceOperationModal
+          isOpen={true}
+          commerceId={activeCommerceModal}
+          commerceData={comercios[activeCommerceModal]}
+          dirtyMoney={playerData?.dirtyMoney || 0}
+          cleanMoney={playerData?.cleanMoney || 0}
+          onClose={closeCommerceModal}
+          onStartOperation={handleStartOperation}
+          onCompleteOperation={handleCompleteOperation}
+        />
+      )}
 
       <Footer />
     </div>
