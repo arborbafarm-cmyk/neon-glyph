@@ -51,6 +51,12 @@ export default function ComercioCard({
     return `${segundos}s`;
   };
 
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -68,7 +74,7 @@ export default function ComercioCard({
       <div className="space-y-2 mb-4 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-400">Valor de Lavagem:</span>
-          <span className="text-green-400 font-semibold">R$ {valorLavagem}</span>
+          <span className="text-green-400 font-semibold">{formatCurrency(valorLavagem)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-400">Tempo:</span>
@@ -80,7 +86,7 @@ export default function ComercioCard({
         </div>
         <div className="flex justify-between">
           <span className="text-gray-400">Retorno:</span>
-          <span className="text-yellow-400">R$ {cleanMoneyGanho}</span>
+          <span className="text-yellow-400">{formatCurrency(cleanMoneyGanho)}</span>
         </div>
       </div>
 
