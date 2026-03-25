@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 
 interface PlayerState {
   playerId: string | null;
@@ -10,9 +9,6 @@ interface PlayerState {
   profilePicture: string | null;
   barracoLevel: number;
 
-  // 🔥 espelho
-  playerMoney: number;
-
   setPlayerId: (id: string) => void;
   setPlayerName: (name: string) => void;
   setLevel: (level: number) => void;
@@ -21,13 +17,11 @@ interface PlayerState {
   setProfilePicture: (url: string | null) => void;
   setBarracoLevel: (level: number) => void;
 
-  setPlayerMoney: (money: number) => void;
-  addPlayerMoney: (amount: number) => void;
-
-  syncMoney: () => void;
+  loadPlayerData: (data: Partial<PlayerState>) => void;
+  resetPlayer: () => void;
 }
 
-export const usePlayerStore = create<PlayerState>((set, get) => ({
+export const usePlayerStore = create<PlayerState>((set) => ({
   playerId: null,
   playerName: 'COMANDANTE',
   level: 10,
@@ -35,8 +29,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   isGuest: false,
   profilePicture: null,
   barracoLevel: 1,
-
-  playerMoney: 0,
 
   setPlayerId: (id) => set({ playerId: id }),
   setPlayerName: (name) => set({ playerName: name }),
@@ -46,22 +38,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setProfilePicture: (url) => set({ profilePicture: url }),
   setBarracoLevel: (level) => set({ barracoLevel: Math.max(1, level) }),
 
-  // 🔥 AGORA REDIRECIONA PRO DIRTY MONEY
-  setPlayerMoney: (money) => {
-    useDirtyMoneyStore.getState().setDirtyMoney(money);
-    set({ playerMoney: money });
-  },
+  loadPlayerData: (data) => set(data),
 
-  addPlayerMoney: (amount) => {
-    const dirtyStore = useDirtyMoneyStore.getState();
-    const newValue = dirtyStore.dirtyMoney + amount;
-    dirtyStore.setDirtyMoney(newValue);
-    set({ playerMoney: newValue });
-  },
-
-  // 🔥 sincroniza manualmente
-  syncMoney: () => {
-    const dirty = useDirtyMoneyStore.getState().dirtyMoney;
-    set({ playerMoney: dirty });
-  },
+  resetPlayer: () =>
+    set({
+      playerId: null,
+      playerName: 'COMANDANTE',
+      level: 1,
+      progress: 0,
+      isGuest: false,
+      profilePicture: null,
+      barracoLevel: 1,
+    }),
 }));
