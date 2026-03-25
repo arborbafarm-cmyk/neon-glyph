@@ -1,4 +1,3 @@
-
 import { Image } from '@/components/ui/image';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -12,13 +11,16 @@ import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
 import CommercialCenterHotspots from '@/components/CommercialCenterHotspots';
 import CommerceOperationModal from '@/components/CommerceOperationModal';
+import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
+import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
+import { usePlayerStore } from '@/store/playerStore';
 
 interface CommerceOperation {
   id: string;
   name: string;
   value: number;
   tax: number;
-  duration: number; // in seconds
+  duration: number;
   startTime?: number;
   isActive: boolean;
   timeLeft?: number;
@@ -33,8 +35,57 @@ interface CompletedOperation {
   date: string;
 }
 
+const INITIAL_COMERCIOS_DATA: Comercios = {
+  pizzaria: {
+    nivelNegocio: 0,
+    nivelTaxa: 0,
+    ultimaDataUso: null,
+    emAndamento: false,
+    horarioFim: null,
+    valorAtual: 0,
+    taxaAplicada: 0,
+  },
+  admBens: {
+    nivelNegocio: 0,
+    nivelTaxa: 0,
+    ultimaDataUso: null,
+    emAndamento: false,
+    horarioFim: null,
+    valorAtual: 0,
+    taxaAplicada: 0,
+  },
+  lavanderia: {
+    nivelNegocio: 0,
+    nivelTaxa: 0,
+    ultimaDataUso: null,
+    emAndamento: false,
+    horarioFim: null,
+    valorAtual: 0,
+    taxaAplicada: 0,
+  },
+  academia: {
+    nivelNegocio: 0,
+    nivelTaxa: 0,
+    ultimaDataUso: null,
+    emAndamento: false,
+    horarioFim: null,
+    valorAtual: 0,
+    taxaAplicada: 0,
+  },
+  templo: {
+    nivelNegocio: 0,
+    nivelTaxa: 0,
+    ultimaDataUso: null,
+    emAndamento: false,
+    horarioFim: null,
+    valorAtual: 0,
+    taxaAplicada: 0,
+  },
+};
+
 export default function CommercialCenterPage() {
   const { member } = useMember();
+
   const [comercios, setComercios] = useState<Comercios | null>(null);
   const [playerData, setPlayerData] = useState<Players | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,35 +95,36 @@ export default function CommercialCenterPage() {
       name: 'Administradora de Bens',
       value: 5000,
       tax: 50,
-      duration: 18000, // 5 hours
+      duration: 18000,
       isActive: false,
     },
   ]);
-
   const [completedOps, setCompletedOps] = useState<CompletedOperation[]>([]);
-
-  // Modal state
   const [activeCommerceModal, setActiveCommerceModal] = useState<ComercioKey | null>(null);
 
-  // Carregar dados do jogador
+  const { dirtyMoney, setDirtyMoney } = useDirtyMoneyStore();
+  const { cleanMoney, setCleanMoney } = useCleanMoneyStore();
+  const { setLevel, setPlayerId, setPlayerName } = usePlayerStore();
+
+  const syncPlayerToStores = (player: Players | null) => {
+    if (!player) return;
+
+    setDirtyMoney(player.dirtyMoney || 0);
+    setCleanMoney(player.cleanMoney || 0);
+    setLevel(player.level || 1);
+    setPlayerId(player._id);
+    setPlayerName(player.playerName || 'Jogador');
+  };
+
+  const getResolvedPlayerId = () => member?._id || 'guest-player';
+
   useEffect(() => {
     const loadPlayerData = async () => {
       try {
-        // Usar member ID se disponível, caso contrário usar um ID genérico
-        const playerId = member?._id || 'guest-player';
+        const playerId = getResolvedPlayerId();
         let player = await BaseCrudService.getById<Players>('players', playerId);
-        
-        // Se o jogador não existe, criar um novo
+
         if (!player) {
-          console.log('📝 Criando novo jogador para:', playerId);
-          const initialComerciosData = {
-            pizzaria: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-            admBens: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-            lavanderia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-            academia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-            templo: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-          };
-          
           const newPlayer: Players = {
             _id: playerId,
             playerName: member?.profile?.nickname || 'Jogador',
@@ -80,32 +132,27 @@ export default function CommercialCenterPage() {
             dirtyMoney: 1000,
             level: 1,
             progress: 0,
-            comercios: JSON.stringify(initialComerciosData),
+            comercios: JSON.stringify(INITIAL_COMERCIOS_DATA),
             isGuest: !member?._id,
             profilePicture: member?.profile?.photo?.url,
           };
-          
+
           await BaseCrudService.create('players', newPlayer);
           setPlayerData(newPlayer);
-          setComercios(initialComerciosData);
-          console.log('✅ Jogador criado com sucesso');
+          setComercios(INITIAL_COMERCIOS_DATA);
+          syncPlayerToStores(newPlayer);
         } else {
           setPlayerData(player);
+          syncPlayerToStores(player);
+
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
+
           if (!comerciosData) {
-            console.warn('⚠️ Comercios não encontrados, inicializando...');
-            const initialComerciosData = {
-              pizzaria: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-              admBens: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-              lavanderia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-              academia: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-              templo: { nivelNegocio: 0, nivelTaxa: 0, ultimaDataUso: null, emAndamento: false, horarioFim: null, valorAtual: 0, taxaAplicada: 0 },
-            };
-            setComercios(initialComerciosData);
-            // Salvar no banco de dados
+            setComercios(INITIAL_COMERCIOS_DATA);
+
             await BaseCrudService.update<Players>('players', {
               _id: playerId,
-              comercios: JSON.stringify(initialComerciosData),
+              comercios: JSON.stringify(INITIAL_COMERCIOS_DATA),
             });
           } else {
             setComercios(comerciosData);
@@ -117,41 +164,49 @@ export default function CommercialCenterPage() {
         setIsLoading(false);
       }
     };
-    loadPlayerData();
-  }, []);
 
-  // Atualizar dados periodicamente
+    loadPlayerData();
+  }, [member?._id]);
+
   useEffect(() => {
     const interval = setInterval(async () => {
-      const playerId = member?._id || 'guest-player';
+      const playerId = getResolvedPlayerId();
+
       try {
         const player = await BaseCrudService.getById<Players>('players', playerId);
+
         if (player) {
           setPlayerData(player);
+          syncPlayerToStores(player);
+
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
           setComercios(comerciosData);
         }
       } catch (error) {
         console.error('Erro ao atualizar dados:', error);
       }
-    }, 5000); // Atualizar a cada 5 segundos
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [member?._id]);
 
   const handleIniciarLavagem = async (comercioKey: ComercioKey) => {
-    const playerId = member?._id || 'guest-player';
-    if (!playerData) return;
+    const playerId = getResolvedPlayerId();
+
     try {
       const resultado = await comerciosService.iniciarLavagem(
         playerId,
         comercioKey,
-        playerData.dirtyMoney || 0
+        dirtyMoney
       );
+
       if (resultado.sucesso) {
         const player = await BaseCrudService.getById<Players>('players', playerId);
+
         if (player) {
           setPlayerData(player);
+          syncPlayerToStores(player);
+
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
           setComercios(comerciosData);
         }
@@ -165,13 +220,18 @@ export default function CommercialCenterPage() {
   };
 
   const handleFinalizarLavagem = async (comercioKey: ComercioKey) => {
-    const playerId = member?._id || 'guest-player';
+    const playerId = getResolvedPlayerId();
+
     try {
       const resultado = await comerciosService.finalizarLavagem(playerId, comercioKey);
+
       if (resultado.sucesso) {
         const player = await BaseCrudService.getById<Players>('players', playerId);
+
         if (player) {
           setPlayerData(player);
+          syncPlayerToStores(player);
+
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
           setComercios(comerciosData);
         }
@@ -192,9 +252,6 @@ export default function CommercialCenterPage() {
   };
 
   const openCommerceModal = (commerceId: string) => {
-    console.log('RECEBIDO DO HOTSPOT:', commerceId);
-
-    // Map commerce IDs to ComercioKey
     const commerceKeyMap: { [key: string]: ComercioKey } = {
       pizzaria: 'pizzaria',
       admBens: 'admBens',
@@ -204,7 +261,6 @@ export default function CommercialCenterPage() {
     };
 
     const comercioKey = commerceKeyMap[commerceId];
-    console.log('MAPEADO PARA:', comercioKey);
 
     if (comercioKey) {
       setActiveCommerceModal(comercioKey);
@@ -216,76 +272,62 @@ export default function CommercialCenterPage() {
   };
 
   const handleStartOperation = async (comercioKey: ComercioKey) => {
-    const playerId = member?._id || 'guest-player';
-    if (!playerData) {
-      throw new Error('Dados do jogador não disponíveis');
-    }
+    const playerId = getResolvedPlayerId();
+
     try {
-      console.log('🚀 Iniciando lavagem para:', comercioKey);
-      console.log('💰 Dinheiro sujo disponível:', playerData.dirtyMoney);
-      
       const resultado = await comerciosService.iniciarLavagem(
         playerId,
         comercioKey,
-        playerData.dirtyMoney || 0
+        dirtyMoney
       );
-      
-      console.log('📊 Resultado da operação:', resultado);
-      
+
       if (resultado.sucesso) {
-        console.log('✅ Lavagem iniciada com sucesso');
-        // Atualizar dados do jogador
         const player = await BaseCrudService.getById<Players>('players', playerId);
+
         if (player) {
           setPlayerData(player);
+          syncPlayerToStores(player);
+
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
           setComercios(comerciosData);
           closeCommerceModal();
         }
       } else {
-        console.error('❌ Erro ao iniciar lavagem:', resultado.mensagem);
         throw new Error(resultado.mensagem);
       }
     } catch (error) {
-      console.error('💥 Erro na operação:', error);
+      console.error('Erro na operação:', error);
       throw error;
     }
   };
 
   const handleCompleteOperation = async (comercioKey: ComercioKey) => {
-    const playerId = member?._id || 'guest-player';
-    if (!playerData) {
-      throw new Error('Dados do jogador não disponíveis');
-    }
+    const playerId = getResolvedPlayerId();
+
     try {
-      console.log('🏁 Finalizando lavagem para:', comercioKey);
-      
       const resultado = await comerciosService.finalizarLavagem(playerId, comercioKey);
-      
-      console.log('📊 Resultado da finalização:', resultado);
-      
+
       if (resultado.sucesso) {
-        console.log('✅ Lavagem finalizada com sucesso. Dinheiro limpo ganho:', resultado.cleanMoneyGanho);
-        // Atualizar dados do jogador
         const player = await BaseCrudService.getById<Players>('players', playerId);
+
         if (player) {
           setPlayerData(player);
+          syncPlayerToStores(player);
+
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
           setComercios(comerciosData);
           closeCommerceModal();
         }
       } else {
-        console.error('❌ Erro ao finalizar lavagem:', resultado.mensagem);
         throw new Error(resultado.mensagem);
       }
     } catch (error) {
-      console.error('💥 Erro na operação:', error);
+      console.error('Erro na finalização:', error);
       throw error;
     }
   };
 
   useEffect(() => {
-    // Inject custom CSS for neon effects and animations
     const style = document.createElement('style');
     style.textContent = `
       @keyframes gridMove {
@@ -322,11 +364,6 @@ export default function CommercialCenterPage() {
         }
       }
 
-      @keyframes progressFill {
-        0% { width: 0%; }
-        100% { width: 100%; }
-      }
-
       .neon-sign {
         color: #00f0ff;
         text-shadow:
@@ -349,10 +386,7 @@ export default function CommercialCenterPage() {
       .commercial-grid::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         background: repeating-linear-gradient(
           45deg,
           transparent,
@@ -364,36 +398,6 @@ export default function CommercialCenterPage() {
         pointer-events: none;
       }
 
-      .container-neon {
-        border: 2px solid #00f0ff;
-        background: rgba(10, 0, 30, 0.6);
-        backdrop-filter: blur(10px);
-        animation: neonBorder 4s ease-in-out infinite;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .container-neon::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(0, 240, 255, 0.1),
-          transparent
-        );
-        animation: shimmer 3s infinite;
-      }
-
-      @keyframes shimmer {
-        0% { left: -100%; }
-        100% { left: 100%; }
-      }
-
       .banner-container {
         position: relative;
         overflow: hidden;
@@ -403,87 +407,6 @@ export default function CommercialCenterPage() {
         display: flex;
         align-items: flex-end;
         justify-content: center;
-      }
-
-      .banner-container::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: none;
-        pointer-events: none;
-      }
-
-      .commerce-card {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 0;
-        transition: all 0.3s ease;
-        min-height: 280px;
-      }
-
-      .commerce-card:hover {
-        box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
-      }
-
-      .commerce-card.active {
-        border-color: #00ff00;
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-      }
-
-      .commerce-card.completed {
-        border-color: #ffd700;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-      }
-
-      .commerce-image {
-        width: 100%;
-        height: 100%;
-        border-right: 3px solid #00f0ff;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.3);
-      }
-
-      .commerce-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-
-      .commerce-content {
-        padding: 2rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-
-      .progress-bar {
-        width: 100%;
-        height: 8px;
-        background: rgba(0, 240, 255, 0.2);
-        border-radius: 4px;
-        overflow: hidden;
-        margin-top: 0.5rem;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #00f0ff, #00ff00);
-        transition: width 0.1s linear;
-        box-shadow: 0 0 10px #00f0ff;
-      }
-
-      .timer-display {
-        font-family: 'Courier New', monospace;
-        font-size: 1.25rem;
-        font-weight: bold;
-        color: #00f0ff;
-        text-shadow: 0 0 10px #00f0ff;
       }
 
       .history-table {
@@ -508,18 +431,8 @@ export default function CommercialCenterPage() {
       .history-table tr:hover {
         background: rgba(0, 240, 255, 0.05);
       }
-
-      @media (max-width: 768px) {
-        .commerce-card {
-          grid-template-columns: 150px 1fr;
-          min-height: 220px;
-        }
-
-        .commerce-content {
-          padding: 1.5rem;
-        }
-      }
     `;
+
     document.head.appendChild(style);
 
     return () => {
@@ -530,15 +443,13 @@ export default function CommercialCenterPage() {
   return (
     <div className="commercial-grid min-h-screen flex flex-col">
       <Header />
-      
-      {/* WELCOME TITLE */}
+
       <div className="w-full pt-[120px] px-4 relative z-10">
         <div className="max-w-[100rem] mx-auto mb-8">
           <h1 className="neon-sign text-4xl md:text-5xl text-center">Bem-vindo ao Complexo</h1>
         </div>
       </div>
 
-      {/* BANNER */}
       <div className="w-full relative z-10">
         <div className="banner-container w-full flex items-center justify-center relative px-4">
           <div className="relative w-full max-w-[1100px] mx-auto z-0">
@@ -552,23 +463,19 @@ export default function CommercialCenterPage() {
         </div>
       </div>
 
-      {/* PLAYER INFO */}
-      {playerData && (
-        <div className="w-full px-4 py-6 relative z-10 border-b border-cyan-500/30">
-          <div className="max-w-[100rem] mx-auto flex justify-between items-center">
-            <div className="text-cyan-300">
-              <span className="text-sm text-gray-400">Dinheiro Sujo:</span>
-              <span className="ml-2 font-bold text-green-400">${playerData.dirtyMoney || 0}</span>
-            </div>
-            <div className="text-cyan-300">
-              <span className="text-sm text-gray-400">Dinheiro Limpo:</span>
-              <span className="ml-2 font-bold text-yellow-400">${playerData.cleanMoney || 0}</span>
-            </div>
+      <div className="w-full px-4 py-6 relative z-10 border-b border-cyan-500/30">
+        <div className="max-w-[100rem] mx-auto flex justify-between items-center">
+          <div className="text-cyan-300">
+            <span className="text-sm text-gray-400">Dinheiro Sujo:</span>
+            <span className="ml-2 font-bold text-green-400">{formatCurrency(dirtyMoney)}</span>
+          </div>
+          <div className="text-cyan-300">
+            <span className="text-sm text-gray-400">Dinheiro Limpo:</span>
+            <span className="ml-2 font-bold text-yellow-400">{formatCurrency(cleanMoney)}</span>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* OPERATIONS */}
       <div className="w-full px-4 py-12 relative z-10">
         <div className="max-w-[100rem] mx-auto">
           {isLoading ? (
@@ -582,7 +489,7 @@ export default function CommercialCenterPage() {
                   data={comercios[key]}
                   onIniciar={() => handleIniciarLavagem(key)}
                   onFinalizar={() => handleFinalizarLavagem(key)}
-                  dirtyMoney={playerData?.dirtyMoney || 0}
+                  dirtyMoney={dirtyMoney}
                 />
               ))}
             </div>
@@ -592,7 +499,6 @@ export default function CommercialCenterPage() {
         </div>
       </div>
 
-      {/* HISTORY */}
       {completedOps.length > 0 && (
         <div className="w-full px-4 py-12 relative z-10 border-t border-cyan-500">
           <div className="max-w-[100rem] mx-auto">
@@ -623,7 +529,6 @@ export default function CommercialCenterPage() {
         </div>
       )}
 
-      {/* Commerce Operation Modal */}
       {activeCommerceModal && (
         <CommerceOperationModal
           isOpen={true}
@@ -635,17 +540,18 @@ export default function CommercialCenterPage() {
               emAndamento: false,
               ultimaDataUso: '',
               horarioFim: null,
+              valorAtual: 0,
+              taxaAplicada: 0,
             }
           }
-          dirtyMoney={playerData?.dirtyMoney || 0}
-          cleanMoney={playerData?.cleanMoney || 0}
+          dirtyMoney={dirtyMoney}
+          cleanMoney={cleanMoney}
           onClose={closeCommerceModal}
           onStartOperation={handleStartOperation}
           onCompleteOperation={handleCompleteOperation}
         />
       )}
 
-      {/* TEMPORARY TEST BUTTON */}
       <Button
         onClick={() => setActiveCommerceModal('pizzaria')}
         className="fixed bottom-10 right-10 z-[9999] bg-orange-500 hover:bg-orange-600 text-white font-bold"
