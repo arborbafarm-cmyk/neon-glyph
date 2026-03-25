@@ -70,9 +70,8 @@ export default function Header() {
         <div className="relative">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,180,0,0.05),transparent_20%),radial-gradient(circle_at_bottom_right,rgba(255,0,0,0.04),transparent_24%)]" />
 
-          <div className="relative px-2.5 md:px-3 py-1.5">
+          <div className="relative px-2.5 md:px-3 py-1.5 min-h-[74px]">
             <div className="flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-2">
-              {/* LOGO REDUZIDO */}
               <div className="flex items-center justify-center 2xl:justify-start min-w-[90px]">
                 <Image
                   src={LOGO_SRC}
@@ -83,13 +82,15 @@ export default function Header() {
                 />
               </div>
 
-              {/* BLOCO CENTRAL */}
               <div className="flex-1">
                 <div className="rounded-[16px] border border-white/10 bg-white/[0.04] backdrop-blur-lg px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                   <div className="flex flex-col xl:flex-row xl:items-center gap-2.5">
-                    {/* IDENTIDADE */}
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        className="relative shrink-0"
+                        title="Avatar do jogador"
+                      >
                         <div className="absolute inset-0 rounded-full blur-xl bg-yellow-400/20" />
                         <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden border-[2px] border-yellow-500 shadow-[0_0_14px_rgba(255,200,0,0.20)]">
                           <Image
@@ -98,7 +99,7 @@ export default function Header() {
                             alt="Avatar do jogador"
                           />
                         </div>
-                      </div>
+                      </button>
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
@@ -107,7 +108,9 @@ export default function Header() {
                           {editingName ? (
                             <input
                               value={tempName}
-                              onChange={(e) => setTempName(e.target.value.slice(0, 18))}
+                              onChange={(e) =>
+                                setTempName(e.target.value.slice(0, 18))
+                              }
                               onBlur={savePlayerName}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") savePlayerName();
@@ -120,8 +123,9 @@ export default function Header() {
                               className="bg-black/70 border border-yellow-500/60 rounded-md px-2 py-1 text-yellow-300 font-black text-sm outline-none w-[150px] md:w-[190px]"
                             />
                           ) : (
-                            <div
-                              className="flex items-center gap-1.5 min-w-0 cursor-pointer group"
+                            <button
+                              type="button"
+                              className="flex items-center gap-1.5 min-w-0 group text-left"
                               onClick={() => setEditingName(true)}
                               title="Clique para editar o nome"
                             >
@@ -129,7 +133,7 @@ export default function Header() {
                                 {playerName || "COMANDANTE"}
                               </span>
                               <Pencil className="w-3 h-3 text-yellow-300/70 group-hover:text-yellow-200 shrink-0" />
-                            </div>
+                            </button>
                           )}
                         </div>
 
@@ -140,12 +144,11 @@ export default function Header() {
                       </div>
                     </div>
 
-                    {/* STATS */}
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
                       <StatCard
                         icon={<Zap className="w-3 h-3" />}
                         label="Nível"
-                        value={String(level)}
+                        value={String(level || 1)}
                         tone="yellow"
                       />
                       <StatCard
@@ -169,15 +172,15 @@ export default function Header() {
                       <StatCard
                         icon={<Gem className="w-3 h-3" />}
                         label="Giros"
-                        value={String(spins)}
+                        value={String(spins || 0)}
                         tone="purple"
                       />
                     </div>
 
-                    {/* BOTÃO */}
                     {member?._id && (
                       <div className="shrink-0">
                         <button
+                          type="button"
                           onClick={() => navigate("/money-laundering")}
                           className="w-full xl:w-auto flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-white font-black tracking-[0.05em] border border-cyan-300/20 bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-700 hover:from-cyan-500 hover:via-sky-500 hover:to-blue-600 shadow-[0_0_14px_rgba(0,180,255,0.16)] transition-all text-xs"
                           title="Operações de Lavagem"
@@ -191,7 +194,6 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* TIMER / GIROS */}
               <div className="min-w-[170px]">
                 <div className="rounded-[16px] border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-lg text-center">
                   <div className="text-[9px] uppercase tracking-[0.14em] text-slate-300">
@@ -271,7 +273,7 @@ function formatMoney(v: number) {
   if (v >= 1_000_000_000) return (v / 1_000_000_000).toFixed(1) + "B";
   if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
   if (v >= 1_000) return (v / 1_000).toFixed(1) + "K";
-  return String(v);
+  return String(v || 0);
 }
 
 function formatTimer(t: string) {
