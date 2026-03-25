@@ -3,6 +3,11 @@ import { motion } from 'framer-motion';
 import { Image } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { useMoneyLaunderingStore } from '@/store/moneyLaunderingStore';
+import { useMember } from '@/integrations';
+import { BaseCrudService } from '@/integrations';
+import { Players } from '@/entities';
+import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
+import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 
 interface MoneyLaunderingBusinessProps {
   businessId: string;
@@ -14,6 +19,7 @@ interface MoneyLaunderingBusinessProps {
   currentRate: number;
   currentMaxValue: number;
   currentTimeMultiplier: number;
+  onOperationComplete?: () => void;
 }
 
 export default function MoneyLaunderingBusiness({
@@ -26,12 +32,16 @@ export default function MoneyLaunderingBusiness({
   currentRate,
   currentMaxValue,
   currentTimeMultiplier,
+  onOperationComplete,
 }: MoneyLaunderingBusinessProps) {
   const [launderAmount, setLaunderAmount] = useState<number>(initialValue);
   const [isProcessing, setIsProcessing] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [completedAmount, setCompletedAmount] = useState<number>(0);
 
+  const { member } = useMember();
+  const { dirtyMoney, setDirtyMoney } = useDirtyMoneyStore();
+  const { cleanMoney, setCleanMoney } = useCleanMoneyStore();
   const { canOperateToday, addOperation, getActiveOperation } = useMoneyLaunderingStore();
   const activeOp = getActiveOperation(businessId);
   const canOperate = canOperateToday(businessId);
@@ -59,14 +69,49 @@ export default function MoneyLaunderingBusiness({
         setIsProcessing(false);
         setCompletedAmount(activeOp.cleanedAmount);
         setTimeRemaining(0);
+        
+        // Update player data in database
+        updatePlayerMoney(activeOp.amount, activeOp.cleanedAmount);
       }
     }, 100); // Update every 100ms for smooth animation
 
     return () => clearInterval(interval);
   }, [isProcessing, activeOp]);
 
+  const updatePlayerMoney = async (usedDirtyMoney: number, gainedCleanMoney: number) => {
+    try {
+      if (!member?._id) return;
+
+      // Get current player data
+      const playerData = await BaseCrudService.getById<Players>('players', member._id);
+      if (!playerData) return;
+
+      // Calculate new values
+      const newDirtyMoney = Math.max(0, (playerData.dirtyMoney || 0) - usedDirtyMoney);
+      const newCleanMoney = (playerData.cleanMoney || 0) + gainedCleanMoney;
+
+      // Update database
+      await BaseCrudService.update<Players>('players', {
+        _id: member._id,
+        dirtyMoney: newDirtyMoney,
+        cleanMoney: newCleanMoney,
+      });
+
+      // Update stores
+      setDirtyMoney(newDirtyMoney);
+      setCleanMoney(newCleanMoney);
+
+      // Callback if provided
+      if (onOperationComplete) {
+        onOperationComplete();
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar dinheiro do jogador:', err);
+    }
+  };
+
   const handleLaunder = () => {
-    if (!canOperate || isProcessing || launderAmount <= 0 || launderAmount > currentMaxValue) {
+    if (!canOperate || isProcessing || launderAmount <= 0 || launderAmount > dirtyMoney) {
       return;
     }
 
@@ -130,8 +175,8 @@ export default function MoneyLaunderingBusiness({
       {/* Business Stats */}
       <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
         <div className="bg-slate-800/50 rounded p-2">
-          <p className="text-gray-400 text-xs">Valor Máximo</p>
-          <p className="text-cyan-400 font-semibold">${currentMaxValue.toLocaleString()}</p>
+          <p className="text-gray-400 text-xs">Dinheiro Sujo Disponível</p>
+          <p className="text-cyan-400 font-semibold">${dirtyMoney.toLocaleString()}</p>
         </div>
         <div className="bg-slate-800/50 rounded p-2">
           <p className="text-gray-400 text-xs">Tempo Base</p>
@@ -145,10 +190,10 @@ export default function MoneyLaunderingBusiness({
         <input
           type="number"
           value={launderAmount}
-          onChange={(e) => setLaunderAmount(Math.min(currentMaxValue, Math.max(0, Number(e.target.value))))}
+          onChange={(e) => setLaunderAmount(Math.min(dirtyMoney, Math.max(0, Number(e.target.value))))}
           disabled={isProcessing || !canOperate}
           className="w-full bg-slate-800 border border-cyan-500/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50"
-          max={currentMaxValue}
+          max={dirtyMoney}
           min={0}
         />
       </div>
@@ -193,7 +238,7 @@ export default function MoneyLaunderingBusiness({
       {/* Action Button */}
       <Button
         onClick={handleLaunder}
-        disabled={isProcessing || !canOperate || launderAmount <= 0 || launderAmount > currentMaxValue}
+        disabled={isProcessing || !canOperate || launderAmount <= 0 || launderAmount > dirtyMoney}
         className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 rounded transition-all"
       >
         {!canOperate ? 'Operação Realizada Hoje' : isProcessing ? 'Processando...' : 'Iniciar Lavagem'}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Clock3, DollarSign, Landmark, BadgeDollarSign, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
 import {
@@ -157,7 +158,12 @@ export default function CommerceOperationModal({
     value: string;
     valueClass?: string;
   }) => (
-    <div className="rounded-2xl border border-cyan-400/20 bg-slate-950/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="rounded-2xl border border-cyan-400/20 bg-slate-950/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+    >
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">
         {icon}
         <span>{title}</span>
@@ -165,17 +171,27 @@ export default function CommerceOperationModal({
       <div className={`mt-3 text-lg md:text-xl font-black ${valueClass}`}>
         {value}
       </div>
-    </div>
+    </motion.div>
   );
 
   return (
     <>
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         className="fixed inset-0 z-40 bg-black/85 backdrop-blur-md"
         onClick={onClose}
       />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6"
+      >
         <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-cyan-400/30 bg-[linear-gradient(180deg,rgba(6,12,24,0.98)_0%,rgba(12,20,36,0.98)_100%)] shadow-[0_0_60px_rgba(0,240,255,0.18)]">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,240,255,0.08),transparent_35%),radial-gradient(circle_at_bottom,rgba(157,0,255,0.08),transparent_35%)]" />
 
@@ -213,9 +229,13 @@ export default function CommerceOperationModal({
 
           <div className="relative px-5 py-5 md:px-8 md:py-7">
             {error && (
-              <div className="mb-5 rounded-2xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm font-medium text-red-200">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-5 rounded-2xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm font-medium text-red-200"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -263,7 +283,12 @@ export default function CommerceOperationModal({
             </div>
 
             {commerceData.emAndamento && (
-              <div className="relative mt-6 overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="relative mt-6 overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6"
+              >
                 <div className="absolute inset-0 pointer-events-none bubble-layer" />
 
                 <div className="mx-auto flex max-w-xl flex-col items-center">
@@ -483,18 +508,23 @@ export default function CommerceOperationModal({
                     50% { transform: translate(16px,12px) rotate(-200deg) scale(1.05); }
                   }
                 `}</style>
-              </div>
+              </motion.div>
             )}
 
             {commerceData.emAndamento && timeLeft === 0 && (
-              <div className="mt-6 rounded-3xl border border-emerald-400/30 bg-gradient-to-r from-emerald-950/40 to-cyan-950/30 p-5 text-center shadow-[0_0_30px_rgba(16,185,129,0.12)]">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="mt-6 rounded-3xl border border-emerald-400/30 bg-gradient-to-r from-emerald-950/40 to-cyan-950/30 p-5 text-center shadow-[0_0_30px_rgba(16,185,129,0.12)]"
+              >
                 <p className="text-xl font-black uppercase text-emerald-300">
                   Operação concluída
                 </p>
                 <p className="mt-2 text-sm text-emerald-100/80">
                   Clique em <strong>Finalizar Lavagem</strong> para receber o dinheiro limpo.
                 </p>
-              </div>
+              </motion.div>
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -549,7 +579,7 @@ export default function CommerceOperationModal({
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }
