@@ -24,6 +24,11 @@ interface PlayerData {
   lastGainTime: number;
   // Luxury items (consolidated from localStorage)
   ownedLuxuryItemIds: string[];
+  // Additional player data loaded from database
+  inventory?: Record<string, any>;
+  investments?: Record<string, any>;
+  cooldowns?: Record<string, number>;
+  passiveBonuses?: Record<string, number>;
 }
 
 interface PlayerState extends PlayerData {
@@ -88,6 +93,10 @@ const initialState = {
   players: {},
   lastGainTime: 0,
   ownedLuxuryItemIds: [],
+  inventory: {},
+  investments: {},
+  cooldowns: {},
+  passiveBonuses: {},
 };
 
 export const usePlayerStore = create<PlayerState>()(
