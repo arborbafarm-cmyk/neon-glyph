@@ -52,8 +52,7 @@ export async function resetPlayerSession() {
     console.log('  2️⃣ Resetting legacy game stores...');
     useGameStore.getState().reset();
 
-    // PHASE 4: spinVaultStore is now visual-only, spins are in database
-    // No need to preserve data here; just reset visual state
+    // PHASE 4: spinVaultStore is visual-only
     useSpinVaultStore.setState({
       spins: 0,
       lastGainTime: 0,
@@ -94,8 +93,7 @@ export async function resetPlayerSession() {
       selectedInvestment: null,
     });
     useMoneyLaunderingStore.setState({
-      businesses: {},
-      selectedBusiness: null,
+      operations: [],
     });
 
     // Step 6: Reset map and location stores
@@ -193,7 +191,6 @@ export function resetSpecificStores(storeNames: string[]) {
     player: () => usePlayerStore.getState().reset(),
     game: () => useGameStore.getState().reset(),
 
-    // PHASE 4: spinVault is now visual-only, spins are in database
     spinVault: () =>
       useSpinVaultStore.setState({
         spins: 0,
@@ -240,8 +237,7 @@ export function resetSpecificStores(storeNames: string[]) {
 
     moneyLaundering: () =>
       useMoneyLaunderingStore.setState({
-        businesses: {},
-        selectedBusiness: null,
+        operations: [],
       }),
 
     mapState: () =>
