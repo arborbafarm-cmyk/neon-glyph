@@ -8,11 +8,6 @@ export function usePlayerAuth() {
   const [isLoading, setIsLoading] = useState(true);
   const [playerData, setPlayerData] = useState<Players | null>(null);
   
-  const setPlayerId = usePlayerStore((state) => state.setPlayerId);
-  const setPlayerName = usePlayerStore((state) => state.setPlayerName);
-  const setLevel = usePlayerStore((state) => state.setLevel);
-  const setProgress = usePlayerStore((state) => state.setProgress);
-  const setProfilePicture = usePlayerStore((state) => state.setProfilePicture);
   const loadPlayerData = usePlayerStore((state) => state.loadPlayerData);
 
   useEffect(() => {
@@ -27,7 +22,8 @@ export function usePlayerAuth() {
             setPlayerData(player);
             setIsAuthenticated(true);
             
-            // Load player data into store
+            // Load player data into store from players collection
+            // playerId is the unique permanent identifier (_id from players collection)
             loadPlayerData({
               playerId: player._id,
               playerName: player.playerName || 'COMANDANTE',
@@ -35,6 +31,8 @@ export function usePlayerAuth() {
               progress: player.progress || 0,
               isGuest: player.isGuest || false,
               profilePicture: player.profilePicture || null,
+              cleanMoney: player.cleanMoney || 0,
+              dirtyMoney: player.dirtyMoney || 10000000000,
             });
           }
         }
@@ -47,7 +45,7 @@ export function usePlayerAuth() {
     };
 
     initializeAuth();
-  }, [setPlayerId, setPlayerName, setLevel, setProgress, setProfilePicture, loadPlayerData]);
+  }, [loadPlayerData]);
 
   return {
     isAuthenticated,

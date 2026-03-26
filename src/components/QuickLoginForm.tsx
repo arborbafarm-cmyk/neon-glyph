@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginLocalPlayer } from '@/services/playerService';
+import { usePlayerStore } from '@/store/playerStore';
 import { AlertCircle, CheckCircle, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,6 +13,8 @@ export default function QuickLoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  const loadPlayerData = usePlayerStore((state) => state.loadPlayerData);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,15 +28,23 @@ export default function QuickLoginForm() {
 
     try {
       setIsLoading(true);
+      // Login returns player from players collection with unique permanent playerId (_id)
       const player = await loginLocalPlayer(email, password);
-      setSuccess('Login realizado com sucesso!');
       
-      localStorage.setItem('lastPlayerData', JSON.stringify({
+      // Load all player data into store from players collection
+      // playerId is the unique permanent identifier (_id from players collection)
+      loadPlayerData({
         playerId: player._id,
-        playerName: player.playerName,
-        level: player.level,
-        progress: player.progress,
-      }));
+        playerName: player.playerName || 'COMANDANTE',
+        level: player.level || 1,
+        progress: player.progress || 0,
+        isGuest: player.isGuest || false,
+        profilePicture: player.profilePicture || null,
+        cleanMoney: player.cleanMoney || 0,
+        dirtyMoney: player.dirtyMoney || 10000000000,
+      });
+      
+      setSuccess('Login realizado com sucesso!');
       
       setTimeout(() => {
         navigate('/star-map');

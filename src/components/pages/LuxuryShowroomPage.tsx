@@ -163,6 +163,7 @@ export default function LuxuryShowroomPage() {
   const playerName = usePlayerStore((s) => s.playerName) || 'COMANDANTE';
   const barracoLevel = usePlayerStore((s) => s.barracoLevel);
   const playerLevel = usePlayerStore((s) => s.level);
+  const playerId = usePlayerStore((s) => s.playerId);
   const setBarracoLevel = usePlayerStore((s) => s.setBarracoLevel);
   const initRef = useRef(false); // Prevent double initialization
 
@@ -173,17 +174,20 @@ export default function LuxuryShowroomPage() {
 
     const loadPlayerData = async () => {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        let playerId = urlParams.get('playerId') || localStorage.getItem('currentPlayerId');
-        if (!playerId) {
+        let currentPlayerId = playerId;
+        if (!currentPlayerId) {
+          const urlParams = new URLSearchParams(window.location.search);
+          currentPlayerId = urlParams.get('playerId') || localStorage.getItem('currentPlayerId');
+        }
+        if (!currentPlayerId) {
           const result = await BaseCrudService.getAll<Players>('players', [], { limit: 1 });
           if (result.items?.length) {
-            playerId = result.items[0]._id;
-            localStorage.setItem('currentPlayerId', playerId);
+            currentPlayerId = result.items[0]._id;
+            localStorage.setItem('currentPlayerId', currentPlayerId);
           }
         }
-        if (playerId) {
-          const player = await BaseCrudService.getById<Players>('players', playerId);
+        if (currentPlayerId) {
+          const player = await BaseCrudService.getById<Players>('players', currentPlayerId);
           if (player) {
             setPlayerData(player);
             if (player.level) setBarracoLevel(player.level);
@@ -196,7 +200,7 @@ export default function LuxuryShowroomPage() {
       }
     };
     loadPlayerData();
-  }, [setBarracoLevel]);
+  }, [setBarracoLevel, playerId]);
 
   const level = barracoLevel && barracoLevel > 0 ? barracoLevel : Math.max(1, playerLevel || 1);
   const system = useMemo(() => getLuxurySystem(level), [level]);

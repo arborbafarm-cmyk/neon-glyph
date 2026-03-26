@@ -19,8 +19,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const setPlayerName = usePlayerStore((state) => state.setPlayerName);
-  const setPlayerId = usePlayerStore((state) => state.setPlayerId);
+  const loadPlayerData = usePlayerStore((state) => state.loadPlayerData);
 
   const validateForm = () => {
     setError('');
@@ -72,19 +71,21 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
 
     try {
       // Register player with authentication
+      // Returns player from players collection with unique permanent playerId (_id)
       const player = await registerLocalPlayer(email, password, gamerName);
 
-      // Update player store
-      setPlayerId(player._id);
-      setPlayerName(gamerName);
-
-      // Store player data in localStorage for quick access
-      localStorage.setItem('lastPlayerData', JSON.stringify({
+      // Load all player data into store from players collection
+      // playerId is the unique permanent identifier (_id from players collection)
+      loadPlayerData({
         playerId: player._id,
-        playerName: player.playerName,
-        level: player.level,
-        progress: player.progress,
-      }));
+        playerName: player.playerName || gamerName,
+        level: player.level || 1,
+        progress: player.progress || 0,
+        isGuest: player.isGuest || false,
+        profilePicture: player.profilePicture || null,
+        cleanMoney: player.cleanMoney || 0,
+        dirtyMoney: player.dirtyMoney || 10000000000,
+      });
 
       setLoading(false);
       onSuccess();

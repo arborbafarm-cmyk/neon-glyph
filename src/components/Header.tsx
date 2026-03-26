@@ -40,7 +40,7 @@ function Stat({ label, value }: StatProps) {
 export default function Header() {
   const { dirtyMoney } = useDirtyMoneyStore();
   const { cleanMoney } = useCleanMoneyStore();
-  const { playerName, level } = usePlayerStore();
+  const { playerName, level, playerId } = usePlayerStore();
   const { spins, timeUntilNextGain, formatTime } = useSpinVault();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,9 +62,9 @@ export default function Header() {
       // Google logout
       await actions.logout();
     } else {
-      // Local logout
+      // Local logout - clear session but keep playerId in players collection
       await logoutLocalPlayer();
-      // Clear player data
+      // Clear session data only
       localStorage.removeItem('currentPlayerId');
       localStorage.removeItem('currentPlayerEmail');
       localStorage.removeItem('playerAuthToken');

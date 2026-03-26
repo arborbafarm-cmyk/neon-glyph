@@ -39,7 +39,7 @@ export default function BarracoPage() {
   const [imageKey, setImageKey] = useState(0);
   const [levelUpAnimation, setLevelUpAnimation] = useState(false);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
-  const { setLevel, setBarracoLevel } = usePlayerStore();
+  const { setLevel, setBarracoLevel, playerId } = usePlayerStore();
   const { setBarracoLevel: setSpinVaultBarracoLevel } = useSpinVaultStore();
   const initRef = useRef(false); // Prevent double initialization
 
@@ -50,8 +50,9 @@ export default function BarracoPage() {
     }
   }, [isAuthenticated, isAuthLoading, navigate]);
 
-  // Get player ID from localStorage or URL
+  // Get player ID from store (unique permanent identifier from players collection)
   const getPlayerId = () => {
+    if (playerId) return playerId;
     const urlParams = new URLSearchParams(window.location.search);
     const idFromUrl = urlParams.get('playerId');
     if (idFromUrl) return idFromUrl;
@@ -69,21 +70,21 @@ export default function BarracoPage() {
   const loadPlayerData = async () => {
     try {
       setLoading(true);
-      let playerId = getPlayerId();
+      let currentPlayerId = getPlayerId();
 
       // If still no player ID, try to get the first player from the collection
-      if (!playerId) {
+      if (!currentPlayerId) {
         const result = await BaseCrudService.getAll<Players>('players', [], { limit: 1 });
         if (result.items && result.items.length > 0) {
-          playerId = result.items[0]._id;
-          localStorage.setItem('currentPlayerId', playerId);
+          currentPlayerId = result.items[0]._id;
+          localStorage.setItem('currentPlayerId', currentPlayerId);
         } else {
           setError('Nenhum jogador encontrado');
           return;
         }
       }
 
-      const playerData = await BaseCrudService.getById<Players>('players', playerId);
+      const playerData = await BaseCrudService.getById<Players>('players', currentPlayerId);
       
       // Check if level increased and trigger level up animation
       if (previousLevel !== null && playerData?.level && playerData.level > previousLevel) {
