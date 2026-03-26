@@ -55,6 +55,7 @@ export async function registerPlayer(email: string, playerName: string, nickname
     progress: 0,
     comercios: JSON.stringify(comercios),
     isGuest: false,
+    spins: 0, // PHASE 4: Initialize spins in database
   };
   
   return BaseCrudService.create(COLLECTION_ID, newPlayer);
@@ -81,6 +82,7 @@ export async function registerLocalPlayer(email: string, password: string, playe
     progress: 0,
     comercios: JSON.stringify(comercios),
     isGuest: false,
+    spins: 0, // PHASE 4: Initialize spins in database
   };
   
   const createdPlayer = await BaseCrudService.create(COLLECTION_ID, newPlayer);

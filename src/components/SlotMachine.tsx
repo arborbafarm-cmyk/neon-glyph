@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Image } from '@/components/ui/image';
-import { useSpinVaultStore } from '@/store/spinVaultStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { executeSpinOperation } from '@/services/spinEconomyService';
 
 export const SLOT_ITEMS = [
   {
@@ -258,16 +258,14 @@ const AnimatedMoney: React.FC<AnimatedMoneyProps> = ({ amount, id, tier }) => {
 };
 
 function SpinButton() {
-  const { isSpinning, setIsSpinning } = usePlayerStore();
-  const { spins, deductSpins } = useSpinVaultStore();
+  const { isSpinning, setIsSpinning, spins, playerId } = usePlayerStore();
   const [selectedMultiplier, setSelectedMultiplier] = useState(1);
 
   const handleSpin = () => {
-    if (spins <= 0 || isSpinning) return;
-    if (!deductSpins(selectedMultiplier)) return;
+    if (spins <= 0 || isSpinning || !playerId) return;
     setIsSpinning(true);
     window.dispatchEvent(
-      new CustomEvent('spinSlots', { detail: { multiplier: selectedMultiplier } }),
+      new CustomEvent('spinSlots', { detail: { multiplier: selectedMultiplier, playerId } }),
     );
   };
 
@@ -326,6 +324,7 @@ function SlotsDisplay() {
     setDirtyMoney,
     setMultiplier,
     setIsSpinning,
+    playerId,
   } = usePlayerStore();
   const [slots, setSlots] = useState([0, 1, 2]);
   const [spinningIndices, setSpinningIndices] = useState([false, false, false]);
@@ -336,6 +335,7 @@ function SlotsDisplay() {
     { id: string; amount: number; tier: ResultTier }[]
   >([]);
   const [machinePulse, setMachinePulse] = useState<ResultTier>('dead');
+  const [spinError, setSpinError] = useState<string | null>(null);
 
   const intervalsRef = useRef<Array<ReturnType<typeof setInterval> | null>>([
     null,
@@ -373,15 +373,24 @@ function SlotsDisplay() {
       timeoutsRef.current.push(timeout);
     };
 
-    const handleSpinEvent = (event: Event) => {
+    const handleSpinEvent = async (event: Event) => {
       const customEvent = event as CustomEvent;
       const selectedMultiplier = customEvent.detail?.multiplier || 1;
+      const eventPlayerId = customEvent.detail?.playerId;
+
+      if (!eventPlayerId) {
+        setSpinError('Erro: ID do jogador não encontrado');
+        setIsSpinning(false);
+        return;
+      }
+
       const outcome = generateOutcome(selectedMultiplier, multiplier);
       const tempSlots = [0, 1, 2];
 
       setResultMessage('');
       setResultTier('dead');
       setMachinePulse('dead');
+      setSpinError(null);
       setSpinningIndices([true, true, true]);
 
       stopAllTimers();
@@ -394,7 +403,7 @@ function SlotsDisplay() {
       );
 
       REEL_STOP_TIMES.forEach((time, index) => {
-        const timeout = setTimeout(() => {
+        const timeout = setTimeout(async () => {
           const interval = intervalsRef.current[index];
           if (interval) {
             clearInterval(interval);
@@ -410,19 +419,27 @@ function SlotsDisplay() {
             setResultTier(outcome.tier);
             setMachinePulse(outcome.tier);
 
-            const currentDirty = Math.max(dirtMoney, dirtyMoney);
+            // PHASE 4: Execute spin operation with database as source of truth
+            const moneyLoss = outcome.prison ? Math.floor(dirtyMoney * 0.3) : 0;
+            const spinResult = await executeSpinOperation(
+              eventPlayerId,
+              selectedMultiplier, // spins to deduct
+              outcome.moneyReward, // money gain
+              outcome.multiplierReward, // multiplier gain
+              moneyLoss, // money loss (prison)
+            );
 
+            if (!spinResult.success) {
+              setSpinError(spinResult.error || 'Erro ao processar giro');
+              setIsSpinning(false);
+              return;
+            }
+
+            // Update UI with results from database
             if (outcome.prison) {
-              const lostMoney = Math.floor(currentDirty * 0.3);
-              const nextDirty = Math.max(0, currentDirty - lostMoney);
-              setDirtMoney(nextDirty);
-              setDirtyMoney(nextDirty);
               setShowPrisonModal(true);
             } else {
               if (outcome.moneyReward > 0) {
-                const nextDirty = currentDirty + outcome.moneyReward;
-                setDirtMoney(nextDirty);
-                setDirtyMoney(nextDirty);
                 showMoney(outcome.moneyReward, outcome.tier);
               }
 
@@ -527,7 +544,11 @@ function SlotsDisplay() {
       </div>
 
       <div className="relative z-10 mt-5 min-h-[28px] text-center font-heading text-sm md:text-base">
-        <span className={TIER_STYLES[resultTier]}>{resultMessage}</span>
+        {spinError ? (
+          <span className="text-red-500">{spinError}</span>
+        ) : (
+          <span className={TIER_STYLES[resultTier]}>{resultMessage}</span>
+        )}
       </div>
 
       {showPrisonModal && (

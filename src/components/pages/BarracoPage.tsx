@@ -8,9 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '@/store/playerStore';
-import { useSpinVaultStore } from '@/store/spinVaultStore';
 import RoyalGreeting from '@/components/RoyalGreeting';
 import { getBackgroundByLevel } from '@/data/luxoItems';
+import { addSpinsToDatabase, syncSpinsFromDatabase } from '@/services/spinEconomyService';
 
 const BARRACO_LEVELS = [
   { level: 10, milestone: 'Casa de Alvenaria' },
@@ -98,7 +98,11 @@ export default function BarracoPage() {
       if (playerData?.level) {
         setLevel(playerData.level);
         setBarracoLevel(playerData.level);
-        setSpinVaultBarracoLevel(playerData.level);
+      }
+      
+      // Sync spins from database to store (PHASE 4)
+      if (currentPlayerId) {
+        await syncSpinsFromDatabase(currentPlayerId);
       }
       
       // Check if all items are at the same level

@@ -51,6 +51,8 @@ export async function resetPlayerSession() {
     // Step 2: Reset all legacy game stores
     console.log('  2️⃣ Resetting legacy game stores...');
     useGameStore.getState().reset();
+    // PHASE 4: spinVaultStore is now visual-only, spins are in database
+    // No need to reset it here as it's not the source of truth anymore
     useSpinVaultStore.setState({
       spins: 0,
       lastGainTime: 0,
@@ -203,6 +205,7 @@ export function resetSpecificStores(storeNames: string[]) {
   const storeMap: Record<string, () => void> = {
     player: () => usePlayerStore.getState().resetPlayer(),
     game: () => useGameStore.getState().reset(),
+    // PHASE 4: spinVault is now visual-only, spins are in database
     spinVault: () =>
       useSpinVaultStore.setState({
         spins: 0,

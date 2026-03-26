@@ -1,51 +1,62 @@
 import { useEffect, useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
+import { addSpinsToDatabase } from '@/services/spinEconomyService';
 
 /**
- * CONSOLIDATED SPIN VAULT HOOK (PHASE 1)
+ * CONSOLIDATED SPIN VAULT HOOK (PHASE 4)
  * 
- * Previously used spinVaultStore separately
- * Now uses playerStore as single source of truth
+ * REFACTORED: Database is now the single source of truth
+ * - Spins are stored in players.spins (database)
+ * - Passive spin gain saves to database immediately
+ * - Store is synced after database updates
  * 
  * Spin Vault data is now part of playerStore:
- * - spins: number
+ * - spins: number (synced from database)
  * - lastGainTime: number
  * - barracoLevel: number
  */
 export const useSpinVault = () => {
   const { 
     spins, 
-    addSpins, 
-    subtractSpins, 
+    setSpins,
     barracoLevel, 
     lastGainTime,
     updateLastGainTime,
-    getTimeUntilNextGain 
+    getTimeUntilNextGain,
+    playerId,
   } = usePlayerStore();
   
   const [timeUntilNextGain, setTimeUntilNextGain] = useState(0);
   const [lastGainAmount, setLastGainAmount] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
 
-  // Handle spin gain every 60 seconds
+  // Handle spin gain every 60 seconds - saves to database
   useEffect(() => {
-    const interval = setInterval(() => {
-      const gainAmount = Math.max(1, barracoLevel);
-      addSpins(gainAmount);
-      updateLastGainTime();
-      setLastGainAmount(gainAmount);
-      setShowNotification(true);
+    if (!playerId) return;
 
-      // Hide notification after 2 seconds
-      const timeoutId = setTimeout(() => {
-        setShowNotification(false);
-      }, 2000);
+    const interval = setInterval(async () => {
+      const gainAmount = Math.max(1, barracoLevel);
       
-      return () => clearTimeout(timeoutId);
+      // PHASE 4: Save spin gain to database immediately
+      const result = await addSpinsToDatabase(playerId, gainAmount);
+      
+      if (result.success) {
+        // Update local state after database confirms
+        updateLastGainTime();
+        setLastGainAmount(gainAmount);
+        setShowNotification(true);
+
+        // Hide notification after 2 seconds
+        const timeoutId = setTimeout(() => {
+          setShowNotification(false);
+        }, 2000);
+        
+        return () => clearTimeout(timeoutId);
+      }
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [barracoLevel, addSpins, updateLastGainTime]);
+  }, [barracoLevel, updateLastGainTime, playerId]);
 
   // Update countdown timer
   useEffect(() => {
@@ -61,20 +72,11 @@ export const useSpinVault = () => {
     return `${seconds}s`;
   };
 
-  const deductSpins = (amount: number): boolean => {
-    if (spins >= amount) {
-      subtractSpins(amount);
-      return true;
-    }
-    return false;
-  };
-
   return {
     spins,
     barracoLevel,
     timeUntilNextGain,
     formatTime,
-    deductSpins,
     lastGainAmount,
     showNotification,
   };
