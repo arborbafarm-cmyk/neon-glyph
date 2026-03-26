@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Eye, EyeOff, Loader } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { usePlayerStore } from '@/store/playerStore';
 import { registerLocalPlayer } from '@/services/playerService';
 
@@ -14,8 +14,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [gamerName, setGamerName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +29,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
     if (password.length < 6) return setError('Senha deve ter no mínimo 6 caracteres'), false;
     if (password !== confirmPassword) return setError('As senhas não coincidem'), false;
     if (!gamerName.trim()) return setError('Nome gamer é obrigatório'), false;
-    if (gamerName.length < 3) return setError('Nome gamer deve ter no mínimo 3 caracteres'), false;
+    if (gamerName.trim().length < 3) return setError('Nome gamer deve ter no mínimo 3 caracteres'), false;
 
     return true;
   };
@@ -45,20 +43,16 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
     setError('');
 
     try {
-      // 🔥 LIMPA QUALQUER SESSÃO ANTIGA
       reset();
 
-      // 🔥 CRIA PLAYER NO BANCO
-      const player = await registerLocalPlayer(email, password, gamerName);
+      const player = await registerLocalPlayer(email.trim(), password, gamerName.trim());
 
-      // 🔥 SINCRONIZA STORE COM PLAYER REAL
       setPlayer(player);
-
-      setLoading(false);
       onSuccess();
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err?.message || 'Erro ao criar perfil. Tente novamente.');
+    } finally {
       setLoading(false);
     }
   };
@@ -116,7 +110,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
           />
 
           <input
-            type={showPassword ? 'text' : 'password'}
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Senha"
@@ -125,7 +119,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
           />
 
           <input
-            type={showConfirmPassword ? 'text' : 'password'}
+            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirmar senha"
@@ -136,7 +130,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-red-700 p-3 text-black font-bold"
+            className="w-full bg-red-700 p-3 text-black font-bold disabled:opacity-50"
           >
             {loading ? 'Criando...' : 'Criar Perfil'}
           </button>
