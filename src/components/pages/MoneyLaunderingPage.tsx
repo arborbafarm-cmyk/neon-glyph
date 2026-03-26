@@ -2,9 +2,9 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMember } from '@/integrations';
 import { BaseCrudService } from '@/integrations';
-import { MoneyLaunderingBusinesses, Players } from '@/entities';
+import { MoneyLaunderingBusinesses } from '@/entities';
 import { usePlayerStore } from '@/store/playerStore';
-import { loadPlayerFromDatabase } from '@/services/playerDataService';
+import { getPlayer } from '@/services/playerCoreService';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MoneyLaunderingBusiness from '@/components/MoneyLaunderingBusiness';
@@ -16,12 +16,15 @@ import { Button } from '@/components/ui/button';
 export default function MoneyLaunderingPage() {
   const navigate = useNavigate();
   const { member, isAuthenticated, isLoading: isAuthLoading } = useMember();
-  const { playerId, dirtyMoney, cleanMoney } = usePlayerStore();
-  const [player, setPlayer] = useState<Players | null>(null);
+
+  const player = usePlayerStore((state) => state.player);
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
+
   const [businesses, setBusinesses] = useState<MoneyLaunderingBusinesses[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const initRef = useRef(false); // Prevent double initialization
+
+  const initRef = useRef(false);
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -30,8 +33,13 @@ export default function MoneyLaunderingPage() {
   }, [isAuthenticated, isAuthLoading, navigate]);
 
   useEffect(() => {
-    // Skip if already initialized or not authenticated
-    if (initRef.current || !isAuthenticated || !member?._id) return;
+    if (initRef.current || !isAuthenticated) return;
+    if (!player?._id) {
+      setIsLoading(false);
+      setError('Jogador não encontrado');
+      return;
+    }
+
     initRef.current = true;
 
     const loadData = async () => {
@@ -39,11 +47,16 @@ export default function MoneyLaunderingPage() {
         setIsLoading(true);
         setError(null);
 
-        // Load player data from database and sync to store
-        await loadPlayerFromDatabase(member._id);
+        const freshPlayer = await getPlayer(player._id);
+        if (!freshPlayer) {
+          setError('Erro ao carregar jogador');
+          return;
+        }
 
-        // Load money laundering businesses
-        const result = await BaseCrudService.getAll<MoneyLaunderingBusinesses>('moneylaunderingbusinesses');
+        setPlayer(freshPlayer);
+
+        const result =
+          await BaseCrudService.getAll<MoneyLaunderingBusinesses>('moneylaunderingbusinesses');
         setBusinesses(result.items || []);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
@@ -54,7 +67,20 @@ export default function MoneyLaunderingPage() {
     };
 
     loadData();
-  }, [member?._id, isAuthenticated]);
+  }, [isAuthenticated, player?._id, setPlayer]);
+
+  const reloadPlayer = async () => {
+    if (!player?._id) return;
+
+    try {
+      const freshPlayer = await getPlayer(player._id);
+      if (freshPlayer) {
+        setPlayer(freshPlayer);
+      }
+    } catch (err) {
+      console.error('Erro ao recarregar dados do jogador:', err);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -82,8 +108,7 @@ export default function MoneyLaunderingPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      
-      {/* Navigation Buttons */}
+
       <div className="fixed top-24 left-6 z-20 flex gap-3">
         <Button
           onClick={() => navigate('/')}
@@ -111,23 +136,30 @@ export default function MoneyLaunderingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Header */}
           <div className="mb-12">
             <h1 className="text-5xl font-heading font-bold text-foreground mb-2">
               💧 Operações de Lavagem
             </h1>
             <p className="text-lg text-secondary">
-              Jogador: <span className="font-bold">{playerId ? 'Conectado' : 'Desconhecido'}</span>
+              Jogador:{' '}
+              <span className="font-bold">
+                {player?.playerName || member?.profile?.nickname || 'Desconhecido'}
+              </span>
             </p>
             <p className="text-lg text-secondary">
-              Dinheiro Sujo: <span className="font-bold text-orange-400">${dirtyMoney?.toLocaleString() || 0}</span>
+              Dinheiro Sujo:{' '}
+              <span className="font-bold text-orange-400">
+                ${(player?.dirtyMoney ?? 0).toLocaleString()}
+              </span>
             </p>
             <p className="text-lg text-secondary">
-              Dinheiro Limpo: <span className="font-bold text-green-400">${cleanMoney?.toLocaleString() || 0}</span>
+              Dinheiro Limpo:{' '}
+              <span className="font-bold text-green-400">
+                ${(player?.cleanMoney ?? 0).toLocaleString()}
+              </span>
             </p>
           </div>
 
-          {/* Businesses Grid */}
           {businesses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {businesses.map((business) => (
@@ -140,25 +172,17 @@ export default function MoneyLaunderingPage() {
                   baseTime={business.baseTime || 1}
                   businessImage={business.businessImage || ''}
                   currentRate={business.initialRate || 10}
-                  currentMaxValue={dirtyMoney || 0}
+                  currentMaxValue={player?.dirtyMoney || 0}
                   currentTimeMultiplier={1}
-                  onOperationComplete={() => {
-                    // Reload player data after operation completes
-                    const loadUpdatedPlayer = async () => {
-                      try {
-                        await loadPlayerFromDatabase(member._id);
-                      } catch (err) {
-                        console.error('Erro ao recarregar dados do jogador:', err);
-                      }
-                    };
-                    loadUpdatedPlayer();
-                  }}
+                  onOperationComplete={reloadPlayer}
                 />
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-lg text-foreground/70">Nenhuma operação de lavagem disponível no momento.</p>
+              <p className="text-lg text-foreground/70">
+                Nenhuma operação de lavagem disponível no momento.
+              </p>
             </div>
           )}
         </motion.div>
