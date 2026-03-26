@@ -5,9 +5,12 @@ import { useBriberyStore, type BriberyConsequence } from '@/store/briberyStore';
 import { useGameScreenStore } from '@/store/gameScreenStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
+import { BaseCrudService } from '@/integrations';
+import { Players } from '@/entities';
 
 import Footer from '@/components/Footer';
 import { getBackgroundByLevel } from '@/data/luxoItems';
+import { removeDirtyMoney } from '@/services/playerEconomyService';
 
 const CHARACTER_IMAGE = 'https://static.wixstatic.com/media/50f4bf_a6a525de29394f1697c36dc7e161661f~mv2.png';
 
@@ -15,7 +18,7 @@ type DialogState = 'initial' | 'accepting' | 'denying' | 'consequence';
 
 export default function BriberyVereadorPage() {
   const navigate = useNavigate();
-  const { dirtyMoney, removeDirtyMoney, level, setLevel } = usePlayerStore();
+  const { player, setPlayer } = usePlayerStore();
   const { getBriberyAmount, getNextBriberyAmount, addConsequence } = useBriberyStore();
   const { setCurrentScreen } = useGameScreenStore();
   
@@ -23,15 +26,15 @@ export default function BriberyVereadorPage() {
   const [consequence, setConsequence] = useState<BriberyConsequence | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [nivelBarraco, setNivelBarraco] = useState(level);
   const [subornosRealizados, setSubornosRealizados] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
-    setNivelBarraco(playerLevel);
-  }, [playerLevel]);
+  }, []);
 
-  const podeSubornarAgora = nivelBarraco > subornosRealizados;
+  const playerLevel = player?.level || 1;
+  const dirtyMoney = player?.dirtyMoney || 0;
+  const podeSubornarAgora = playerLevel > subornosRealizados;
 
   const briberyAmount = getBriberyAmount(playerLevel);
   const nextBriberyAmount = getNextBriberyAmount(playerLevel);
@@ -73,25 +76,49 @@ export default function BriberyVereadorPage() {
       return;
     }
 
-    removeDirtyMoney(briberyAmount);
-    setSubornosRealizados(prev => prev + 1);
+    try {
+      const updated = await removeDirtyMoney(player!._id, briberyAmount, 'BRIBERY');
+      
+      if (!updated) {
+        setIsProcessing(false);
+        alert('Falha ao processar suborno');
+        return;
+      }
 
-    if (playerLevel < 9) {
-      setPlayerLevel(playerLevel + 1);
-    } else if (playerLevel === 9) {
-      setPlayerLevel(10);
-    } else if (playerLevel < 100) {
-      setPlayerLevel(playerLevel + 1);
-    }
+      setSubornosRealizados(prev => prev + 1);
 
-    setDialogState('accepting');
-    
-    setTimeout(() => {
-      setIsProcessing(false);
+      let nextLevel = playerLevel;
+      if (playerLevel < 9) {
+        nextLevel = playerLevel + 1;
+      } else if (playerLevel === 9) {
+        nextLevel = 10;
+      } else if (playerLevel < 100) {
+        nextLevel = playerLevel + 1;
+      }
+
+      await BaseCrudService.update<Players>('players', {
+        _id: player!._id,
+        level: nextLevel,
+      });
+
+      const reloaded = await BaseCrudService.getById<Players>('players', player!._id);
+      if (reloaded) {
+        setPlayer(reloaded);
+      }
+
+      setDialogState('accepting');
+      
       setTimeout(() => {
-        navigate('/star-map');
-      }, 3000);
-    }, 2000);
+        setIsProcessing(false);
+        setTimeout(() => {
+          navigate('/star-map');
+        }, 3000);
+      }, 2000);
+    } catch (err) {
+      console.error('Error processing bribery:', err);
+      setIsProcessing(false);
+      alert('Erro ao processar suborno');
+    }
   };
 
   const handleDeny = async () => {
@@ -210,7 +237,7 @@ export default function BriberyVereadorPage() {
                           </div>
                           
                           <p className="font-paragraph text-xs text-white/60">
-                            Status do Barraco: <span className="text-[#00eaff] font-bold">Nível {nivelBarraco}</span>
+                            Status do Barraco: <span className="text-[#00eaff] font-bold">Nível {playerLevel}</span>
                           </p>
                           <p className={`font-paragraph text-xs mt-1 ${podeSubornarAgora ? 'text-green-400' : 'text-yellow-400'}`}>
                             {podeSubornarAgora 

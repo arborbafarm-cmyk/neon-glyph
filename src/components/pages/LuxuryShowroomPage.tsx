@@ -8,6 +8,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
 import { getLuxurySystem, getBackgroundByLevel } from '@/data/luxoItems';
+import { removeCleanMoney } from '@/services/playerEconomyService';
 
 type SkillKey = 'inteligencia' | 'agilidade' | 'ataque' | 'defesa' | 'respeito' | 'vigor';
 type PurchaseMap = Record<number, boolean>;
@@ -158,15 +159,8 @@ export default function LuxuryShowroomPage() {
   const [blink, setBlink] = useState(false);
   const [npcHover, setNpcHover] = useState(false);
   const [npcDrift, setNpcDrift] = useState({ x: 0, y: 0 });
-  const [playerData, setPlayerData] = useState<Players | null>(null);
 
-  const playerName = usePlayerStore((s) => s.playerName) || 'COMANDANTE';
-  const barracoLevel = usePlayerStore((s) => s.barracoLevel);
-  const playerLevel = usePlayerStore((s) => s.level);
-  const playerId = usePlayerStore((s) => s.playerId);
-  const setBarracoLevel = usePlayerStore((s) => s.setBarracoLevel);
-  const ownedLuxuryItemIds = usePlayerStore((s) => s.ownedLuxuryItemIds);
-  const addOwnedLuxuryItem = usePlayerStore((s) => s.addOwnedLuxuryItem);
+  const { player, setPlayer } = usePlayerStore();
   const initRef = useRef(false);
 
   useEffect(() => {
@@ -175,7 +169,7 @@ export default function LuxuryShowroomPage() {
 
     const loadPlayerData = async () => {
       try {
-        let currentPlayerId = playerId;
+        let currentPlayerId = player?._id;
         if (!currentPlayerId) {
           const urlParams = new URLSearchParams(window.location.search);
           currentPlayerId = urlParams.get('playerId');
@@ -187,10 +181,9 @@ export default function LuxuryShowroomPage() {
           }
         }
         if (currentPlayerId) {
-          const player = await BaseCrudService.getById<Players>('players', currentPlayerId);
-          if (player) {
-            setPlayerData(player);
-            if (player.level) setBarracoLevel(player.level);
+          const playerData = await BaseCrudService.getById<Players>('players', currentPlayerId);
+          if (playerData) {
+            setPlayer(playerData);
           }
         }
       } catch (err) {
@@ -200,33 +193,33 @@ export default function LuxuryShowroomPage() {
       }
     };
     loadPlayerData();
-  }, [setBarracoLevel, playerId]);
+  }, [player?._id, setPlayer]);
 
-  const level = barracoLevel && barracoLevel > 0 ? barracoLevel : Math.max(1, playerLevel || 1);
+  const level = player?.level || 1;
   const system = useMemo(() => getLuxurySystem(level), [level]);
   const theme = useMemo(() => themeByLevel(level), [level]);
 
   useEffect(() => {
     setPurchasedItems(
-      ownedLuxuryItemIds.reduce((acc, id) => {
-        const index = system.items.findIndex((item) => item._id === id);
+      (player?.ownedLuxuryItems ? JSON.parse(player.ownedLuxuryItems) : []).reduce((acc: PurchaseMap, item: any) => {
+        const index = system.items.findIndex((sysItem) => sysItem._id === item.id);
         if (index !== -1) {
           acc[index] = true;
         }
         return acc;
       }, {} as PurchaseMap)
     );
-  }, [ownedLuxuryItemIds, system.items]);
+  }, [player?.ownedLuxuryItems, system.items]);
 
   useEffect(() => {
     if (loading) return;
     const timer = setTimeout(() => {
-      setDialogTitle(`Boa noite, ${playerName}`);
-      setDialogMessage(npcLine('welcome', playerName));
+      setDialogTitle(`Boa noite, ${player?.playerName || 'COMANDANTE'}`);
+      setDialogMessage(npcLine('welcome', player?.playerName || 'COMANDANTE'));
       setShowDialog(true);
     }, 900);
     return () => clearTimeout(timer);
-  }, [loading, playerName]);
+  }, [loading, player?.playerName]);
 
   useEffect(() => {
     let active = true;
@@ -300,13 +293,13 @@ export default function LuxuryShowroomPage() {
   };
 
   const handleBuy = () => {
-    if (!selectedItem || !playerData) return;
+    if (!selectedItem || !player) return;
     if (purchasedItems[selectedItem.id]) {
       setShowItemShowcase(false);
       openNpcDialog('owned');
       return;
     }
-    if ((playerData.cleanMoney || 0) < selectedItem.price) {
+    if ((player.cleanMoney || 0) < selectedItem.price) {
       setShowItemShowcase(false);
       openNpcDialog('insufficient');
       return;
@@ -316,9 +309,9 @@ export default function LuxuryShowroomPage() {
       try {
         // Parse existing owned items from database
         let ownedItems: Array<{ id: string; purchaseDate: string; bonus: number; cost: number }> = [];
-        if (playerData.ownedLuxuryItems) {
+        if (player.ownedLuxuryItems) {
           try {
-            ownedItems = JSON.parse(playerData.ownedLuxuryItems);
+            ownedItems = JSON.parse(player.ownedLuxuryItems);
           } catch (e) {
             console.warn('Error parsing owned items:', e);
             ownedItems = [];
@@ -329,20 +322,29 @@ export default function LuxuryShowroomPage() {
         ownedItems.push({
           id: selectedItem._id,
           purchaseDate: new Date().toISOString(),
-          bonus: 1, // +1% bonus per item
+          bonus: 1,
           cost: selectedItem.price,
         });
         
-        // Update player in database with new owned items and deducted money
-        const updatedPlayer = await BaseCrudService.update<Players>('players', {
-          _id: playerData._id,
-          cleanMoney: (playerData.cleanMoney || 0) - selectedItem.price,
+        // Use economy service to deduct money
+        const updated = await removeCleanMoney(player._id, selectedItem.price, 'LUXURY_ITEM_PURCHASE');
+        
+        if (!updated) {
+          setShowCard(false);
+          return;
+        }
+        
+        // Update owned items in database
+        await BaseCrudService.update<Players>('players', {
+          _id: player._id,
           ownedLuxuryItems: JSON.stringify(ownedItems),
         });
-        setPlayerData(updatedPlayer);
         
-        // Add item to playerStore
-        addOwnedLuxuryItem(selectedItem._id);
+        // Reload player data
+        const reloaded = await BaseCrudService.getById<Players>('players', player._id);
+        if (reloaded) {
+          setPlayer(reloaded);
+        }
         
         setPurchasedItems((prev) => ({ ...prev, [selectedItem.id]: true }));
         setShowCard(false);

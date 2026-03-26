@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import { usePlayerStore } from '@/store/playerStore';
 import RoyalGreeting from '@/components/RoyalGreeting';
 import { getBackgroundByLevel } from '@/data/luxoItems';
-import { addSpinsToDatabase, syncSpinsFromDatabase } from '@/services/spinEconomyService';
+import { removeCleanMoney } from '@/services/playerEconomyService';
 
 const BARRACO_LEVELS = [
   { level: 10, milestone: 'Casa de Alvenaria' },
@@ -30,7 +30,6 @@ const COST_MULTIPLIER = 1.1;
 export default function BarracoPage() {
   const navigate = useNavigate();
   const { member, isAuthenticated, isLoading: isAuthLoading } = useMember();
-  const [player, setPlayer] = useState<Players | null>(null);
   const [loading, setLoading] = useState(true);
   const [evolving, setEvolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +38,7 @@ export default function BarracoPage() {
   const [imageKey, setImageKey] = useState(0);
   const [levelUpAnimation, setLevelUpAnimation] = useState(false);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
-  const { setLevel, setBarracoLevel, playerId } = usePlayerStore();
+  const { player, setPlayer } = usePlayerStore();
   const initRef = useRef(false); // Prevent double initialization
 
   // Redirect if not authenticated
@@ -51,7 +50,7 @@ export default function BarracoPage() {
 
   // Get player ID from store (unique permanent identifier from players collection)
   const getPlayerId = () => {
-    if (playerId) return playerId;
+    if (player?._id) return player._id;
     const urlParams = new URLSearchParams(window.location.search);
     const idFromUrl = urlParams.get('playerId');
     if (idFromUrl) return idFromUrl;
@@ -93,17 +92,6 @@ export default function BarracoPage() {
       setPreviousLevel(playerData?.level || 1);
       setPlayer(playerData);
       setImageKey(prev => prev + 1); // Trigger image change animation
-      
-      // Update the player store with the level from database
-      if (playerData?.level) {
-        setLevel(playerData.level);
-        setBarracoLevel(playerData.level);
-      }
-      
-      // Sync spins from database to store (PHASE 4)
-      if (currentPlayerId) {
-        await syncSpinsFromDatabase(currentPlayerId);
-      }
       
       // Check if all items are at the same level
       checkAllItemsAtLevel(playerData?.level || 1);
@@ -193,15 +181,22 @@ export default function BarracoPage() {
       setEvolving(true);
       setError(null);
 
-      // Update player level and deduct cleanMoney
-      const updatedPlayer = await BaseCrudService.update<Players>('players', {
+      // Use economy service to deduct money and update player
+      const updated = await removeCleanMoney(player._id, evolutionCost, 'BARRACO_EVOLUTION');
+      
+      if (!updated) {
+        setError('Falha ao evoluir barraco');
+        return;
+      }
+
+      // Update level in database
+      const levelUpdated = await BaseCrudService.update<Players>('players', {
         _id: player._id,
         level: nextLevel,
-        cleanMoney: (player.cleanMoney || 0) - evolutionCost,
         lastUpdated: new Date().toISOString(),
       });
 
-      // Reload player data
+      // Reload player data to sync everything
       await loadPlayerData();
     } catch (err) {
       setError('Failed to evolve barraco');

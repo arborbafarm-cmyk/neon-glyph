@@ -10,8 +10,15 @@ import { Players } from '@/entities';
  * CRITICAL RULES:
  * 1. Never modify this store directly in components
  * 2. Always use the specialized services (economyService, spinsService, etc.)
- * 3. After any operation, update this store with the returned player data
+ * 3. After any operation, update this store with the returned player data via setPlayer()
  * 4. On logout, call reset()
+ * 
+ * ⚠️ REMOVED METHODS (use setPlayer() instead):
+ * - setMoney, setSpins, setLevel, setBarracoLevel
+ * - _setDirtyMoney, _setCleanMoney
+ * - loadPlayerData
+ * 
+ * All state updates MUST go through setPlayer() with the full updated player object.
  */
 
 interface PlayerState {

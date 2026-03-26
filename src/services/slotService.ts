@@ -7,6 +7,7 @@
  * - Spin history tracking
  * 
  * This service is the single source of truth for slot operations.
+ * All operations return the full updated player object via setPlayer().
  */
 
 import { BaseCrudService } from '@/integrations';
@@ -37,15 +38,17 @@ export async function getPlayerSpins(playerId: string): Promise<number> {
 
 /**
  * Add spins to player
+ * Returns full updated player object
  */
 export async function addSpins(
   playerId: string,
   amount: number,
   reason: string
-): Promise<{ success: boolean; newSpins?: number; error?: string }> {
+): Promise<Players | null> {
   try {
     if (amount <= 0) {
-      return { success: false, error: 'Amount must be positive' };
+      console.error('Amount must be positive');
+      return null;
     }
 
     const currentSpins = await getPlayerSpins(playerId);
@@ -56,38 +59,40 @@ export async function addSpins(
       spins: newSpins,
     });
 
-    const store = usePlayerStore.getState();
-    store.setSpins(newSpins);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
     console.log(`[SLOTS] Added ${amount} spins (${reason}) - Total: ${newSpins}`);
 
-    return { success: true, newSpins };
+    return updated || null;
   } catch (error) {
     console.error('Failed to add spins:', error);
-    return { success: false, error: String(error) };
+    return null;
   }
 }
 
 /**
  * Remove spins from player
+ * Returns full updated player object
  */
 export async function removeSpins(
   playerId: string,
   amount: number,
   reason: string
-): Promise<{ success: boolean; newSpins?: number; error?: string }> {
+): Promise<Players | null> {
   try {
     if (amount <= 0) {
-      return { success: false, error: 'Amount must be positive' };
+      console.error('Amount must be positive');
+      return null;
     }
 
     const currentSpins = await getPlayerSpins(playerId);
 
     if (currentSpins < amount) {
-      return {
-        success: false,
-        error: `Insufficient spins. Have: ${currentSpins}, Need: ${amount}`,
-      };
+      console.error(`Insufficient spins. Have: ${currentSpins}, Need: ${amount}`);
+      return null;
     }
 
     const newSpins = currentSpins - amount;
@@ -97,104 +102,93 @@ export async function removeSpins(
       spins: newSpins,
     });
 
-    const store = usePlayerStore.getState();
-    store.setSpins(newSpins);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
     console.log(`[SLOTS] Removed ${amount} spins (${reason}) - Total: ${newSpins}`);
 
-    return { success: true, newSpins };
+    return updated || null;
   } catch (error) {
     console.error('Failed to remove spins:', error);
-    return { success: false, error: String(error) };
+    return null;
   }
 }
 
 /**
  * Execute spin and calculate reward
+ * Returns full updated player object with new spins and money
  */
 export async function executeSpin(
   playerId: string,
   spinsToUse: number = 1
-): Promise<{
-  success: boolean;
-  result?: SpinResult;
-  newSpins?: number;
-  error?: string;
-}> {
+): Promise<Players | null> {
   try {
-    // Check if player has enough spins
     const currentSpins = await getPlayerSpins(playerId);
     if (currentSpins < spinsToUse) {
-      return {
-        success: false,
-        error: `Insufficient spins. Have: ${currentSpins}, Need: ${spinsToUse}`,
-      };
+      console.error(`Insufficient spins. Have: ${currentSpins}, Need: ${spinsToUse}`);
+      return null;
     }
 
     // Remove spins
-    const removeResult = await removeSpins(playerId, spinsToUse, 'SPIN_EXECUTION');
-    if (!removeResult.success) {
-      return { success: false, error: removeResult.error };
+    const afterSpinRemoval = await removeSpins(playerId, spinsToUse, 'SPIN_EXECUTION');
+    if (!afterSpinRemoval) {
+      return null;
     }
 
     // Calculate reward (random multiplier between 1x and 10x)
     const multiplier = Math.floor(Math.random() * 10) + 1;
-    const baseReward = 1000; // Base reward per spin
+    const baseReward = 1000;
     const reward = baseReward * multiplier;
 
-    const result: SpinResult = {
-      spinsUsed: spinsToUse,
-      reward,
-      multiplier,
-      timestamp: new Date(),
-    };
+    // Add reward as dirty money
+    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (!player) return null;
+
+    const newDirtyMoney = (player.dirtyMoney ?? 0) + reward;
+
+    await BaseCrudService.update(COLLECTION_ID, {
+      _id: playerId,
+      dirtyMoney: newDirtyMoney,
+    });
+
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
     console.log(`[SLOTS] Spin result: ${multiplier}x multiplier, ${reward} reward`);
 
-    return {
-      success: true,
-      result,
-      newSpins: removeResult.newSpins,
-    };
+    return updated || null;
   } catch (error) {
     console.error('Failed to execute spin:', error);
-    return { success: false, error: String(error) };
-  }
-}
-
-/**
- * Sync player spins with store
- */
-export async function syncPlayerSpins(playerId: string): Promise<void> {
-  try {
-    const spins = await getPlayerSpins(playerId);
-    const store = usePlayerStore.getState();
-    store.setSpins(spins);
-  } catch (error) {
-    console.error('Failed to sync player spins:', error);
-    throw error;
+    return null;
   }
 }
 
 /**
  * Reset player spins (for testing/reset only)
+ * Returns full updated player object
  */
 export async function resetPlayerSpins(
   playerId: string,
   spins: number = 0
-): Promise<{ success: boolean; error?: string }> {
+): Promise<Players | null> {
   try {
     await BaseCrudService.update(COLLECTION_ID, {
       _id: playerId,
       spins,
     });
 
-    const store = usePlayerStore.getState();
-    store.setSpins(spins);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
-    return { success: true };
+    return updated || null;
   } catch (error) {
     console.error('Failed to reset player spins:', error);
-    return { success: false, error: String(error) };
+    return null;
   }
 }

@@ -9,7 +9,7 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function LocalLoginForm() {
   const navigate = useNavigate();
-  const { loadPlayerData, resetPlayer } = usePlayerStore();
+  const { setPlayer, reset } = usePlayerStore();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -51,25 +51,14 @@ export default function LocalLoginForm() {
 
     try {
       setIsLoading(true);
-      // Step 1: Register player (creates in DB, registers credentials, creates session)
+      // Register player (creates in DB, registers credentials, creates session)
       const player = await registerLocalPlayer(email, password, playerName);
       
-      // Step 2: Clear any previous session data
-      resetPlayer();
+      // Clear any previous session data
+      reset();
       
-      // Step 3: Load player data into playerStore
-      loadPlayerData({
-        playerId: player._id,
-        playerName: player.playerName || 'Player',
-        level: player.level || 1,
-        progress: player.progress || 0,
-        isGuest: player.isGuest || false,
-        profilePicture: player.profilePicture || null,
-        barracoLevel: player.barracoLevel || 1,
-        cleanMoney: player.cleanMoney || 0,
-        dirtyMoney: player.dirtyMoney || 0,
-        hasInitialized: true,
-      });
+      // Load player data into playerStore
+      setPlayer(player);
       
       setSuccess('Conta criada com sucesso! Fazendo login...');
       
@@ -96,7 +85,7 @@ export default function LocalLoginForm() {
     try {
       setIsLoading(true);
       
-      // loginLocalPlayer now handles complete session reset internally:
+      // loginLocalPlayer handles complete session reset internally:
       // 1. Resets all stores
       // 2. Validates credentials
       // 3. Loads player from database
@@ -104,18 +93,7 @@ export default function LocalLoginForm() {
       const player = await loginLocalPlayer(email, password);
       
       // Load player data into playerStore for UI synchronization
-      loadPlayerData({
-        playerId: player._id,
-        playerName: player.playerName || 'Player',
-        level: player.level || 1,
-        progress: player.progress || 0,
-        isGuest: player.isGuest || false,
-        profilePicture: player.profilePicture || null,
-        barracoLevel: player.barracoLevel || 1,
-        cleanMoney: player.cleanMoney || 0,
-        dirtyMoney: player.dirtyMoney || 0,
-        hasInitialized: true,
-      });
+      setPlayer(player);
       
       setSuccess('Login realizado com sucesso!');
       

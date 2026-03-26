@@ -8,7 +8,7 @@
  * - Only dirtyMoney and cleanMoney are real balances (stored in Players collection)
  * - All operations are validated before execution
  * - All operations are persisted to database
- * - All operations sync the playerStore
+ * - All operations sync the playerStore via setPlayer()
  * - History is recorded for audit trail
  */
 
@@ -29,9 +29,8 @@ export interface TransactionRecord {
 }
 
 const COLLECTION_ID = 'players';
-const MAX_TRANSACTION_HISTORY = 1000; // Keep last 1000 transactions in memory
+const MAX_TRANSACTION_HISTORY = 1000;
 
-// In-memory transaction history (could be persisted to a separate collection later)
 let transactionHistory: TransactionRecord[] = [];
 
 /**
@@ -63,7 +62,6 @@ function validateBalance(currentBalance: number, amount: number): boolean {
  */
 function recordTransaction(record: TransactionRecord) {
   transactionHistory.unshift(record);
-  // Keep only last MAX_TRANSACTION_HISTORY
   if (transactionHistory.length > MAX_TRANSACTION_HISTORY) {
     transactionHistory = transactionHistory.slice(0, MAX_TRANSACTION_HISTORY);
   }
@@ -92,32 +90,32 @@ export async function addDirtyMoney(
   playerId: string,
   amount: number,
   reason: string
-): Promise<{ success: boolean; newBalance: number; error?: string }> {
+): Promise<Players | null> {
   try {
     if (amount <= 0) {
-      return { success: false, newBalance: 0, error: 'Amount must be positive' };
+      console.error('Amount must be positive');
+      return null;
     }
 
-    // Get current state
     const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
     if (!player) {
-      return { success: false, newBalance: 0, error: 'Player not found' };
+      console.error('Player not found');
+      return null;
     }
 
     const currentDirty = player.dirtyMoney ?? 0;
     const newBalance = currentDirty + amount;
 
-    // Update database
     await BaseCrudService.update(COLLECTION_ID, {
       _id: playerId,
       dirtyMoney: newBalance,
     });
 
-    // Sync store
-    const store = usePlayerStore.getState();
-    store._setDirtyMoney(newBalance);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
-    // Record transaction
     recordTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -130,10 +128,10 @@ export async function addDirtyMoney(
       playerId,
     });
 
-    return { success: true, newBalance };
+    return updated || null;
   } catch (error) {
     console.error('Failed to add dirty money:', error);
-    return { success: false, newBalance: 0, error: String(error) };
+    return null;
   }
 }
 
@@ -145,42 +143,38 @@ export async function removeDirtyMoney(
   playerId: string,
   amount: number,
   reason: string
-): Promise<{ success: boolean; newBalance: number; error?: string }> {
+): Promise<Players | null> {
   try {
     if (amount <= 0) {
-      return { success: false, newBalance: 0, error: 'Amount must be positive' };
+      console.error('Amount must be positive');
+      return null;
     }
 
-    // Get current state
     const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
     if (!player) {
-      return { success: false, newBalance: 0, error: 'Player not found' };
+      console.error('Player not found');
+      return null;
     }
 
     const currentDirty = player.dirtyMoney ?? 0;
 
-    // Validate balance
     if (!validateBalance(currentDirty, amount)) {
-      return {
-        success: false,
-        newBalance: currentDirty,
-        error: `Insufficient dirty money. Have: ${currentDirty}, Need: ${amount}`,
-      };
+      console.error(`Insufficient dirty money. Have: ${currentDirty}, Need: ${amount}`);
+      return null;
     }
 
     const newBalance = currentDirty - amount;
 
-    // Update database
     await BaseCrudService.update(COLLECTION_ID, {
       _id: playerId,
       dirtyMoney: newBalance,
     });
 
-    // Sync store
-    const store = usePlayerStore.getState();
-    store._setDirtyMoney(newBalance);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
-    // Record transaction
     recordTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -193,10 +187,10 @@ export async function removeDirtyMoney(
       playerId,
     });
 
-    return { success: true, newBalance };
+    return updated || null;
   } catch (error) {
     console.error('Failed to remove dirty money:', error);
-    return { success: false, newBalance: 0, error: String(error) };
+    return null;
   }
 }
 
@@ -208,32 +202,32 @@ export async function addCleanMoney(
   playerId: string,
   amount: number,
   reason: string
-): Promise<{ success: boolean; newBalance: number; error?: string }> {
+): Promise<Players | null> {
   try {
     if (amount <= 0) {
-      return { success: false, newBalance: 0, error: 'Amount must be positive' };
+      console.error('Amount must be positive');
+      return null;
     }
 
-    // Get current state
     const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
     if (!player) {
-      return { success: false, newBalance: 0, error: 'Player not found' };
+      console.error('Player not found');
+      return null;
     }
 
     const currentClean = player.cleanMoney ?? 0;
     const newBalance = currentClean + amount;
 
-    // Update database
     await BaseCrudService.update(COLLECTION_ID, {
       _id: playerId,
       cleanMoney: newBalance,
     });
 
-    // Sync store
-    const store = usePlayerStore.getState();
-    store._setCleanMoney(newBalance);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
-    // Record transaction
     recordTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -246,10 +240,10 @@ export async function addCleanMoney(
       playerId,
     });
 
-    return { success: true, newBalance };
+    return updated || null;
   } catch (error) {
     console.error('Failed to add clean money:', error);
-    return { success: false, newBalance: 0, error: String(error) };
+    return null;
   }
 }
 
@@ -261,42 +255,38 @@ export async function removeCleanMoney(
   playerId: string,
   amount: number,
   reason: string
-): Promise<{ success: boolean; newBalance: number; error?: string }> {
+): Promise<Players | null> {
   try {
     if (amount <= 0) {
-      return { success: false, newBalance: 0, error: 'Amount must be positive' };
+      console.error('Amount must be positive');
+      return null;
     }
 
-    // Get current state
     const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
     if (!player) {
-      return { success: false, newBalance: 0, error: 'Player not found' };
+      console.error('Player not found');
+      return null;
     }
 
     const currentClean = player.cleanMoney ?? 0;
 
-    // Validate balance
     if (!validateBalance(currentClean, amount)) {
-      return {
-        success: false,
-        newBalance: currentClean,
-        error: `Insufficient clean money. Have: ${currentClean}, Need: ${amount}`,
-      };
+      console.error(`Insufficient clean money. Have: ${currentClean}, Need: ${amount}`);
+      return null;
     }
 
     const newBalance = currentClean - amount;
 
-    // Update database
     await BaseCrudService.update(COLLECTION_ID, {
       _id: playerId,
       cleanMoney: newBalance,
     });
 
-    // Sync store
-    const store = usePlayerStore.getState();
-    store._setCleanMoney(newBalance);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
-    // Record transaction
     recordTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -309,10 +299,10 @@ export async function removeCleanMoney(
       playerId,
     });
 
-    return { success: true, newBalance };
+    return updated || null;
   } catch (error) {
     console.error('Failed to remove clean money:', error);
-    return { success: false, newBalance: 0, error: String(error) };
+    return null;
   }
 }
 
@@ -325,45 +315,41 @@ export async function launderMoney(
   dirtyAmount: number,
   cleanAmount: number,
   reason: string
-): Promise<{ success: boolean; error?: string; newDirtyBalance?: number; newCleanBalance?: number }> {
+): Promise<Players | null> {
   try {
     if (dirtyAmount <= 0 || cleanAmount <= 0) {
-      return { success: false, error: 'Amounts must be positive' };
+      console.error('Amounts must be positive');
+      return null;
     }
 
-    // Get current state
     const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
     if (!player) {
-      return { success: false, error: 'Player not found' };
+      console.error('Player not found');
+      return null;
     }
 
     const currentDirty = player.dirtyMoney ?? 0;
     const currentClean = player.cleanMoney ?? 0;
 
-    // Validate dirty money balance
     if (!validateBalance(currentDirty, dirtyAmount)) {
-      return {
-        success: false,
-        error: `Insufficient dirty money. Have: ${currentDirty}, Need: ${dirtyAmount}`,
-      };
+      console.error(`Insufficient dirty money. Have: ${currentDirty}, Need: ${dirtyAmount}`);
+      return null;
     }
 
     const newDirtyBalance = currentDirty - dirtyAmount;
     const newCleanBalance = currentClean + cleanAmount;
 
-    // Update database
     await BaseCrudService.update(COLLECTION_ID, {
       _id: playerId,
       dirtyMoney: newDirtyBalance,
       cleanMoney: newCleanBalance,
     });
 
-    // Sync store
-    const store = usePlayerStore.getState();
-    store._setDirtyMoney(newDirtyBalance);
-    store._setCleanMoney(newCleanBalance);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
-    // Record transactions
     recordTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -388,29 +374,10 @@ export async function launderMoney(
       playerId,
     });
 
-    return {
-      success: true,
-      newDirtyBalance,
-      newCleanBalance,
-    };
+    return updated || null;
   } catch (error) {
     console.error('Failed to launder money:', error);
-    return { success: false, error: String(error) };
-  }
-}
-
-/**
- * SYNC PLAYER FINANCES WITH STORE
- * Call this when loading player data to ensure store is in sync
- */
-export async function syncPlayerFinances(playerId: string): Promise<void> {
-  try {
-    const finances = await getPlayerFinances(playerId);
-    const store = usePlayerStore.getState();
-    store._setDirtyMoney(finances.dirtyMoney);
-    store._setCleanMoney(finances.cleanMoney);
-  } catch (error) {
-    console.error('Failed to sync player finances:', error);
+    return null;
   }
 }
 
@@ -421,7 +388,7 @@ export async function resetPlayerFinances(
   playerId: string,
   dirtyMoney: number = 0,
   cleanMoney: number = 0
-): Promise<{ success: boolean; error?: string }> {
+): Promise<Players | null> {
   try {
     await BaseCrudService.update(COLLECTION_ID, {
       _id: playerId,
@@ -429,9 +396,10 @@ export async function resetPlayerFinances(
       cleanMoney,
     });
 
-    const store = usePlayerStore.getState();
-    store._setDirtyMoney(dirtyMoney);
-    store._setCleanMoney(cleanMoney);
+    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    if (updated) {
+      usePlayerStore.getState().setPlayer(updated);
+    }
 
     recordTransaction({
       id: crypto.randomUUID(),
@@ -445,9 +413,9 @@ export async function resetPlayerFinances(
       playerId,
     });
 
-    return { success: true };
+    return updated || null;
   } catch (error) {
     console.error('Failed to reset player finances:', error);
-    return { success: false, error: String(error) };
+    return null;
   }
 }

@@ -5,9 +5,12 @@ import { useBriberyStore, type BriberyConsequence } from '@/store/briberyStore';
 import { useGameScreenStore } from '@/store/gameScreenStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
+import { BaseCrudService } from '@/integrations';
+import { Players } from '@/entities';
 
 import Footer from '@/components/Footer';
 import { getBackgroundByLevel } from '@/data/luxoItems';
+import { removeDirtyMoney } from '@/services/playerEconomyService';
 
 const CHARACTER_IMAGE = 'https://static.wixstatic.com/media/50f4bf_3949fc256fce456eab1e7dcbc75cdc40~mv2.png';
 
@@ -141,8 +144,7 @@ function getCharacterConfig(level: number): CharacterConfig {
 
 export default function BriberyGuardPage() {
   const navigate = useNavigate();
-  const { dirtyMoney, removeDirtyMoney } = usePlayerStore();
-  const { level, setLevel } = usePlayerStore();
+  const { player, setPlayer } = usePlayerStore();
   const { getBriberyAmount, getNextBriberyAmount, addConsequence } = useBriberyStore();
   const { setCurrentScreen } = useGameScreenStore();
   
@@ -150,17 +152,17 @@ export default function BriberyGuardPage() {
   const [consequence, setConsequence] = useState<BriberyConsequence | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [nivelBarraco, setNivelBarraco] = useState(playerLevel);
   const [subornosRealizados, setSubornosRealizados] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
-    // Initialize barraco level from player level
-    setNivelBarraco(playerLevel);
-  }, [playerLevel]);
+  }, []);
+
+  const playerLevel = player?.level || 1;
+  const dirtyMoney = player?.dirtyMoney || 0;
 
   // REGRA: Só pode subornar se o nível do barraco for maior que os subornos já feitos
-  const podeSubornarAgora = nivelBarraco > subornosRealizados;
+  const podeSubornarAgora = playerLevel > subornosRealizados;
 
   const briberyAmount = getBriberyAmount(playerLevel);
   const nextBriberyAmount = getNextBriberyAmount(playerLevel);
@@ -204,32 +206,53 @@ export default function BriberyGuardPage() {
       return;
     }
 
-    // Debit dirty money
-    removeDirtyMoney(briberyAmount);
-    
-    // Increment bribes completed
-    setSubornosRealizados(prev => prev + 1);
+    try {
+      // Use economy service to deduct dirty money
+      const updated = await removeDirtyMoney(player!._id, briberyAmount, 'BRIBERY');
+      
+      if (!updated) {
+        setIsProcessing(false);
+        alert('Falha ao processar suborno');
+        return;
+      }
 
-    // Update level - progression from 1-9, then jump to 10
-    if (playerLevel < 9) {
-      // Levels 1-8: increment by 1
-      setPlayerLevel(playerLevel + 1);
-    } else if (playerLevel === 9) {
-      // Level 9: jump to level 10
-      setPlayerLevel(10);
-    } else if (playerLevel < 100) {
-      // Levels 10+: increment by 1
-      setPlayerLevel(playerLevel + 1);
-    }
+      // Increment bribes completed
+      setSubornosRealizados(prev => prev + 1);
 
-    setDialogState('accepting');
-    
-    setTimeout(() => {
-      setIsProcessing(false);
+      // Update level in database
+      let nextLevel = playerLevel;
+      if (playerLevel < 9) {
+        nextLevel = playerLevel + 1;
+      } else if (playerLevel === 9) {
+        nextLevel = 10;
+      } else if (playerLevel < 100) {
+        nextLevel = playerLevel + 1;
+      }
+
+      const levelUpdated = await BaseCrudService.update<Players>('players', {
+        _id: player!._id,
+        level: nextLevel,
+      });
+
+      // Reload player
+      const reloaded = await BaseCrudService.getById<Players>('players', player!._id);
+      if (reloaded) {
+        setPlayer(reloaded);
+      }
+
+      setDialogState('accepting');
+      
       setTimeout(() => {
-        navigate('/');
-      }, 3000);
-    }, 2000);
+        setIsProcessing(false);
+        setTimeout(() => {
+          navigate('/');
+        }, 3000);
+      }, 2000);
+    } catch (err) {
+      console.error('Error processing bribery:', err);
+      setIsProcessing(false);
+      alert('Erro ao processar suborno');
+    }
   };
 
   const handleDeny = async () => {
@@ -260,19 +283,32 @@ export default function BriberyGuardPage() {
     navigate('/game');
   };
 
-  const handleWhistleblowerConfirm = () => {
-    // Reset player to level 1
-    setPlayerLevel(1);
-    setLevel(1);
-    setDialogState('accepting');
-    
-    setTimeout(() => {
-      setIsProcessing(false);
+  const handleWhistleblowerConfirm = async () => {
+    try {
+      // Reset player to level 1
+      const updated = await BaseCrudService.update<Players>('players', {
+        _id: player!._id,
+        level: 1,
+      });
+
+      const reloaded = await BaseCrudService.getById<Players>('players', player!._id);
+      if (reloaded) {
+        setPlayer(reloaded);
+      }
+
+      setDialogState('accepting');
+      
       setTimeout(() => {
-        setCurrentScreen('map');
-        navigate('/game');
-      }, 3000);
-    }, 2000);
+        setIsProcessing(false);
+        setTimeout(() => {
+          setCurrentScreen('map');
+          navigate('/game');
+        }, 3000);
+      }, 2000);
+    } catch (err) {
+      console.error('Error resetting player:', err);
+      setIsProcessing(false);
+    }
   };
 
   if (!isMounted) return null;
