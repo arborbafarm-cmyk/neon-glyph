@@ -6,7 +6,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useSpinVault } from '@/hooks/useSpinVault';
 import { useNavigate } from 'react-router-dom';
 import { useMember } from '@/integrations';
-import { playerService } from '@/services/playerService';
+import { logoutLocalPlayer } from '@/services/playerService';
 import { Droplet, LogOut, LogIn } from 'lucide-react';
 
 const LOGO_SRC = 'https://static.wixstatic.com/media/50f4bf_01590cb08b7048babbfed83e2830a27c~mv2.png';
@@ -63,7 +63,7 @@ export default function Header() {
       await actions.logout();
     } else {
       // Local logout
-      await playerService.logoutLocalPlayer();
+      await logoutLocalPlayer();
       navigate('/login');
     }
   };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMember } from '@/integrations';
 import { useNavigate } from 'react-router-dom';
-import { playerService } from '@/services/playerService';
+import { registerPlayer } from '@/services/playerService';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -31,7 +31,7 @@ export default function GoogleLoginButton() {
           const playerName = member.contact?.firstName || member.profile?.nickname || 'Player';
           const nickname = member.profile?.nickname || member.contact?.firstName || 'Anonymous';
 
-          await playerService.registerPlayer(member.loginEmail, playerName, nickname);
+          await registerPlayer(member.loginEmail, playerName, nickname);
           // Redirect to game page after successful registration
           navigate('/star-map');
         } catch (error) {

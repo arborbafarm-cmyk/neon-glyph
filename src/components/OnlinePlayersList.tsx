@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { playerService, type LoggedInPlayer } from '@/services/playerService';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
+import { LoggedInPlayers } from '@/entities';
 
 export default function OnlinePlayersList() {
-  const [onlinePlayers, setOnlinePlayers] = useState<LoggedInPlayer[]>([]);
+  const [onlinePlayers, setOnlinePlayers] = useState<LoggedInPlayers[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -14,9 +14,10 @@ export default function OnlinePlayersList() {
       try {
         if (!isMounted) return;
         setIsLoading(true);
-        const players = await playerService.getOnlinePlayers();
+        // TODO: Implement fetching online players from database
+        // For now, just set empty array
         if (isMounted) {
-          setOnlinePlayers(players);
+          setOnlinePlayers([]);
         }
       } catch (error) {
         console.error('Error fetching online players:', error);

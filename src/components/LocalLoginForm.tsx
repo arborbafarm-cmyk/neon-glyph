@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playerService } from '@/services/playerService';
+import { registerLocalPlayer, loginLocalPlayer } from '@/services/playerService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -49,7 +49,7 @@ export default function LocalLoginForm() {
 
     try {
       setIsLoading(true);
-      await playerService.registerLocalPlayer(email, password, playerName);
+      await registerLocalPlayer(email, password, playerName);
       setSuccess('Conta criada com sucesso! Fazendo login...');
       
       setTimeout(() => {
@@ -74,7 +74,7 @@ export default function LocalLoginForm() {
 
     try {
       setIsLoading(true);
-      await playerService.loginLocalPlayer(email, password);
+      await loginLocalPlayer(email, password);
       setSuccess('Login realizado com sucesso!');
       
       setTimeout(() => {
