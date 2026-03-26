@@ -1,6 +1,6 @@
 /**
  * Auto-generated entity types
- * Contains all CMS collection interfaces in a single file 
+ * Contains all CMS collection interfaces in a single file
  */
 
 /**
@@ -18,7 +18,6 @@ export interface Background {
   /** @wixFieldType image - Contains image URL, render with <Image> component, NOT as text */
   image?: string;
 }
-
 
 /**
  * Collection ID: businessupgrades
@@ -41,7 +40,6 @@ export interface BusinessUpgrades {
   /** @wixFieldType text */
   description?: string;
 }
-
 
 /**
  * Collection ID: financialhistory
@@ -67,7 +65,6 @@ export interface FinancialHistory {
   timestamp?: Date | string;
 }
 
-
 /**
  * Collection ID: itensdeluxo
  * Interface for ItensdeLuxo
@@ -90,7 +87,6 @@ export interface ItensdeLuxo {
   category?: string;
 }
 
-
 /**
  * Collection ID: moneylaunderingbusinesses
  * Interface for MoneyLaunderingBusinesses
@@ -111,7 +107,6 @@ export interface MoneyLaunderingBusinesses {
   businessImage?: string;
 }
 
-
 /**
  * Collection ID: personagens
  * Interface for Characters
@@ -131,13 +126,12 @@ export interface Characters {
   /** @wixFieldType text */
   acceptOptionText?: string;
   /** @wixFieldType text */
-  denounceOptionText?: string;
+ denounceOptionText?: string;
   /** @wixFieldType number */
   baseBribeValue?: number;
   /** @wixFieldType image - Contains image URL, render with <Image> component, NOT as text */
   characterImage?: string;
 }
-
 
 /**
  * Collection ID: playerpresence
@@ -147,20 +141,37 @@ export interface PlayerPresence {
   _id: string;
   _createdDate?: Date;
   _updatedDate?: Date;
+
   /** @wixFieldType text */
   playerId?: string;
+
+  /** @wixFieldType text */
+  playerName?: string;
+
   /** @wixFieldType text */
   mapPosition?: string;
-  /** @wixFieldType datetime */
-  lastSeenAt?: Date | string;
+
+  /** @wixFieldType text */
+  currentComplex?: string;
+
+  /** @wixFieldType text */
+  currentArea?: string;
+
   /** @wixFieldType text */
   status?: string;
+
   /** @wixFieldType text */
   complexStatus?: string;
+
   /** @wixFieldType boolean */
   isOnline?: boolean;
-}
 
+  /** @wixFieldType datetime */
+  lastSeenAt?: Date | string;
+
+  /** @wixFieldType datetime */
+  updatedAt?: Date | string;
+}
 
 /**
  * Collection ID: players
@@ -240,7 +251,6 @@ export interface Players {
   /** @wixFieldType datetime */
   updatedAt?: Date | string;
 }
-
 
 /**
  * Collection ID: playerslogados
