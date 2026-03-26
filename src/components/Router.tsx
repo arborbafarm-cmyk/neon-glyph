@@ -27,6 +27,7 @@ const InvestmentSkillTreePage = lazy(() => import('@/components/pages/Investment
 const CommercialCenterPage = lazy(() => import('@/components/pages/CommercialCenterPage'));
 const ProfilePage = lazy(() => import('@/components/pages/ProfilePage'));
 const LoginPage = lazy(() => import('@/components/pages/LoginPage'));
+const FinancialHistoryPage = lazy(() => import('@/components/pages/FinancialHistoryPage'));
 {/* ... keep existing code (other lazy imports) ... */}
 
 
@@ -200,6 +201,13 @@ const router = createBrowserRouter([
         element: <LoginPage />,
         routeMetadata: {
           pageIdentifier: 'login',
+        },
+      },
+      {
+        path: "financial-history",
+        element: <FinancialHistoryPage />,
+        routeMetadata: {
+          pageIdentifier: 'financial-history',
         },
       },
 

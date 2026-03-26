@@ -44,6 +44,31 @@ export interface BusinessUpgrades {
 
 
 /**
+ * Collection ID: financialhistory
+ * Interface for FinancialHistory
+ */
+export interface FinancialHistory {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  playerId?: string;
+  /** @wixFieldType text */
+  operationType?: string;
+  /** @wixFieldType number */
+  value?: number;
+  /** @wixFieldType number */
+  balanceBefore?: number;
+  /** @wixFieldType number */
+  balanceAfter?: number;
+  /** @wixFieldType text */
+  actionOrigin?: string;
+  /** @wixFieldType datetime */
+  timestamp?: Date | string;
+}
+
+
+/**
  * Collection ID: itensdeluxo
  * Interface for ItensdeLuxo
  */
