@@ -20,6 +20,8 @@ interface PlayerData {
   lastResult: string[] | null;
   // Player records for multiplayer
   players: Record<string, Players>;
+  // Spin Vault fields (consolidated from spinVaultStore)
+  lastGainTime: number;
 }
 
 interface PlayerState extends PlayerData {
@@ -52,6 +54,11 @@ interface PlayerState extends PlayerData {
   addPlayer: (player: Players) => void;
   updatePlayer: (playerId: string, updates: Partial<Players>) => void;
   
+  // Spin Vault methods (consolidated from spinVaultStore)
+  setLastGainTime: (time: number) => void;
+  updateLastGainTime: () => void;
+  getTimeUntilNextGain: () => number;
+  
   loadPlayerData: (data: Partial<PlayerState>) => void;
   resetPlayer: () => void;
 }
@@ -72,6 +79,7 @@ const initialState = {
   isSpinning: false,
   lastResult: null,
   players: {},
+  lastGainTime: 0,
 };
 
 export const usePlayerStore = create<PlayerState>()(
@@ -115,6 +123,16 @@ export const usePlayerStore = create<PlayerState>()(
           [playerId]: { ...state.players[playerId], ...updates }
         }
       })),
+      
+      // Spin Vault methods (consolidated from spinVaultStore)
+      setLastGainTime: (time: number) => set({ lastGainTime: time }),
+      updateLastGainTime: () => set({ lastGainTime: Date.now() }),
+      getTimeUntilNextGain: () => {
+        const state = usePlayerStore.getState();
+        const timeSinceLastGain = Date.now() - state.lastGainTime;
+        const timeUntilNextGain = 60000 - (timeSinceLastGain % 60000);
+        return Math.max(0, timeUntilNextGain);
+      },
       
       loadPlayerData: (data: Partial<PlayerState>) => set(data),
       resetPlayer: () => set({
