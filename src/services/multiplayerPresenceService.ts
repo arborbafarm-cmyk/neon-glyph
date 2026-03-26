@@ -1,12 +1,12 @@
 /**
  * MULTIPLAYER PRESENCE SERVICE
- * 
+ *
  * Handles all multiplayer presence-related operations:
  * - Updating player presence
  * - Loading online players
  * - Managing player status
  * - Tracking player location
- * 
+ *
  * This service is the single source of truth for multiplayer presence.
  */
 
@@ -17,10 +17,48 @@ const COLLECTION_ID = 'playerpresence';
 
 export interface PlayerStatus {
   playerId: string;
+  playerName?: string;
   mapPosition: string;
+  currentComplex?: string;
+  currentArea?: string;
   status: 'online' | 'offline' | 'away';
   lastSeenAt: Date;
   isOnline: boolean;
+}
+
+function normalizeDate(value?: Date | string): Date {
+  if (!value) return new Date();
+  return value instanceof Date ? value : new Date(value);
+}
+
+function parseMapPosition(mapPosition: string): {
+  currentComplex?: string;
+  currentArea?: string;
+} {
+  const [currentComplex, currentArea] = mapPosition.split(':');
+  return {
+    currentComplex: currentComplex || undefined,
+    currentArea: currentArea || undefined,
+  };
+}
+
+function toPlayerStatus(presence: PlayerPresence): PlayerStatus {
+  return {
+    playerId: presence.playerId || '',
+    playerName: presence.playerName || undefined,
+    mapPosition: presence.mapPosition || 'unknown',
+    currentComplex: presence.currentComplex || undefined,
+    currentArea: presence.currentArea || undefined,
+    status: (presence.status as 'online' | 'offline' | 'away') || 'offline',
+    lastSeenAt: normalizeDate(presence.lastSeenAt),
+    isOnline: presence.isOnline || false,
+  };
+}
+
+async function findPresenceByPlayerId(playerId: string): Promise<PlayerPresence | null> {
+  const result = await BaseCrudService.getAll<PlayerPresence>(COLLECTION_ID);
+  const existingPresence = result.items?.find((p) => p.playerId === playerId);
+  return existingPresence || null;
 }
 
 /**
@@ -29,19 +67,24 @@ export interface PlayerStatus {
 export async function updatePlayerPresence(
   playerId: string,
   mapPosition: string,
-  status: 'online' | 'offline' | 'away' = 'online'
+  status: 'online' | 'offline' | 'away' = 'online',
+  playerName?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Check if presence record exists
-    const result = await BaseCrudService.getAll<PlayerPresence>(COLLECTION_ID);
-    const existingPresence = result.items?.find((p) => p.playerId === playerId);
+    const existingPresence = await findPresenceByPlayerId(playerId);
+    const now = new Date().toISOString();
+    const { currentComplex, currentArea } = parseMapPosition(mapPosition);
 
     const presenceData: PlayerPresence = {
       _id: existingPresence?._id || crypto.randomUUID(),
       playerId,
+      playerName: playerName || existingPresence?.playerName || '',
       mapPosition,
+      currentComplex,
+      currentArea,
       status,
-      lastSeenAt: new Date(),
+      lastSeenAt: now,
+      updatedAt: now,
       isOnline: status === 'online',
       complexStatus: `${status}:${mapPosition}`,
     };
@@ -53,7 +96,6 @@ export async function updatePlayerPresence(
     }
 
     console.log(`[PRESENCE] Updated ${playerId} - ${status} at ${mapPosition}`);
-
     return { success: true };
   } catch (error) {
     console.error('Failed to update player presence:', error);
@@ -66,20 +108,13 @@ export async function updatePlayerPresence(
  */
 export async function getPlayerPresence(playerId: string): Promise<PlayerStatus | null> {
   try {
-    const result = await BaseCrudService.getAll<PlayerPresence>(COLLECTION_ID);
-    const presence = result.items?.find((p) => p.playerId === playerId);
+    const presence = await findPresenceByPlayerId(playerId);
 
     if (!presence) {
       return null;
     }
 
-    return {
-      playerId: presence.playerId || playerId,
-      mapPosition: presence.mapPosition || 'unknown',
-      status: (presence.status as 'online' | 'offline' | 'away') || 'offline',
-      lastSeenAt: new Date(presence.lastSeenAt || new Date()),
-      isOnline: presence.isOnline || false,
-    };
+    return toPlayerStatus(presence);
   } catch (error) {
     console.error('Failed to get player presence:', error);
     return null;
@@ -93,14 +128,7 @@ export async function getOnlinePlayers(): Promise<PlayerStatus[]> {
   try {
     const result = await BaseCrudService.getAll<PlayerPresence>(COLLECTION_ID);
     const onlinePlayers = result.items?.filter((p) => p.isOnline) || [];
-
-    return onlinePlayers.map((p) => ({
-      playerId: p.playerId || '',
-      mapPosition: p.mapPosition || 'unknown',
-      status: 'online' as const,
-      lastSeenAt: new Date(p.lastSeenAt || new Date()),
-      isOnline: true,
-    }));
+    return onlinePlayers.map(toPlayerStatus);
   } catch (error) {
     console.error('Failed to get online players:', error);
     return [];
@@ -113,17 +141,10 @@ export async function getOnlinePlayers(): Promise<PlayerStatus[]> {
 export async function getPlayersInLocation(mapPosition: string): Promise<PlayerStatus[]> {
   try {
     const result = await BaseCrudService.getAll<PlayerPresence>(COLLECTION_ID);
-    const playersInLocation = result.items?.filter(
-      (p) => p.mapPosition === mapPosition && p.isOnline
-    ) || [];
+    const playersInLocation =
+      result.items?.filter((p) => p.mapPosition === mapPosition && p.isOnline) || [];
 
-    return playersInLocation.map((p) => ({
-      playerId: p.playerId || '',
-      mapPosition: p.mapPosition || mapPosition,
-      status: 'online' as const,
-      lastSeenAt: new Date(p.lastSeenAt || new Date()),
-      isOnline: true,
-    }));
+    return playersInLocation.map(toPlayerStatus);
   } catch (error) {
     console.error('Failed to get players in location:', error);
     return [];
@@ -133,24 +154,29 @@ export async function getPlayersInLocation(mapPosition: string): Promise<PlayerS
 /**
  * Set player offline
  */
-export async function setPlayerOffline(playerId: string): Promise<{ success: boolean; error?: string }> {
+export async function setPlayerOffline(
+  playerId: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const result = await BaseCrudService.getAll<PlayerPresence>(COLLECTION_ID);
-    const presence = result.items?.find((p) => p.playerId === playerId);
+    const presence = await findPresenceByPlayerId(playerId);
 
     if (!presence) {
       return { success: false, error: 'Player presence not found' };
     }
 
+    const now = new Date().toISOString();
+
     await BaseCrudService.update(COLLECTION_ID, {
+      ...presence,
       _id: presence._id,
       status: 'offline',
       isOnline: false,
-      lastSeenAt: new Date(),
+      lastSeenAt: now,
+      updatedAt: now,
+      complexStatus: `offline:${presence.mapPosition || 'unknown'}`,
     });
 
     console.log(`[PRESENCE] Set ${playerId} offline`);
-
     return { success: true };
   } catch (error) {
     console.error('Failed to set player offline:', error);
