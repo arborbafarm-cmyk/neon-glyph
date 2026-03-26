@@ -131,7 +131,7 @@ export default function Header() {
 
             {/* WASH BUTTON */}
             <button
-              onClick={() => navigate('/money-laundering')}
+              onClick={() => navigate('/giro-no-asfalto')}
               className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-4 py-2 rounded-lg text-white font-semibold transition-all text-sm flex-shrink-0"
               title="Operações de Lavagem"
             >

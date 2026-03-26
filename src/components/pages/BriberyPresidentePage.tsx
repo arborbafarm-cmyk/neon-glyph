@@ -92,7 +92,7 @@ export default function BriberyPresidentePage() {
     setTimeout(() => {
       setIsProcessing(false);
       setTimeout(() => {
-        navigate('/game2');
+        navigate('/star-map');
       }, 3000);
     }, 2000);
   };
@@ -111,14 +111,14 @@ export default function BriberyPresidentePage() {
       setIsProcessing(false);
       setTimeout(() => {
         setCurrentScreen('map');
-        navigate('/game2');
+        navigate('/star-map');
       }, 3000);
     }, 2000);
   };
 
   const handleCloseConsequence = () => {
     setCurrentScreen('map');
-    navigate('/game2');
+    navigate('/star-map');
   };
 
   if (!isMounted) return null;

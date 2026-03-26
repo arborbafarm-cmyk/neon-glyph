@@ -93,7 +93,7 @@ export default function BriberyDelegadoPage() {
     setTimeout(() => {
       setIsProcessing(false);
       setTimeout(() => {
-        navigate('/game2');
+        navigate('/star-map');
       }, 3000);
     }, 2000);
   };
@@ -116,7 +116,7 @@ export default function BriberyDelegadoPage() {
 
   const handleCloseConsequence = () => {
     setCurrentScreen('map');
-    navigate('/game2');
+    navigate('/star-map');
   };
 
   if (!isMounted) return null;
