@@ -1,9 +1,9 @@
 /**
  * UNIFIED PLAYER ECONOMY SERVICE
- * 
+ *
  * Single source of truth for all financial operations.
  * All money transactions MUST go through this service.
- * 
+ *
  * Rules:
  * - Only dirtyMoney and cleanMoney are real balances (stored in Players collection)
  * - All operations are validated before execution
@@ -13,8 +13,9 @@
  */
 
 import { BaseCrudService } from '@/integrations';
-import { Players } from '@/entities';
+import { Players, FinancialHistory } from '@/entities';
 import { usePlayerStore } from '@/store/playerStore';
+import { getPlayer, savePlayer } from './playerCoreService';
 
 export interface TransactionRecord {
   id: string;
@@ -28,8 +29,8 @@ export interface TransactionRecord {
   playerId: string;
 }
 
-const COLLECTION_ID = 'players';
 const MAX_TRANSACTION_HISTORY = 1000;
+const FINANCIAL_HISTORY_COLLECTION_ID = 'financialhistory';
 
 let transactionHistory: TransactionRecord[] = [];
 
@@ -37,17 +38,17 @@ let transactionHistory: TransactionRecord[] = [];
  * Get current player's financial state from database
  */
 export async function getPlayerFinances(playerId: string) {
-  try {
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    return {
-      dirtyMoney: player?.dirtyMoney ?? 0,
-      cleanMoney: player?.cleanMoney ?? 0,
-      playerId: player?._id,
-    };
-  } catch (error) {
-    console.error('Failed to get player finances:', error);
-    throw error;
+  const player = await getPlayer(playerId);
+
+  if (!player) {
+    throw new Error(`Player ${playerId} not found`);
   }
+
+  return {
+    dirtyMoney: player.dirtyMoney ?? 0,
+    cleanMoney: player.cleanMoney ?? 0,
+    playerId: player._id,
+  };
 }
 
 /**
@@ -58,25 +59,65 @@ function validateBalance(currentBalance: number, amount: number): boolean {
 }
 
 /**
- * Record transaction in history
+ * Record transaction in memory
  */
 function recordTransaction(record: TransactionRecord) {
   transactionHistory.unshift(record);
   if (transactionHistory.length > MAX_TRANSACTION_HISTORY) {
     transactionHistory = transactionHistory.slice(0, MAX_TRANSACTION_HISTORY);
   }
-  console.log(`[ECONOMY] ${record.type.toUpperCase()}: ${record.amount} ${record.moneyType} - ${record.reason}`);
+
+  console.log(
+    `[ECONOMY] ${record.type.toUpperCase()}: ${record.amount} ${record.moneyType} - ${record.reason}`
+  );
 }
 
 /**
- * Get transaction history
+ * Persist transaction to financialhistory collection
+ */
+async function persistTransaction(record: TransactionRecord): Promise<void> {
+  const payload: FinancialHistory = {
+    _id: record.id,
+    playerId: record.playerId,
+    operationType: `${record.type}_${record.moneyType}`,
+    value: record.amount,
+    balanceBefore: record.balanceBefore,
+    balanceAfter: record.balanceAfter,
+    actionOrigin: record.reason,
+    timestamp: record.timestamp.toISOString(),
+  };
+
+  try {
+    await BaseCrudService.create(FINANCIAL_HISTORY_COLLECTION_ID, payload);
+  } catch (error) {
+    console.error('Failed to persist financial history:', error);
+  }
+}
+
+/**
+ * Record transaction in memory and database
+ */
+async function registerTransaction(record: TransactionRecord): Promise<void> {
+  recordTransaction(record);
+  await persistTransaction(record);
+}
+
+/**
+ * Sync updated player to store
+ */
+function syncPlayerStore(player: Players) {
+  usePlayerStore.getState().setPlayer(player);
+}
+
+/**
+ * Get transaction history from memory
  */
 export function getTransactionHistory(limit: number = 50): TransactionRecord[] {
   return transactionHistory.slice(0, limit);
 }
 
 /**
- * Clear transaction history (for testing/reset)
+ * Clear transaction history in memory (for testing only)
  */
 export function clearTransactionHistory() {
   transactionHistory = [];
@@ -97,7 +138,7 @@ export async function addDirtyMoney(
       return null;
     }
 
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    const player = await getPlayer(playerId);
     if (!player) {
       console.error('Player not found');
       return null;
@@ -106,17 +147,15 @@ export async function addDirtyMoney(
     const currentDirty = player.dirtyMoney ?? 0;
     const newBalance = currentDirty + amount;
 
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
+    const updatedPlayer: Players = {
+      ...player,
       dirtyMoney: newBalance,
-    });
+    };
 
-    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (updated) {
-      usePlayerStore.getState().setPlayer(updated);
-    }
+    const savedPlayer = await savePlayer(updatedPlayer);
+    syncPlayerStore(savedPlayer);
 
-    recordTransaction({
+    await registerTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
       type: 'add',
@@ -128,7 +167,7 @@ export async function addDirtyMoney(
       playerId,
     });
 
-    return updated || null;
+    return savedPlayer;
   } catch (error) {
     console.error('Failed to add dirty money:', error);
     return null;
@@ -150,7 +189,7 @@ export async function removeDirtyMoney(
       return null;
     }
 
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    const player = await getPlayer(playerId);
     if (!player) {
       console.error('Player not found');
       return null;
@@ -165,17 +204,15 @@ export async function removeDirtyMoney(
 
     const newBalance = currentDirty - amount;
 
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
+    const updatedPlayer: Players = {
+      ...player,
       dirtyMoney: newBalance,
-    });
+    };
 
-    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (updated) {
-      usePlayerStore.getState().setPlayer(updated);
-    }
+    const savedPlayer = await savePlayer(updatedPlayer);
+    syncPlayerStore(savedPlayer);
 
-    recordTransaction({
+    await registerTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
       type: 'remove',
@@ -187,7 +224,7 @@ export async function removeDirtyMoney(
       playerId,
     });
 
-    return updated || null;
+    return savedPlayer;
   } catch (error) {
     console.error('Failed to remove dirty money:', error);
     return null;
@@ -209,7 +246,7 @@ export async function addCleanMoney(
       return null;
     }
 
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    const player = await getPlayer(playerId);
     if (!player) {
       console.error('Player not found');
       return null;
@@ -218,17 +255,15 @@ export async function addCleanMoney(
     const currentClean = player.cleanMoney ?? 0;
     const newBalance = currentClean + amount;
 
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
+    const updatedPlayer: Players = {
+      ...player,
       cleanMoney: newBalance,
-    });
+    };
 
-    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (updated) {
-      usePlayerStore.getState().setPlayer(updated);
-    }
+    const savedPlayer = await savePlayer(updatedPlayer);
+    syncPlayerStore(savedPlayer);
 
-    recordTransaction({
+    await registerTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
       type: 'add',
@@ -240,7 +275,7 @@ export async function addCleanMoney(
       playerId,
     });
 
-    return updated || null;
+    return savedPlayer;
   } catch (error) {
     console.error('Failed to add clean money:', error);
     return null;
@@ -262,7 +297,7 @@ export async function removeCleanMoney(
       return null;
     }
 
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    const player = await getPlayer(playerId);
     if (!player) {
       console.error('Player not found');
       return null;
@@ -277,17 +312,15 @@ export async function removeCleanMoney(
 
     const newBalance = currentClean - amount;
 
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
+    const updatedPlayer: Players = {
+      ...player,
       cleanMoney: newBalance,
-    });
+    };
 
-    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (updated) {
-      usePlayerStore.getState().setPlayer(updated);
-    }
+    const savedPlayer = await savePlayer(updatedPlayer);
+    syncPlayerStore(savedPlayer);
 
-    recordTransaction({
+    await registerTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
       type: 'remove',
@@ -299,7 +332,7 @@ export async function removeCleanMoney(
       playerId,
     });
 
-    return updated || null;
+    return savedPlayer;
   } catch (error) {
     console.error('Failed to remove clean money:', error);
     return null;
@@ -307,8 +340,8 @@ export async function removeCleanMoney(
 }
 
 /**
- * TRANSFER MONEY
- * Convert dirty money to clean money (money laundering)
+ * LAUNDER MONEY
+ * Convert dirty money to clean money
  */
 export async function launderMoney(
   playerId: string,
@@ -322,7 +355,7 @@ export async function launderMoney(
       return null;
     }
 
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
+    const player = await getPlayer(playerId);
     if (!player) {
       console.error('Player not found');
       return null;
@@ -339,18 +372,16 @@ export async function launderMoney(
     const newDirtyBalance = currentDirty - dirtyAmount;
     const newCleanBalance = currentClean + cleanAmount;
 
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
+    const updatedPlayer: Players = {
+      ...player,
       dirtyMoney: newDirtyBalance,
       cleanMoney: newCleanBalance,
-    });
+    };
 
-    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (updated) {
-      usePlayerStore.getState().setPlayer(updated);
-    }
+    const savedPlayer = await savePlayer(updatedPlayer);
+    syncPlayerStore(savedPlayer);
 
-    recordTransaction({
+    await registerTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
       type: 'launder',
@@ -362,7 +393,7 @@ export async function launderMoney(
       playerId,
     });
 
-    recordTransaction({
+    await registerTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
       type: 'launder',
@@ -374,7 +405,7 @@ export async function launderMoney(
       playerId,
     });
 
-    return updated || null;
+    return savedPlayer;
   } catch (error) {
     console.error('Failed to launder money:', error);
     return null;
@@ -390,30 +421,46 @@ export async function resetPlayerFinances(
   cleanMoney: number = 0
 ): Promise<Players | null> {
   try {
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
-      dirtyMoney,
-      cleanMoney,
-    });
-
-    const updated = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (updated) {
-      usePlayerStore.getState().setPlayer(updated);
+    const player = await getPlayer(playerId);
+    if (!player) {
+      console.error('Player not found');
+      return null;
     }
 
-    recordTransaction({
+    const updatedPlayer: Players = {
+      ...player,
+      dirtyMoney,
+      cleanMoney,
+    };
+
+    const savedPlayer = await savePlayer(updatedPlayer);
+    syncPlayerStore(savedPlayer);
+
+    await registerTransaction({
       id: crypto.randomUUID(),
       timestamp: new Date(),
-      type: 'remove',
+      type: 'transfer',
       moneyType: 'dirty',
       amount: 0,
-      reason: 'RESET',
-      balanceBefore: 0,
+      reason: 'RESET_FINANCES',
+      balanceBefore: player.dirtyMoney ?? 0,
       balanceAfter: dirtyMoney,
       playerId,
     });
 
-    return updated || null;
+    await registerTransaction({
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'transfer',
+      moneyType: 'clean',
+      amount: 0,
+      reason: 'RESET_FINANCES',
+      balanceBefore: player.cleanMoney ?? 0,
+      balanceAfter: cleanMoney,
+      playerId,
+    });
+
+    return savedPlayer;
   } catch (error) {
     console.error('Failed to reset player finances:', error);
     return null;
