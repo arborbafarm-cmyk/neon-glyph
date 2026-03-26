@@ -140,6 +140,29 @@ export interface Characters {
 
 
 /**
+ * Collection ID: playerpresence
+ * Interface for PlayerPresence
+ */
+export interface PlayerPresence {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  playerId?: string;
+  /** @wixFieldType text */
+  mapPosition?: string;
+  /** @wixFieldType datetime */
+  lastSeenAt?: Date | string;
+  /** @wixFieldType text */
+  status?: string;
+  /** @wixFieldType text */
+  complexStatus?: string;
+  /** @wixFieldType boolean */
+  isOnline?: boolean;
+}
+
+
+/**
  * Collection ID: players
  * Interface for Players
  */
