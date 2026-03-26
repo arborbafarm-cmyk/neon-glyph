@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import InteractiveTileGrid from '@/components/game/InteractiveTileGrid';
 import { useEnsurePlayerLot } from '@/hooks/useEnsurePlayerLot';
+import { usePlayerLot } from '@/hooks/usePlayerLot';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@/store/playerStore';
 import { usePlayerAuth } from '@/hooks/usePlayerAuth';
@@ -19,6 +20,7 @@ export default function StarMapPage() {
   const { isAuthenticated, isLoading: isAuthLoading } = usePlayerAuth();
 
   useEnsurePlayerLot(40, 20);
+const lot = usePlayerLot();
 
   const [showLuxuryNotification, setShowLuxuryNotification] = useState(false);
   const [showQGNotification, setShowQGNotification] = useState(false);
