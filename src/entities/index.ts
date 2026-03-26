@@ -170,48 +170,75 @@ export interface Players {
   _id: string;
   _createdDate?: Date;
   _updatedDate?: Date;
+
   /** @wixFieldType number */
   cleanMoney?: number;
-  /** @wixFieldType datetime */
-  createdAt?: Date | string;
-  /** @wixFieldType datetime */
-  lastLoginAt?: Date | string;
-  /** @wixFieldType text */
-  inventory?: string;
-  /** @wixFieldType text */
-  skillTrees?: string;
-  /** @wixFieldType text */
-  ownedLuxuryItems?: string;
-  /** @wixFieldType text */
-  investments?: string;
-  /** @wixFieldType number */
-  barracoLevel?: number;
-  /** @wixFieldType number */
-  spins?: number;
-  /** @wixFieldType text */
-  email?: string;
-  /** @wixFieldType text */
-  comercios?: string;
-  /** @wixFieldType date */
-  updatedAt?: Date | string;
+
   /** @wixFieldType number */
   dirtyMoney?: number;
-  /** @wixFieldType text */
-  playerId?: string;
-  /** @wixFieldType text */
-  playerName?: string;
+
+  /** @wixFieldType number */
+  spins?: number;
+
+  /** @wixFieldType number */
+  barracoLevel?: number;
+
   /** @wixFieldType number */
   level?: number;
+
   /** @wixFieldType number */
   progress?: number;
+
+  /** @wixFieldType number */
+  xp?: number;
+
+  /** @wixFieldType number */
+  power?: number;
+
+  /** @wixFieldType text */
+  email?: string;
+
+  /** @wixFieldType text */
+  playerId?: string;
+
   /** @wixFieldType text */
   externalPlayerId?: string;
-  /** @wixFieldType datetime */
-  lastUpdated?: Date | string;
-  /** @wixFieldType image - Contains image URL, render with <Image> component, NOT as text */
+
+  /** @wixFieldType text */
+  playerName?: string;
+
+  /** @wixFieldType image */
   profilePicture?: string;
+
   /** @wixFieldType boolean */
   isGuest?: boolean;
+
+  /** @wixFieldType text */
+  inventory?: string;
+
+  /** @wixFieldType text */
+  skillTrees?: string;
+
+  /** @wixFieldType text */
+  ownedLuxuryItems?: string;
+
+  /** @wixFieldType text */
+  investments?: string;
+
+  /** @wixFieldType text */
+  comercios?: string;
+
+  /** @wixFieldType datetime */
+  createdAt?: Date | string;
+
+  /** @wixFieldType datetime */
+  lastLoginAt?: Date | string;
+
+  /** @wixFieldType datetime */
+  lastUpdated?: Date | string;
+
+  /** @wixFieldType datetime */
+  updatedAt?: Date | string;
 }
 
 
