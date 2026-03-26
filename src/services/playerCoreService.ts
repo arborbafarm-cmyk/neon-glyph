@@ -1,9 +1,9 @@
 /**
  * PLAYER CORE SERVICE - Central Player Data Management
- * 
+ *
  * This is the SINGLE SOURCE OF TRUTH for all player operations.
  * All other services depend on this.
- * 
+ *
  * CRITICAL: Never use BaseCrudService directly in components.
  * Always go through this service.
  */
@@ -27,12 +27,15 @@ export async function getPlayer(playerId: string): Promise<Players | null> {
 
 /**
  * Save/update player in database
- * Automatically updates the updatedAt timestamp
+ * Automatically updates timestamps
  */
 export async function savePlayer(player: Players): Promise<Players> {
-  const updated = {
+  const now = new Date().toISOString();
+
+  const updated: Players = {
     ...player,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
+    lastUpdated: now,
   };
 
   return BaseCrudService.update<Players>(COLLECTION_ID, updated);
@@ -43,39 +46,49 @@ export async function savePlayer(player: Players): Promise<Players> {
  */
 export async function createPlayer(playerData: Partial<Players>): Promise<Players> {
   const now = new Date().toISOString();
-  
+
   const newPlayer: Players = {
     _id: playerData._id || crypto.randomUUID(),
+
     email: playerData.email || '',
+    playerId: playerData.playerId || playerData.email || '',
+    externalPlayerId: playerData.externalPlayerId,
+
     playerName: playerData.playerName || 'Player',
-    profilePicture: playerData.profilePicture,
+    profilePicture: playerData.profilePicture || '',
     isGuest: playerData.isGuest ?? false,
 
     level: playerData.level ?? 1,
+    progress: playerData.progress ?? 0,
     xp: playerData.xp ?? 0,
+    power: playerData.power ?? 0,
 
     dirtyMoney: playerData.dirtyMoney ?? 0,
     cleanMoney: playerData.cleanMoney ?? 0,
-    spins: playerData.spins ?? 0,
+    spins: playerData.spins ?? 10,
 
     barracoLevel: playerData.barracoLevel ?? 1,
 
     investments: playerData.investments ?? '{}',
-    skillTrees: playerData.skillTrees ?? JSON.stringify({
-      attack: {},
-      defense: {},
-      intelligence: {},
-      respect: {},
-    }),
+    skillTrees:
+      playerData.skillTrees ??
+      JSON.stringify({
+        attack: {},
+        defense: {},
+        intelligence: {},
+        respeit: {},
+      }),
     inventory: playerData.inventory ?? '[]',
     ownedLuxuryItems: playerData.ownedLuxuryItems ?? '[]',
     comercios: playerData.comercios ?? '{}',
 
-    power: playerData.power ?? 0,
-
     lastLoginAt: playerData.lastLoginAt ?? now,
     createdAt: playerData.createdAt ?? now,
     updatedAt: now,
+    lastUpdated: now,
+
+    _createdDate: playerData._createdDate,
+    _updatedDate: playerData._updatedDate,
   };
 
   return BaseCrudService.create<Players>(COLLECTION_ID, newPlayer);
