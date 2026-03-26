@@ -22,10 +22,6 @@ export default function ResetLuxuryPage() {
       // Reset dirty money to 0
       setDirtyMoney(0);
 
-      // Clear localStorage
-      localStorage.removeItem('luxury-shop-store');
-      localStorage.removeItem('gameStore');
-
       setResetComplete(true);
       
       // Reset after 3 seconds

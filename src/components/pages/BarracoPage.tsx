@@ -40,7 +40,6 @@ export default function BarracoPage() {
   const [levelUpAnimation, setLevelUpAnimation] = useState(false);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
   const { setLevel, setBarracoLevel, playerId } = usePlayerStore();
-  const { setBarracoLevel: setSpinVaultBarracoLevel } = useSpinVaultStore();
   const initRef = useRef(false); // Prevent double initialization
 
   // Redirect if not authenticated
@@ -56,7 +55,7 @@ export default function BarracoPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const idFromUrl = urlParams.get('playerId');
     if (idFromUrl) return idFromUrl;
-    return localStorage.getItem('currentPlayerId') || '';
+    return '';
   };
 
   useEffect(() => {
@@ -77,7 +76,6 @@ export default function BarracoPage() {
         const result = await BaseCrudService.getAll<Players>('players', [], { limit: 1 });
         if (result.items && result.items.length > 0) {
           currentPlayerId = result.items[0]._id;
-          localStorage.setItem('currentPlayerId', currentPlayerId);
         } else {
           setError('Nenhum jogador encontrado');
           return;

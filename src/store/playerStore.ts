@@ -22,6 +22,8 @@ interface PlayerData {
   players: Record<string, Players>;
   // Spin Vault fields (consolidated from spinVaultStore)
   lastGainTime: number;
+  // Luxury items (consolidated from localStorage)
+  ownedLuxuryItemIds: string[];
 }
 
 interface PlayerState extends PlayerData {
@@ -59,6 +61,11 @@ interface PlayerState extends PlayerData {
   updateLastGainTime: () => void;
   getTimeUntilNextGain: () => number;
   
+  // Luxury items methods (consolidated from localStorage)
+  setOwnedLuxuryItems: (itemIds: string[]) => void;
+  addOwnedLuxuryItem: (itemId: string) => void;
+  isLuxuryItemOwned: (itemId: string) => boolean;
+  
   loadPlayerData: (data: Partial<PlayerState>) => void;
   resetPlayer: () => void;
 }
@@ -66,12 +73,12 @@ interface PlayerState extends PlayerData {
 const initialState = {
   playerId: null,
   playerName: 'COMANDANTE',
-  level: 10,
+  level: 1,
   progress: 0,
   isGuest: false,
   profilePicture: null,
   barracoLevel: 1,
-  cleanMoney: 1000000000,
+  cleanMoney: 0,
   dirtyMoney: 0,
   spins: 0,
   multiplier: 1,
@@ -80,6 +87,7 @@ const initialState = {
   lastResult: null,
   players: {},
   lastGainTime: 0,
+  ownedLuxuryItemIds: [],
 };
 
 export const usePlayerStore = create<PlayerState>()(
@@ -132,6 +140,19 @@ export const usePlayerStore = create<PlayerState>()(
         const timeSinceLastGain = Date.now() - state.lastGainTime;
         const timeUntilNextGain = 60000 - (timeSinceLastGain % 60000);
         return Math.max(0, timeUntilNextGain);
+      },
+      
+      // Luxury items methods (consolidated from localStorage)
+      setOwnedLuxuryItems: (itemIds: string[]) => set({ ownedLuxuryItemIds: itemIds }),
+      addOwnedLuxuryItem: (itemId: string) => set((state) => {
+        if (!state.ownedLuxuryItemIds.includes(itemId)) {
+          return { ownedLuxuryItemIds: [...state.ownedLuxuryItemIds, itemId] };
+        }
+        return state;
+      }),
+      isLuxuryItemOwned: (itemId: string) => {
+        const state = usePlayerStore.getState();
+        return state.ownedLuxuryItemIds.includes(itemId);
       },
       
       loadPlayerData: (data: Partial<PlayerState>) => set(data),

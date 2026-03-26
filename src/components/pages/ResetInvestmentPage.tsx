@@ -19,9 +19,6 @@ export default function ResetInvestmentPage() {
       const store = useInvestmentSkillTreeStore.getState();
       store.resetAllSkills();
 
-      // Clear localStorage
-      localStorage.removeItem('investment-skill-tree-store');
-
       setResetComplete(true);
 
       // Reset after 3 seconds

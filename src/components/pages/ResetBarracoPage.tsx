@@ -35,7 +35,7 @@ export default function ResetBarracoPage() {
       // Get player ID
       const urlParams = new URLSearchParams(window.location.search);
       const idFromUrl = urlParams.get('playerId');
-      let playerId = idFromUrl || localStorage.getItem('currentPlayerId') || '';
+      let playerId = idFromUrl || '';
 
       if (!playerId) {
         const result = await BaseCrudService.getAll<Players>('players', [], { limit: 1 });

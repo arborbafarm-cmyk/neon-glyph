@@ -165,10 +165,11 @@ export default function LuxuryShowroomPage() {
   const playerLevel = usePlayerStore((s) => s.level);
   const playerId = usePlayerStore((s) => s.playerId);
   const setBarracoLevel = usePlayerStore((s) => s.setBarracoLevel);
-  const initRef = useRef(false); // Prevent double initialization
+  const ownedLuxuryItemIds = usePlayerStore((s) => s.ownedLuxuryItemIds);
+  const addOwnedLuxuryItem = usePlayerStore((s) => s.addOwnedLuxuryItem);
+  const initRef = useRef(false);
 
   useEffect(() => {
-    // Skip if already initialized
     if (initRef.current) return;
     initRef.current = true;
 
@@ -177,13 +178,12 @@ export default function LuxuryShowroomPage() {
         let currentPlayerId = playerId;
         if (!currentPlayerId) {
           const urlParams = new URLSearchParams(window.location.search);
-          currentPlayerId = urlParams.get('playerId') || localStorage.getItem('currentPlayerId');
+          currentPlayerId = urlParams.get('playerId');
         }
         if (!currentPlayerId) {
           const result = await BaseCrudService.getAll<Players>('players', [], { limit: 1 });
           if (result.items?.length) {
             currentPlayerId = result.items[0]._id;
-            localStorage.setItem('currentPlayerId', currentPlayerId);
           }
         }
         if (currentPlayerId) {
@@ -205,23 +205,18 @@ export default function LuxuryShowroomPage() {
   const level = barracoLevel && barracoLevel > 0 ? barracoLevel : Math.max(1, playerLevel || 1);
   const system = useMemo(() => getLuxurySystem(level), [level]);
   const theme = useMemo(() => themeByLevel(level), [level]);
-  const storageKey = useMemo(
-    () => `luxury_showroom_owned_${playerName.toLowerCase().replace(/\s+/g, '_')}`,
-    [playerName],
-  );
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) setPurchasedItems(JSON.parse(saved));
-    } catch {
-      setPurchasedItems({});
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(purchasedItems));
-  }, [purchasedItems, storageKey]);
+    setPurchasedItems(
+      ownedLuxuryItemIds.reduce((acc, id) => {
+        const index = system.items.findIndex((item) => item._id === id);
+        if (index !== -1) {
+          acc[index] = true;
+        }
+        return acc;
+      }, {} as PurchaseMap)
+    );
+  }, [ownedLuxuryItemIds, system.items]);
 
   useEffect(() => {
     if (loading) return;
@@ -254,6 +249,7 @@ export default function LuxuryShowroomPage() {
 
   const items = (system?.items || []).map((item, index) => ({
     id: index,
+    _id: item._id,
     name: item.name,
     image: item.image,
     price: item.price,
@@ -318,12 +314,16 @@ export default function LuxuryShowroomPage() {
     setShowCard(true);
     setTimeout(async () => {
       try {
-        // Deduct cleanMoney from player data
+        // Deduct cleanMoney and add luxury item to player data
         const updatedPlayer = await BaseCrudService.update<Players>('players', {
           _id: playerData._id,
           cleanMoney: (playerData.cleanMoney || 0) - selectedItem.price,
         });
         setPlayerData(updatedPlayer);
+        
+        // Add item to playerStore
+        addOwnedLuxuryItem(selectedItem._id);
+        
         setPurchasedItems((prev) => ({ ...prev, [selectedItem.id]: true }));
         setShowCard(false);
         setShowItemShowcase(false);
@@ -394,10 +394,7 @@ export default function LuxuryShowroomPage() {
               <p className="mt-4 max-w-xl text-sm text-white/74 sm:text-base">
                 Luxo, provocação e presença. Aqui você não compra só peça. Você compra o jeito que o mundo vai te enxergar.
               </p>
-
             </div>
-            {/* RIGHT - PLAYER INFO & STATUS */}
-
           </div>
 
           {/* MAIN SECTION - NPC & ITEMS */}
@@ -454,7 +451,6 @@ export default function LuxuryShowroomPage() {
                           >
                             Ver coleção
                           </button>
-
                         </div>
                       </div>
                     </motion.div>
@@ -599,92 +595,11 @@ export default function LuxuryShowroomPage() {
                   })}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </div>
-      {/* MOBILE DIALOG */}
-      <AnimatePresence>
-        {showDialog && (
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 22 }}
-            className="fixed bottom-5 left-1/2 z-[9999] w-[92%] max-w-[560px] -translate-x-1/2 xl:hidden"
-          >
-            <div
-              className="overflow-hidden rounded-[30px] border"
-              style={{
-                borderColor: theme.accent,
-                background: 'linear-gradient(180deg, rgba(15,15,15,.95), rgba(0,0,0,.96))',
-                boxShadow: `0 20px 80px rgba(0,0,0,.55), 0 0 26px ${theme.accentSoft}`,
-              }}
-            >
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.35em] text-white/40">Atendimento privado</p>
-                    <h2 className="mt-2 text-xl font-black text-white">{dialogTitle}</h2>
-                  </div>
-                  <button
-                    onClick={() => setShowDialog(false)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-white/78"
-                  >
-                    fechar
-                  </button>
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-white/78">{dialogMessage}</p>
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => {
-                      setShowDialog(false);
-                      setShowHint(true);
-                    }}
-                    className="flex-1 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-[0.22em] text-black"
-                    style={{ background: theme.cardMetal }}
-                  >
-                    Ver coleção
-                  </button>
-                  <button
-                    onClick={handleNpcClick}
-                    className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.22em] text-white"
-                  >
-                    Ouvir mais
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* HINT */}
-      <AnimatePresence>
-        {showHint && !showDialog && (
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 18 }}
-            className="fixed bottom-5 left-1/2 z-[9990] w-[92%] max-w-[900px] -translate-x-1/2 rounded-[28px] border border-white/10 bg-black/82 px-5 py-4 backdrop-blur-xl"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-white/45">Coleção liberada</p>
-                <p className="mt-1 text-white/85">
-                  {playerName}, toque na peça para ela ser apresentada. Cada compra aumenta uma habilidade em{' '}
-                  <span className="font-black text-white">+1%</span>.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowHint(false)}
-                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white/75"
-              >
-                Fechar aviso
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
       {/* ITEM SHOWCASE */}
       <AnimatePresence>
         {showItemShowcase && selectedItem && (
@@ -753,7 +668,6 @@ export default function LuxuryShowroomPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="relative flex w-full max-w-[980px] items-end justify-end"
                 >
-                  {/* giant item near hands */}
                   <motion.div
                     initial={{ y: 28, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -776,7 +690,6 @@ export default function LuxuryShowroomPage() {
                     </div>
                   </motion.div>
 
-                  {/* npc */}
                   <motion.div
                     animate={{ y: [0, -1.2, 0] }}
                     transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
@@ -805,6 +718,7 @@ export default function LuxuryShowroomPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* CARD */}
       <AnimatePresence>
         {showCard && selectedItem && (
@@ -901,6 +815,7 @@ export default function LuxuryShowroomPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
       <Footer />
     </div>
   );
