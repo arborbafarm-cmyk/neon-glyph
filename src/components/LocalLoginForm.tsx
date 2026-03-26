@@ -9,7 +9,9 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function LocalLoginForm() {
   const navigate = useNavigate();
-  const { setPlayer, reset } = usePlayerStore();
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
+  const reset = usePlayerStore((state) => state.reset);
+
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,15 +21,19 @@ export default function LocalLoginForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const validateEmail = (email: string) => {
+  const validateEmail = (value: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+    return re.test(value);
+  };
+
+  const resetFormMessages = () => {
+    setError('');
+    setSuccess('');
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    resetFormMessages();
 
     if (!email || !password || !playerName || !confirmPassword) {
       setError('Todos os campos são obrigatórios');
@@ -51,22 +57,24 @@ export default function LocalLoginForm() {
 
     try {
       setIsLoading(true);
-      // Register player (creates in DB, registers credentials, creates session)
-      const player = await registerLocalPlayer(email, password, playerName);
-      
-      // Clear any previous session data
+
+      // Limpa qualquer resquício de sessão anterior antes de registrar
       reset();
-      
-      // Load player data into playerStore
+
+      // Cria o jogador, registra credenciais e já devolve o player persistido
+      const player = await registerLocalPlayer(email, password, playerName);
+
+      // Sincroniza a store única da sessão
       setPlayer(player);
-      
+
       setSuccess('Conta criada com sucesso! Fazendo login...');
-      
+
       setTimeout(() => {
         navigate('/star-map');
       }, 1500);
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta');
+      console.error('Register error:', err);
+      setError(err?.message || 'Erro ao criar conta');
     } finally {
       setIsLoading(false);
     }
@@ -74,44 +82,56 @@ export default function LocalLoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    resetFormMessages();
 
     if (!email || !password) {
       setError('Email e senha são obrigatórios');
       return;
     }
 
+    if (!validateEmail(email)) {
+      setError('Email inválido');
+      return;
+    }
+
     try {
       setIsLoading(true);
-      
-      // loginLocalPlayer handles complete session reset internally:
-      // 1. Resets all stores
-      // 2. Validates credentials
-      // 3. Loads player from database
-      // 4. Creates authenticated session
+
+      // Garante limpeza da sessão visual antes do novo login
+      reset();
+
+      // loginLocalPlayer deve validar credenciais, resetar stores internas,
+      // carregar o player do banco e devolver o player final autenticado
       const player = await loginLocalPlayer(email, password);
-      
-      // Load player data into playerStore for UI synchronization
+
+      // Sincroniza a UI com o player carregado do banco
       setPlayer(player);
-      
+
       setSuccess('Login realizado com sucesso!');
-      
+
       setTimeout(() => {
         navigate('/star-map');
       }, 1500);
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Erro ao fazer login');
+      setError(err?.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleToggleMode = () => {
+    setMode(mode === 'login' ? 'register' : 'login');
+    resetFormMessages();
+    setEmail('');
+    setPassword('');
+    setPlayerName('');
+    setConfirmPassword('');
+  };
+
   return (
     <div className="w-full max-w-md">
       <div className="bg-background/50 backdrop-blur-sm border-2 border-secondary/30 rounded-lg p-8 shadow-2xl">
-        {/* Title */}
         <div className="mb-8 text-center">
           <h2 className="font-heading text-3xl font-bold text-foreground mb-2">
             {mode === 'login' ? 'Entrar' : 'Criar Conta'}
@@ -121,7 +141,6 @@ export default function LocalLoginForm() {
           </p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-4 flex items-center gap-2 bg-red-500/20 border border-red-500/50 rounded p-3">
             <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
@@ -129,7 +148,6 @@ export default function LocalLoginForm() {
           </div>
         )}
 
-        {/* Success Message */}
         {success && (
           <div className="mb-4 flex items-center gap-2 bg-green-500/20 border border-green-500/50 rounded p-3">
             <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
@@ -137,9 +155,7 @@ export default function LocalLoginForm() {
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-4">
-          {/* Email */}
           <div>
             <label className="font-paragraph text-sm text-foreground mb-2 block">
               Email
@@ -154,7 +170,6 @@ export default function LocalLoginForm() {
             />
           </div>
 
-          {/* Player Name (Register only) */}
           {mode === 'register' && (
             <div>
               <label className="font-paragraph text-sm text-foreground mb-2 block">
@@ -171,7 +186,6 @@ export default function LocalLoginForm() {
             </div>
           )}
 
-          {/* Password */}
           <div>
             <label className="font-paragraph text-sm text-foreground mb-2 block">
               Senha
@@ -186,7 +200,6 @@ export default function LocalLoginForm() {
             />
           </div>
 
-          {/* Confirm Password (Register only) */}
           {mode === 'register' && (
             <div>
               <label className="font-paragraph text-sm text-foreground mb-2 block">
@@ -203,7 +216,6 @@ export default function LocalLoginForm() {
             </div>
           )}
 
-          {/* Submit Button */}
           <Button
             type="submit"
             disabled={isLoading}
@@ -220,21 +232,12 @@ export default function LocalLoginForm() {
           </Button>
         </form>
 
-        {/* Toggle Mode */}
         <div className="mt-6 text-center">
           <p className="font-paragraph text-sm text-foreground/70 mb-3">
             {mode === 'login' ? 'Não tem conta?' : 'Já tem conta?'}
           </p>
           <button
-            onClick={() => {
-              setMode(mode === 'login' ? 'register' : 'login');
-              setError('');
-              setSuccess('');
-              setEmail('');
-              setPassword('');
-              setPlayerName('');
-              setConfirmPassword('');
-            }}
+            onClick={handleToggleMode}
             disabled={isLoading}
             className="font-paragraph text-sm text-secondary hover:text-secondary/80 transition-colors underline"
           >
