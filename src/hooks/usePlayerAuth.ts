@@ -2,19 +2,19 @@ import { useEffect, useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { getCurrentLocalPlayer, isPlayerAuthenticated } from '@/services/playerService';
 import { getPlayer } from '@/services/playerCoreService';
+import { resetPlayerSession } from '@/services/sessionResetService';
 
 export function usePlayerAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const setPlayer = usePlayerStore((state) => state.setPlayer);
-  const reset = usePlayerStore((state) => state.reset);
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Sempre limpa a sessão visual antes de reidratar
-        reset();
+        // 🔥 CORREÇÃO CRÍTICA: reset COMPLETO da sessão
+        await resetPlayerSession();
 
         const isAuth = await isPlayerAuthenticated();
 
@@ -27,16 +27,14 @@ export function usePlayerAuth() {
 
         if (!localPlayer?._id) {
           setIsAuthenticated(false);
-          reset();
           return;
         }
 
-        // Carrega o player completo e atualizado do banco
+        // 🔥 SEMPRE puxar do banco (source of truth)
         const fullPlayer = await getPlayer(localPlayer._id);
 
         if (!fullPlayer) {
           setIsAuthenticated(false);
-          reset();
           return;
         }
 
@@ -44,7 +42,6 @@ export function usePlayerAuth() {
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Error initializing player auth:', error);
-        reset();
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -52,7 +49,7 @@ export function usePlayerAuth() {
     };
 
     initializeAuth();
-  }, [setPlayer, reset]);
+  }, [setPlayer]);
 
   return {
     isAuthenticated,
