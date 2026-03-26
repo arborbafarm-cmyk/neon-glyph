@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import { usePlayerStore } from '@/store/playerStore';
 import { registerLocalPlayer } from '@/services/playerService';
+import { resetPlayerSession } from '@/services/sessionResetService';
 
 interface PlayerRegistrationProps {
   onClose: () => void;
@@ -18,7 +19,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
   const [loading, setLoading] = useState(false);
 
   const setPlayer = usePlayerStore((state) => state.setPlayer);
-  const reset = usePlayerStore((state) => state.reset);
 
   const validateForm = () => {
     setError('');
@@ -43,7 +43,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
     setError('');
 
     try {
-      reset();
+      await resetPlayerSession();
 
       const player = await registerLocalPlayer(email.trim(), password, gamerName.trim());
 
