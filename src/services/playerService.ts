@@ -1,31 +1,110 @@
-import { BaseCrudService } from "@/integrations";
-import { Players } from "@/entities";
-import { getInitialComercioData } from "@/types/comercios";
-import {
-  storeSession,
-  getSession,
-  clearSession,
-} from "./indexedDBService";
+import { BaseCrudService } from '@/integrations';
+import { Players } from '@/entities';
+import { getInitialComercioData } from '@/types/comercios';
 import {
   registerCredentials,
   validateCredentials,
   createSession,
   destroySession,
   getAuthSession,
-} from "./authService";
-import { resetPlayerSession } from "./sessionResetService";
+} from './authService';
+import { resetPlayerSession } from './sessionResetService';
 
-const COLLECTION_ID = "players";
+const COLLECTION_ID = 'players';
+
+function buildNewPlayer(playerId: string, email: string, playerName: string): Players {
+  const now = new Date().toISOString();
+  const comercios = getInitialComercioData();
+
+  return {
+    _id: playerId,
+    email,
+    playerId: email,
+    playerName: playerName || 'Player',
+
+    cleanMoney: 0,
+    dirtyMoney: 0,
+    spins: 10,
+
+    level: 1,
+    progress: 0,
+    xp: 0,
+    power: 0,
+    barracoLevel: 1,
+
+    comercios: JSON.stringify(comercios),
+    inventory: JSON.stringify([]),
+    skillTrees: JSON.stringify({}),
+    ownedLuxuryItems: JSON.stringify([]),
+    investments: JSON.stringify({}),
+
+    isGuest: false,
+    profilePicture: '',
+
+    createdAt: now,
+    updatedAt: now,
+    lastUpdated: now,
+    lastLoginAt: now,
+  };
+}
 
 export async function savePlayer(player: Partial<Players>) {
+  const now = new Date().toISOString();
+
   if (!player._id) {
-    player._id = crypto.randomUUID();
+    const newPlayer: Players = {
+      _id: crypto.randomUUID(),
+      email: player.email || '',
+      playerId: player.playerId || player.email || '',
+      playerName: player.playerName || 'Player',
+
+      cleanMoney: player.cleanMoney ?? 0,
+      dirtyMoney: player.dirtyMoney ?? 0,
+      spins: player.spins ?? 10,
+
+      level: player.level ?? 1,
+      progress: player.progress ?? 0,
+      xp: player.xp ?? 0,
+      power: player.power ?? 0,
+      barracoLevel: player.barracoLevel ?? 1,
+
+      comercios: player.comercios ?? JSON.stringify(getInitialComercioData()),
+      inventory: player.inventory ?? JSON.stringify([]),
+      skillTrees: player.skillTrees ?? JSON.stringify({}),
+      ownedLuxuryItems: player.ownedLuxuryItems ?? JSON.stringify([]),
+      investments: player.investments ?? JSON.stringify({}),
+
+      isGuest: player.isGuest ?? false,
+      profilePicture: player.profilePicture ?? '',
+
+      createdAt: player.createdAt ?? now,
+      updatedAt: now,
+      lastUpdated: now,
+      lastLoginAt: player.lastLoginAt ?? now,
+      _createdDate: player._createdDate,
+      _updatedDate: player._updatedDate,
+      externalPlayerId: player.externalPlayerId,
+    };
+
+    return BaseCrudService.create(COLLECTION_ID, newPlayer);
   }
-  return BaseCrudService.create(COLLECTION_ID, player as Players);
+
+  return BaseCrudService.update(COLLECTION_ID, {
+    ...player,
+    updatedAt: now,
+    lastUpdated: now,
+  });
 }
 
 export async function updatePlayer(playerId: string, updates: Partial<Players>) {
-  return BaseCrudService.update(COLLECTION_ID, { _id: playerId, ...updates });
+  const now = new Date().toISOString();
+
+  return BaseCrudService.update(COLLECTION_ID, {
+    _id: playerId,
+    ...updates,
+    updatedAt: now,
+    lastUpdated: now,
+  });
 }
 
 export async function loadPlayers() {
@@ -41,96 +120,67 @@ export async function deletePlayer(playerId: string) {
   return BaseCrudService.delete(COLLECTION_ID, playerId);
 }
 
-export async function registerPlayer(email: string, playerName: string, nickname: string) {
+export async function registerPlayer(email: string, playerName: string, _nickname: string) {
   const playerId = crypto.randomUUID();
-  const comercios = getInitialComercioData();
-  
-  const newPlayer: Players = {
-    _id: playerId,
-    playerName: playerName || 'Player',
-    playerId: email,
-    cleanMoney: 0,
-    dirtyMoney: 10000000000,
-    level: 1,
-    progress: 0,
-    comercios: JSON.stringify(comercios),
-    isGuest: false,
-    spins: 0, // PHASE 4: Initialize spins in database
-  };
-  
+  const newPlayer = buildNewPlayer(playerId, email, playerName);
+
   return BaseCrudService.create(COLLECTION_ID, newPlayer);
 }
 
 /**
- * REFACTORED: Register new player with email/password
+ * Register new player with email/password
  * Step 1: Create player in database with fixed _id
  * Step 2: Register credentials in auth system
  * Step 3: Create authenticated session
  */
 export async function registerLocalPlayer(email: string, password: string, playerName: string) {
-  // Step 1: Create player in database with fixed _id
+  const normalizedEmail = email.trim().toLowerCase();
   const playerId = crypto.randomUUID();
-  const comercios = getInitialComercioData();
-  
-  const newPlayer: Players = {
-    _id: playerId,
-    playerName: playerName || 'Player',
-    playerId: email,
-    cleanMoney: 0,
-    dirtyMoney: 10000000000,
-    level: 1,
-    progress: 0,
-    comercios: JSON.stringify(comercios),
-    isGuest: false,
-    spins: 0, // PHASE 4: Initialize spins in database
-  };
-  
+  const newPlayer = buildNewPlayer(playerId, normalizedEmail, playerName.trim());
+
   const createdPlayer = await BaseCrudService.create(COLLECTION_ID, newPlayer);
-  
-  // Step 2: Register credentials in auth system
-  await registerCredentials(email, password, playerId);
-  
-  // Step 3: Create authenticated session
-  await createSession(playerId, email);
-  
+
+  await registerCredentials(normalizedEmail, password, playerId);
+  await createSession(playerId, normalizedEmail);
+
   return createdPlayer;
 }
 
 /**
- * REFACTORED: Login player with email/password
- * 
- * CRITICAL SESSION RESET ORDER:
- * Step 1: Reset old session (clear all stores, localStorage, IndexedDB)
- * Step 2: Validate email and password (returns player _id)
+ * Login player with email/password
+ *
+ * Step 1: Reset old session
+ * Step 2: Validate email and password
  * Step 3: Load player data from database
  * Step 4: Create authenticated session
- * Step 5: Sync screen state
+ * Step 5: Return player data
  */
 export async function loginLocalPlayer(email: string, password: string) {
-  // Step 1: RESET OLD SESSION - Clear all player-related state
-  // This prevents leftover state from previous player from contaminating new session
+  const normalizedEmail = email.trim().toLowerCase();
+
   console.log('🔄 Resetting old session before login...');
   await resetPlayerSession();
-  
-  // Step 2: Validate email and password (returns player _id)
+
   console.log('🔐 Validating credentials...');
-  const playerId = await validateCredentials(email, password);
-  
-  // Step 3: Load player data from database
+  const playerId = await validateCredentials(normalizedEmail, password);
+
   console.log('📥 Loading player data from database...');
   const player = await getPlayerById(playerId);
-  
+
   if (!player) {
     throw new Error('Jogador não encontrado no banco de dados');
   }
-  
-  // Step 4: Create authenticated session
+
   console.log('🔑 Creating authenticated session...');
-  await createSession(playerId, email);
-  
-  // Step 5: Return player data (caller will sync screen state)
+  await createSession(playerId, normalizedEmail);
+
+  const now = new Date().toISOString();
+  const updatedPlayer = await updatePlayer(playerId, {
+    lastLoginAt: now,
+  });
+
   console.log('✅ Login successful - player session ready');
-  return player;
+  return updatedPlayer;
 }
 
 export async function logoutLocalPlayer() {
@@ -146,7 +196,7 @@ export async function getCurrentLocalPlayer() {
 export async function isPlayerAuthenticated(): Promise<boolean> {
   const session = await getAuthSession();
   if (!session) return false;
-  
+
   try {
     const player = await getPlayerById(session.playerId);
     return !!player;
