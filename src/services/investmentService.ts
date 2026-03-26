@@ -1,184 +1,125 @@
 /**
- * INVESTMENT SERVICE
+ * INVESTMENT SERVICE - Investment Management
  * 
- * Handles all investment-related operations:
- * - Loading investments
- * - Creating investments
- * - Updating investment status
- * - Calculating investment returns
- * 
- * This service is the single source of truth for investment operations.
+ * Handles business investments and returns
  */
 
-import { BaseCrudService } from '@/integrations';
+import { getPlayer, savePlayer } from './playerCoreService';
 import { Players } from '@/entities';
 
-const COLLECTION_ID = 'players';
-
-export interface Investment {
-  id: string;
-  name: string;
-  amount: number;
-  returnRate: number;
-  createdAt: Date;
-  completedAt?: Date;
-  status: 'active' | 'completed' | 'failed';
-}
-
 /**
- * Get player investments
+ * Parse investments from JSON string
  */
-export async function getPlayerInvestments(playerId: string): Promise<Investment[]> {
+function parseInvestments(investmentsJson: string | undefined): Record<string, number> {
+  if (!investmentsJson) return {};
   try {
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (!player || !player.investments) {
-      return [];
-    }
-
-    try {
-      return JSON.parse(player.investments);
-    } catch {
-      return [];
-    }
-  } catch (error) {
-    console.error('Failed to get player investments:', error);
-    throw error;
+    return JSON.parse(investmentsJson);
+  } catch {
+    return {};
   }
 }
 
 /**
- * Create new investment
+ * Stringify investments to JSON
  */
-export async function createInvestment(
+function stringifyInvestments(investments: Record<string, number>): string {
+  return JSON.stringify(investments);
+}
+
+/**
+ * Invest in a business
+ */
+export async function investInBusiness(
   playerId: string,
-  investment: Omit<Investment, 'id' | 'createdAt'>
-): Promise<{ success: boolean; investment?: Investment; error?: string }> {
-  try {
-    const investments = await getPlayerInvestments(playerId);
+  businessId: string,
+  amount: number
+): Promise<Players> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    const newInvestment: Investment = {
-      ...investment,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-    };
-
-    investments.push(newInvestment);
-
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
-      investments: JSON.stringify(investments),
-    });
-
-    console.log(`[INVESTMENT] Created investment: ${investment.name} - ${investment.amount}`);
-
-    return { success: true, investment: newInvestment };
-  } catch (error) {
-    console.error('Failed to create investment:', error);
-    return { success: false, error: String(error) };
+  const currentClean = player.cleanMoney ?? 0;
+  if (currentClean < amount) {
+    throw new Error(
+      `Insufficient clean money to invest. Have: ${currentClean}, Need: ${amount}`
+    );
   }
+
+  const investments = parseInvestments(player.investments);
+  investments[businessId] = (investments[businessId] ?? 0) + amount;
+
+  const updated = {
+    ...player,
+    cleanMoney: currentClean - amount,
+    investments: stringifyInvestments(investments),
+  };
+
+  return savePlayer(updated);
 }
 
 /**
- * Complete investment
+ * Get investment amount in a business
  */
-export async function completeInvestment(
+export async function getInvestmentAmount(
   playerId: string,
-  investmentId: string
-): Promise<{ success: boolean; investment?: Investment; error?: string }> {
-  try {
-    const investments = await getPlayerInvestments(playerId);
+  businessId: string
+): Promise<number> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    const investment = investments.find((inv) => inv.id === investmentId);
-    if (!investment) {
-      return { success: false, error: 'Investment not found' };
-    }
-
-    investment.status = 'completed';
-    investment.completedAt = new Date();
-
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
-      investments: JSON.stringify(investments),
-    });
-
-    console.log(`[INVESTMENT] Completed investment: ${investment.name}`);
-
-    return { success: true, investment };
-  } catch (error) {
-    console.error('Failed to complete investment:', error);
-    return { success: false, error: String(error) };
-  }
+  const investments = parseInvestments(player.investments);
+  return investments[businessId] ?? 0;
 }
 
 /**
- * Calculate investment return
+ * Get all investments
  */
-export function calculateInvestmentReturn(investment: Investment): number {
-  if (investment.status !== 'active') {
-    return 0;
-  }
+export async function getAllInvestments(playerId: string): Promise<Record<string, number>> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-  const now = new Date().getTime();
-  const created = new Date(investment.createdAt).getTime();
-  const daysElapsed = (now - created) / (1000 * 60 * 60 * 24);
-
-  // Simple calculation: amount * returnRate * daysElapsed
-  return investment.amount * (investment.returnRate / 100) * daysElapsed;
+  return parseInvestments(player.investments);
 }
 
 /**
- * Get total investment returns
+ * Withdraw investment from a business
  */
-export async function getTotalInvestmentReturns(playerId: string): Promise<number> {
-  try {
-    const investments = await getPlayerInvestments(playerId);
-    return investments.reduce((total, inv) => total + calculateInvestmentReturn(inv), 0);
-  } catch (error) {
-    console.error('Failed to get total investment returns:', error);
-    return 0;
-  }
-}
-
-/**
- * Cancel investment
- */
-export async function cancelInvestment(
+export async function withdrawInvestment(
   playerId: string,
-  investmentId: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const investments = await getPlayerInvestments(playerId);
+  businessId: string,
+  amount: number
+): Promise<Players> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    const investment = investments.find((inv) => inv.id === investmentId);
-    if (!investment) {
-      return { success: false, error: 'Investment not found' };
-    }
+  const investments = parseInvestments(player.investments);
+  const currentInvestment = investments[businessId] ?? 0;
 
-    investment.status = 'failed';
-
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
-      investments: JSON.stringify(investments),
-    });
-
-    console.log(`[INVESTMENT] Cancelled investment: ${investment.name}`);
-
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to cancel investment:', error);
-    return { success: false, error: String(error) };
+  if (currentInvestment < amount) {
+    throw new Error(
+      `Insufficient investment in ${businessId}. Have: ${currentInvestment}, Need: ${amount}`
+    );
   }
+
+  investments[businessId] = currentInvestment - amount;
+
+  // Remove business if investment reaches 0
+  if (investments[businessId] <= 0) {
+    delete investments[businessId];
+  }
+
+  const updated = {
+    ...player,
+    cleanMoney: (player.cleanMoney ?? 0) + amount,
+    investments: stringifyInvestments(investments),
+  };
+
+  return savePlayer(updated);
 }
 
 /**
- * Get active investments
+ * Get total invested amount
  */
-export async function getActiveInvestments(playerId: string): Promise<Investment[]> {
-  try {
-    const investments = await getPlayerInvestments(playerId);
-    return investments.filter((inv) => inv.status === 'active');
-  } catch (error) {
-    console.error('Failed to get active investments:', error);
-    return [];
-  }
+export async function getTotalInvested(playerId: string): Promise<number> {
+  const investments = await getAllInvestments(playerId);
+  return Object.values(investments).reduce((sum, amount) => sum + amount, 0);
 }

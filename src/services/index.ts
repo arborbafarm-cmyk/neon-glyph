@@ -1,53 +1,37 @@
 /**
- * SERVICES INDEX
+ * SERVICES INDEX - REFACTORED
  * 
  * Central export point for all services.
  * Import services from here instead of individual files.
  * 
- * Usage:
- * import { 
- *   playerEconomyService,
- *   playerProfileService,
- *   slotService,
- * } from '@/services';
+ * CRITICAL: Use the new unified services for all operations.
+ * Legacy services are kept for backward compatibility only.
  */
 
-// Authentication
-export * from './authService';
-
-// Player Profile
-export * from './playerProfileService';
-
-// Player Economy (Money)
-export * from './playerEconomyService';
-
-// Player Progress (Level, Progression)
-export * from './playerProgressService';
-
-// Slot Machine
-export * from './slotService';
-
-// Inventory
-export * from './inventoryService';
-
-// Luxury Items
+// ✅ NEW UNIFIED SERVICES (Use these!)
+export * from './playerCoreService';
+export * from './economyService';
+export * from './spinsService';
+export * from './barracoService';
 export * from './luxuryService';
-
-// Investments
+export * from './skillTreeService';
+export * from './inventoryService';
 export * from './investmentService';
 
-// Multiplayer Presence
-export * from './multiplayerPresenceService';
-
-// Legacy Services (to be refactored)
+// ⚠️ LEGACY SERVICES (Backward compatibility only)
+export * from './authService';
 export * from './playerService';
 export * from './playerDataService';
 export * from './playerEconomyService';
+export * from './playerProgressService';
+export * from './playerProfileService';
 export * from './playerPresenceService';
 export * from './spinEconomyService';
+export * from './slotService';
 export * from './comerciosService';
 export * from './financialHistoryService';
 export * from './sessionResetService';
 export * from './criticalActionService';
 export * from './backgroundService';
 export * from './indexedDBService';
+export * from './multiplayerPresenceService';

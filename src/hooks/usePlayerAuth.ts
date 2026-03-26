@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { getCurrentLocalPlayer, isPlayerAuthenticated } from '@/services/playerService';
-import { loadPlayerFromDatabase } from '@/services/playerDataService';
+import { getPlayer } from '@/services/playerCoreService';
 import { Players } from '@/entities';
 
 export function usePlayerAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [playerData, setPlayerData] = useState<Players | null>(null);
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -18,11 +18,13 @@ export function usePlayerAuth() {
           const player = await getCurrentLocalPlayer();
           
           if (player) {
-            setPlayerData(player);
-            setIsAuthenticated(true);
+            // Load full player data from database
+            const fullPlayer = await getPlayer(player._id);
             
-            // Use centralized service to load player data
-            await loadPlayerFromDatabase(player._id);
+            if (fullPlayer) {
+              setPlayer(fullPlayer);
+              setIsAuthenticated(true);
+            }
           }
         }
       } catch (error) {
@@ -34,11 +36,10 @@ export function usePlayerAuth() {
     };
 
     initializeAuth();
-  }, []);
+  }, [setPlayer]);
 
   return {
     isAuthenticated,
     isLoading,
-    playerData,
   };
 }

@@ -1,186 +1,95 @@
 /**
- * LUXURY SERVICE
+ * LUXURY SERVICE - Luxury Items Management
  * 
- * Handles all luxury items related operations:
- * - Loading luxury items
- * - Purchasing luxury items
- * - Managing owned luxury items
- * - Calculating bonuses from luxury items
- * 
- * This service is the single source of truth for luxury operations.
+ * Handles luxury item purchases and inventory
  */
 
-import { BaseCrudService } from '@/integrations';
-import { Players, ItensdeLuxo } from '@/entities';
-
-const PLAYERS_COLLECTION = 'players';
-const LUXURY_COLLECTION = 'itensdeluxo';
-
-export interface OwnedLuxuryItem {
-  itemId: string;
-  purchaseDate: Date;
-  level: number;
-}
+import { getPlayer, savePlayer } from './playerCoreService';
+import { removeCleanMoney } from './economyService';
+import { Players } from '@/entities';
 
 /**
- * Load all luxury items from database
+ * Parse ownedLuxuryItems from JSON string
  */
-export async function loadLuxuryItems(): Promise<ItensdeLuxo[]> {
+function parseOwnedItems(itemsJson: string | undefined): string[] {
+  if (!itemsJson) return [];
   try {
-    const result = await BaseCrudService.getAll<ItensdeLuxo>(LUXURY_COLLECTION);
-    return result.items || [];
-  } catch (error) {
-    console.error('Failed to load luxury items:', error);
-    throw error;
+    return JSON.parse(itemsJson);
+  } catch {
+    return [];
   }
 }
 
 /**
- * Get luxury item by ID
+ * Stringify ownedLuxuryItems to JSON
  */
-export async function getLuxuryItem(itemId: string): Promise<ItensdeLuxo | null> {
-  try {
-    const item = await BaseCrudService.getById<ItensdeLuxo>(LUXURY_COLLECTION, itemId);
-    return item || null;
-  } catch (error) {
-    console.error('Failed to get luxury item:', error);
-    throw error;
-  }
+function stringifyOwnedItems(items: string[]): string {
+  return JSON.stringify(items);
 }
 
 /**
- * Get player's owned luxury items
+ * Buy luxury item
+ * Deducts clean money and adds item to inventory
  */
-export async function getOwnedLuxuryItems(playerId: string): Promise<OwnedLuxuryItem[]> {
-  try {
-    const player = await BaseCrudService.getById<Players>(PLAYERS_COLLECTION, playerId);
-    if (!player || !player.ownedLuxuryItems) {
-      return [];
-    }
-
-    try {
-      return JSON.parse(player.ownedLuxuryItems);
-    } catch {
-      return [];
-    }
-  } catch (error) {
-    console.error('Failed to get owned luxury items:', error);
-    throw error;
-  }
-}
-
-/**
- * Purchase luxury item
- */
-export async function purchaseLuxuryItem(
+export async function buyLuxuryItem(
   playerId: string,
   itemId: string,
-  cost: number
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Check if player already owns this item
-    const ownedItems = await getOwnedLuxuryItems(playerId);
-    if (ownedItems.some((item) => item.itemId === itemId)) {
-      return { success: false, error: 'You already own this item' };
-    }
+  price: number
+): Promise<Players> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    // Get luxury item details
-    const luxuryItem = await getLuxuryItem(itemId);
-    if (!luxuryItem) {
-      return { success: false, error: 'Luxury item not found' };
-    }
-
-    // Add to owned items
-    const newOwnedItem: OwnedLuxuryItem = {
-      itemId,
-      purchaseDate: new Date(),
-      level: luxuryItem.level || 1,
-    };
-
-    ownedItems.push(newOwnedItem);
-
-    // Update player
-    await BaseCrudService.update(PLAYERS_COLLECTION, {
-      _id: playerId,
-      ownedLuxuryItems: JSON.stringify(ownedItems),
-    });
-
-    console.log(`[LUXURY] Purchased item: ${luxuryItem.itemName} for ${cost}`);
-
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to purchase luxury item:', error);
-    return { success: false, error: String(error) };
+  const currentClean = player.cleanMoney ?? 0;
+  if (currentClean < price) {
+    throw new Error(
+      `Insufficient clean money to buy luxury item. Have: ${currentClean}, Need: ${price}`
+    );
   }
+
+  const ownedItems = parseOwnedItems(player.ownedLuxuryItems);
+  
+  // Add item if not already owned
+  if (!ownedItems.includes(itemId)) {
+    ownedItems.push(itemId);
+  }
+
+  const updated = {
+    ...player,
+    cleanMoney: currentClean - price,
+    ownedLuxuryItems: stringifyOwnedItems(ownedItems),
+  };
+
+  return savePlayer(updated);
 }
 
 /**
  * Check if player owns luxury item
  */
 export async function ownsLuxuryItem(playerId: string, itemId: string): Promise<boolean> {
-  try {
-    const ownedItems = await getOwnedLuxuryItems(playerId);
-    return ownedItems.some((item) => item.itemId === itemId);
-  } catch (error) {
-    console.error('Failed to check luxury item ownership:', error);
-    return false;
-  }
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
+
+  const ownedItems = parseOwnedItems(player.ownedLuxuryItems);
+  return ownedItems.includes(itemId);
 }
 
 /**
- * Get total bonus from owned luxury items
+ * Get player's owned luxury items
  */
-export async function calculateLuxuryBonus(playerId: string): Promise<{
-  moneyMultiplier: number;
-  spinsBonus: number;
-  levelBonus: number;
-}> {
-  try {
-    const ownedItems = await getOwnedLuxuryItems(playerId);
-    let moneyMultiplier = 1;
-    let spinsBonus = 0;
-    let levelBonus = 0;
+export async function getOwnedLuxuryItems(playerId: string): Promise<string[]> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    for (const ownedItem of ownedItems) {
-      const luxuryItem = await getLuxuryItem(ownedItem.itemId);
-      if (luxuryItem) {
-        // Apply bonuses (these would be stored in luxury items)
-        // For now, using default values
-        moneyMultiplier += 0.1; // 10% per item
-        spinsBonus += 10; // 10 spins per item
-      }
-    }
-
-    return { moneyMultiplier, spinsBonus, levelBonus };
-  } catch (error) {
-    console.error('Failed to calculate luxury bonus:', error);
-    return { moneyMultiplier: 1, spinsBonus: 0, levelBonus: 0 };
-  }
+  return parseOwnedItems(player.ownedLuxuryItems);
 }
 
 /**
- * Remove luxury item from owned items
+ * Check if player can afford luxury item
  */
-export async function removeLuxuryItem(
-  playerId: string,
-  itemId: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const ownedItems = await getOwnedLuxuryItems(playerId);
-    const filteredItems = ownedItems.filter((item) => item.itemId !== itemId);
+export async function canBuyLuxuryItem(playerId: string, price: number): Promise<boolean> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    if (filteredItems.length === ownedItems.length) {
-      return { success: false, error: 'Item not found in owned items' };
-    }
-
-    await BaseCrudService.update(PLAYERS_COLLECTION, {
-      _id: playerId,
-      ownedLuxuryItems: JSON.stringify(filteredItems),
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to remove luxury item:', error);
-    return { success: false, error: String(error) };
-  }
+  const currentClean = player.cleanMoney ?? 0;
+  return currentClean >= price;
 }

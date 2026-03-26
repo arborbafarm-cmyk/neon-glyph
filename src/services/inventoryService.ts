@@ -1,45 +1,34 @@
 /**
- * INVENTORY SERVICE
+ * INVENTORY SERVICE - Inventory Management
  * 
- * Handles all inventory-related operations:
- * - Loading inventory data
- * - Adding/removing items
- * - Inventory synchronization
- * 
- * This service is the single source of truth for inventory operations.
+ * Handles inventory items and quantities
  */
 
-import { BaseCrudService } from '@/integrations';
+import { getPlayer, savePlayer } from './playerCoreService';
 import { Players } from '@/entities';
 
-const COLLECTION_ID = 'players';
-
 export interface InventoryItem {
-  id: string;
-  name: string;
+  itemId: string;
   quantity: number;
-  category: string;
 }
 
 /**
- * Get player inventory
+ * Parse inventory from JSON string
  */
-export async function getPlayerInventory(playerId: string): Promise<InventoryItem[]> {
+function parseInventory(inventoryJson: string | undefined): InventoryItem[] {
+  if (!inventoryJson) return [];
   try {
-    const player = await BaseCrudService.getById<Players>(COLLECTION_ID, playerId);
-    if (!player || !player.inventory) {
-      return [];
-    }
-
-    try {
-      return JSON.parse(player.inventory);
-    } catch {
-      return [];
-    }
-  } catch (error) {
-    console.error('Failed to get player inventory:', error);
-    throw error;
+    return JSON.parse(inventoryJson);
+  } catch {
+    return [];
   }
+}
+
+/**
+ * Stringify inventory to JSON
+ */
+function stringifyInventory(items: InventoryItem[]): string {
+  return JSON.stringify(items);
 }
 
 /**
@@ -47,29 +36,27 @@ export async function getPlayerInventory(playerId: string): Promise<InventoryIte
  */
 export async function addInventoryItem(
   playerId: string,
-  item: InventoryItem
-): Promise<{ success: boolean; inventory?: InventoryItem[]; error?: string }> {
-  try {
-    const inventory = await getPlayerInventory(playerId);
+  itemId: string,
+  quantity: number = 1
+): Promise<Players> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    // Check if item already exists
-    const existingItem = inventory.find((i) => i.id === item.id);
-    if (existingItem) {
-      existingItem.quantity += item.quantity;
-    } else {
-      inventory.push(item);
-    }
+  const inventory = parseInventory(player.inventory);
+  const existingItem = inventory.find((item) => item.itemId === itemId);
 
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
-      inventory: JSON.stringify(inventory),
-    });
-
-    return { success: true, inventory };
-  } catch (error) {
-    console.error('Failed to add inventory item:', error);
-    return { success: false, error: String(error) };
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    inventory.push({ itemId, quantity });
   }
+
+  const updated = {
+    ...player,
+    inventory: stringifyInventory(inventory),
+  };
+
+  return savePlayer(updated);
 }
 
 /**
@@ -79,67 +66,69 @@ export async function removeInventoryItem(
   playerId: string,
   itemId: string,
   quantity: number = 1
-): Promise<{ success: boolean; inventory?: InventoryItem[]; error?: string }> {
-  try {
-    const inventory = await getPlayerInventory(playerId);
+): Promise<Players> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    const itemIndex = inventory.findIndex((i) => i.id === itemId);
-    if (itemIndex === -1) {
-      return { success: false, error: 'Item not found in inventory' };
-    }
+  const inventory = parseInventory(player.inventory);
+  const itemIndex = inventory.findIndex((item) => item.itemId === itemId);
 
-    const item = inventory[itemIndex];
-    if (item.quantity < quantity) {
-      return {
-        success: false,
-        error: `Insufficient quantity. Have: ${item.quantity}, Need: ${quantity}`,
-      };
-    }
-
-    item.quantity -= quantity;
-    if (item.quantity <= 0) {
-      inventory.splice(itemIndex, 1);
-    }
-
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
-      inventory: JSON.stringify(inventory),
-    });
-
-    return { success: true, inventory };
-  } catch (error) {
-    console.error('Failed to remove inventory item:', error);
-    return { success: false, error: String(error) };
+  if (itemIndex === -1) {
+    throw new Error(`Item ${itemId} not found in inventory`);
   }
+
+  const item = inventory[itemIndex];
+  if (item.quantity < quantity) {
+    throw new Error(
+      `Insufficient quantity of ${itemId}. Have: ${item.quantity}, Need: ${quantity}`
+    );
+  }
+
+  item.quantity -= quantity;
+
+  // Remove item if quantity reaches 0
+  if (item.quantity <= 0) {
+    inventory.splice(itemIndex, 1);
+  }
+
+  const updated = {
+    ...player,
+    inventory: stringifyInventory(inventory),
+  };
+
+  return savePlayer(updated);
 }
 
 /**
- * Clear inventory
+ * Get inventory item quantity
  */
-export async function clearInventory(playerId: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    await BaseCrudService.update(COLLECTION_ID, {
-      _id: playerId,
-      inventory: JSON.stringify([]),
-    });
+export async function getInventoryItemQuantity(
+  playerId: string,
+  itemId: string
+): Promise<number> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
 
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to clear inventory:', error);
-    return { success: false, error: String(error) };
-  }
+  const inventory = parseInventory(player.inventory);
+  const item = inventory.find((item) => item.itemId === itemId);
+
+  return item?.quantity ?? 0;
 }
 
 /**
- * Get inventory item count
+ * Get all inventory items
  */
-export async function getInventoryItemCount(playerId: string, itemId: string): Promise<number> {
-  try {
-    const inventory = await getPlayerInventory(playerId);
-    const item = inventory.find((i) => i.id === itemId);
-    return item?.quantity || 0;
-  } catch (error) {
-    console.error('Failed to get inventory item count:', error);
-    throw error;
-  }
+export async function getInventory(playerId: string): Promise<InventoryItem[]> {
+  const player = await getPlayer(playerId);
+  if (!player) throw new Error(`Player ${playerId} not found`);
+
+  return parseInventory(player.inventory);
+}
+
+/**
+ * Check if player has item
+ */
+export async function hasInventoryItem(playerId: string, itemId: string): Promise<boolean> {
+  const quantity = await getInventoryItemQuantity(playerId, itemId);
+  return quantity > 0;
 }
