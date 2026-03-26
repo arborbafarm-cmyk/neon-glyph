@@ -1,43 +1,100 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { syncPlayerToDatabase } from '@/services/playerDataService';
+import {
+  updatePlayerPresence,
+  setPlayerOffline,
+} from '@/services/multiplayerPresenceService';
 
 /**
- * Hook to automatically sync player data to the database
- * Saves player progress, level, and other data periodically
- * Uses centralized playerDataService for consistency
+ * Hook MULTIPLAYER READY
+ *
+ * Agora faz:
+ * - Sync de dados (player)
+ * - Sync de presença (online)
+ * - Heartbeat multiplayer
+ * - Safe unload (offline)
  */
 export function usePlayerDataSync() {
-  const playerId = usePlayerStore((state) => state.playerId);
+  const player = usePlayerStore((state) => state.player);
 
-  // Auto-save player data every 30 seconds
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const presenceIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  /**
+   * =========================
+   * DATABASE SYNC (30s)
+   * =========================
+   */
   useEffect(() => {
-    if (!playerId) return;
+    if (!player?._id) return;
 
-    const syncInterval = setInterval(async () => {
+    intervalRef.current = setInterval(async () => {
       try {
-        await syncPlayerToDatabase(playerId);
+        await syncPlayerToDatabase(player._id);
       } catch (error) {
-        console.error('Error syncing player data:', error);
+        console.error('[SYNC] Error syncing player data:', error);
       }
-    }, 30000); // Sync every 30 seconds
+    }, 30000);
 
-    return () => clearInterval(syncInterval);
-  }, [playerId]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [player?._id]);
 
-  // Save on page unload
+  /**
+   * =========================
+   * MULTIPLAYER PRESENCE (HEARTBEAT)
+   * =========================
+   */
   useEffect(() => {
-    if (!playerId) return;
+    if (!player?._id) return;
 
-    const handleBeforeUnload = async () => {
+    const sendPresence = async () => {
       try {
-        await syncPlayerToDatabase(playerId);
+        await updatePlayerPresence(
+          player._id,
+          'star-map', // 🔥 depois você troca dinamicamente pelo mapa atual
+          'online',
+          player.playerName
+        );
       } catch (error) {
-        console.error('Error saving player data on unload:', error);
+        console.error('[PRESENCE] Error updating presence:', error);
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [playerId]);
+    // Envia imediatamente
+    sendPresence();
+
+    // Heartbeat a cada 10s (tempo ideal multiplayer fake realtime)
+    presenceIntervalRef.current = setInterval(sendPresence, 10000);
+
+    return () => {
+      if (presenceIntervalRef.current) clearInterval(presenceIntervalRef.current);
+    };
+  }, [player?._id]);
+
+  /**
+   * =========================
+   * SAFE UNLOAD (OFFLINE)
+   * =========================
+   */
+  useEffect(() => {
+    if (!player?._id) return;
+
+    const handleUnload = async () => {
+      try {
+        await syncPlayerToDatabase(player._id);
+        await setPlayerOffline(player._id);
+      } catch (error) {
+        console.error('[UNLOAD] Error:', error);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [player?._id]);
 }
