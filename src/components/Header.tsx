@@ -5,7 +5,6 @@ import { useCleanMoneyStore } from '@/store/cleanMoneyStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useSpinVault } from '@/hooks/useSpinVault';
 import { useNavigate } from 'react-router-dom';
-import { usePlayerInitialization } from '@/hooks/usePlayerInitialization';
 import { useMember } from '@/integrations';
 import { playerService } from '@/services/playerService';
 import { Droplet, LogOut, LogIn } from 'lucide-react';
@@ -46,8 +45,6 @@ export default function Header() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { member, actions } = useMember();
-
-  usePlayerInitialization();
 
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
 

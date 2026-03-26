@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Chrome, ShieldCheck, Eye, Play, AlertTriangle } from 'lucide-react'; // Ícones mais "agressivos"
+import { Chrome, ShieldCheck, Eye, Play, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@/store/playerStore';
 import { usePlayerInitialization } from '@/hooks/usePlayerInitialization';
@@ -14,6 +14,7 @@ export default function HomePage() {
   
   // Initialize player data
   usePlayerInitialization();
+  
   const playerName = usePlayerStore((state) => state.playerName);
 
   const phrases = [
@@ -29,7 +30,7 @@ export default function HomePage() {
       setTextIndex((prev) => (prev < phrases.length - 1 ? prev + 1 : prev));
     }, 1200);
     return () => clearInterval(interval);
-  }, [stage]);
+  }, [stage, phrases.length]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black font-sans text-white select-none">
@@ -109,8 +110,23 @@ export default function HomePage() {
                 </div>
 
                 <div className="grid gap-4">
-                   <LoginBtn icon={<Chrome />} label="Google Access" />
-                   <LoginBtn icon={<ShieldCheck />} label="Facebook Secure" color="bg-[#1877F2]" />
+                   <button 
+                     onClick={() => {
+                       console.log('Google login clicked');
+                       window.location.href = '/api/auth/login';
+                     }}
+                     className="bg-white text-black flex items-center gap-4 p-4 font-black uppercase tracking-tighter transition-transform active:scale-95 hover:brightness-90"
+                   >
+                     <Chrome /> Google Access
+                   </button>
+                   <button 
+                     onClick={() => {
+                       console.log('Facebook login clicked');
+                     }}
+                     className="bg-[#1877F2] text-white flex items-center gap-4 p-4 font-black uppercase tracking-tighter transition-transform active:scale-95 hover:brightness-90"
+                   >
+                     <ShieldCheck /> Facebook Secure
+                   </button>
                    
                    <div className="relative py-4">
                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10" /></div>
@@ -165,13 +181,5 @@ export default function HomePage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function LoginBtn({ icon, label, color = "bg-white text-black" }: any) {
-  return (
-    <button className={`${color} flex items-center gap-4 p-4 font-black uppercase tracking-tighter transition-transform active:scale-95 hover:brightness-90`}>
-      {icon} {label}
-    </button>
   );
 }
