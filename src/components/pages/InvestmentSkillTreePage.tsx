@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useInvestmentSkillTreeStore, type Skill } from '@/store/investmentSkillTreeStore';
-import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
+import { usePlayerStore } from '@/store/playerStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ export default function InvestmentSkillTreePage() {
     getSkill,
   } = useInvestmentSkillTreeStore();
   
-  const { dirtyMoney } = useDirtyMoneyStore();
+  const { dirtyMoney } = usePlayerStore();
   const { member } = useMember();
 
   const [selectedSkill, setSelectedSkill] = useState<SkillModalData | null>(null);

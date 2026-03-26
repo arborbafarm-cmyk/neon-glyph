@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 import { useBriberyStore, type BriberyConsequence } from '@/store/briberyStore';
-import { useGameStore } from '@/store/gameStore';
 import { useGameScreenStore } from '@/store/gameScreenStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
@@ -16,9 +14,7 @@ type DialogState = 'initial' | 'accepting' | 'denying' | 'consequence';
 
 export default function BriberyMinistroPage() {
   const navigate = useNavigate();
-  const { dirtyMoney, removeDirtyMoney } = useDirtyMoneyStore();
-  const { playerLevel, setPlayerLevel } = useGameStore();
-  const { setLevel } = usePlayerStore();
+  const { dirtyMoney, removeDirtyMoney, level, setLevel } = usePlayerStore();
   const { getBriberyAmount, getNextBriberyAmount, addConsequence } = useBriberyStore();
   const { setCurrentScreen } = useGameScreenStore();
   
@@ -26,7 +22,7 @@ export default function BriberyMinistroPage() {
   const [consequence, setConsequence] = useState<BriberyConsequence | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [nivelBarraco, setNivelBarraco] = useState(playerLevel);
+  const [nivelBarraco, setNivelBarraco] = useState(level);
   const [subornosRealizados, setSubornosRealizados] = useState(0);
 
   useEffect(() => {

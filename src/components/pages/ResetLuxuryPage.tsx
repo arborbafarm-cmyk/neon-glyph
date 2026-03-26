@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, RotateCcw, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useLuxuryShopStore } from '@/store/luxuryShopStore';
-import { useGameStore } from '@/store/gameStore';
+import { usePlayerStore } from '@/store/playerStore';
 
 export default function ResetLuxuryPage() {
   const [isResetting, setIsResetting] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
   const { purchasedItems } = useLuxuryShopStore();
-  const { dirtMoney, setDirtMoney } = useGameStore();
+  const { dirtyMoney, setDirtyMoney } = usePlayerStore();
 
   const handleResetLuxury = async () => {
     setIsResetting(true);
@@ -20,7 +20,7 @@ export default function ResetLuxuryPage() {
       store.purchasedItems = [];
       
       // Reset dirty money to 0
-      setDirtMoney(0);
+      setDirtyMoney(0);
 
       // Clear localStorage
       localStorage.removeItem('luxury-shop-store');

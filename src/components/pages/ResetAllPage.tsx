@@ -4,7 +4,6 @@ import { Players } from '@/entities';
 
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
-import { useGameStore } from '@/store/gameStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useBriberyStore } from '@/store/briberyStore';
 
@@ -13,8 +12,7 @@ export default function ResetAllPage() {
   const [resetting, setResetting] = useState(false);
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
-  const { reset: resetGameStore } = useGameStore();
-  const { setLevel: setPlayerLevel } = usePlayerStore();
+  const { resetPlayer } = usePlayerStore();
   const { reset: resetBriberyStore } = useBriberyStore();
   const initRef = useRef(false); // Prevent double initialization
 
@@ -71,8 +69,7 @@ export default function ResetAllPage() {
 
       // Reset all stores
       setMessage('Resetando lojas...');
-      setPlayerLevel(1);
-      resetGameStore();
+      resetPlayer();
       resetBriberyStore();
 
       setMessage('✓ Todos os níveis e lojas resetados para 1');

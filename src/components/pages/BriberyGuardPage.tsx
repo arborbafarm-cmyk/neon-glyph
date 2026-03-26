@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBriberyStore, type BriberyConsequence } from '@/store/briberyStore';
-import { useGameStore } from '@/store/gameStore';
 import { useGameScreenStore } from '@/store/gameScreenStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
@@ -143,8 +142,7 @@ function getCharacterConfig(level: number): CharacterConfig {
 export default function BriberyGuardPage() {
   const navigate = useNavigate();
   const { dirtyMoney, removeDirtyMoney } = usePlayerStore();
-  const { playerLevel, setPlayerLevel } = useGameStore();
-  const { setLevel } = usePlayerStore();
+  const { level, setLevel } = usePlayerStore();
   const { getBriberyAmount, getNextBriberyAmount, addConsequence } = useBriberyStore();
   const { setCurrentScreen } = useGameScreenStore();
   

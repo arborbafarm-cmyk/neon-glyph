@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Footer from '@/components/Footer';
-import { useDirtyMoneyStore } from '@/store/dirtyMoneyStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useBriberyStore, type BriberyConsequence } from '@/store/briberyStore';
 import { Button } from '@/components/ui/button';
@@ -28,8 +27,7 @@ const consequenceMessages: Record<BriberyConsequence, string> = {
 
 export default function BriberyPage() {
   const navigate = useNavigate();
-  const { dirtyMoney, removeDirtyMoney } = useDirtyMoneyStore();
-  const { level } = usePlayerStore();
+  const { dirtyMoney, removeDirtyMoney, level } = usePlayerStore();
   const {
     getBriberyAmount,
     addConsequence,
