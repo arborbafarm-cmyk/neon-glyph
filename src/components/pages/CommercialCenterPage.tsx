@@ -2,7 +2,6 @@ import { Image } from '@/components/ui/image';
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useMember } from '@/integrations';
 import { useNavigate } from 'react-router-dom';
 import { comerciosService } from '@/services/comerciosService';
 import { Comercios, COMERCIOS_KEYS, ComercioKey, getInitialComercioData } from '@/types/comercios';
@@ -11,6 +10,7 @@ import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
 import CommercialCenterHotspots from '@/components/CommercialCenterHotspots';
 import CommerceOperationModal from '@/components/CommerceOperationModal';
+import { usePlayerAuth } from '@/hooks/usePlayerAuth';
 
 const INITIAL_COMERCIOS_DATA = getInitialComercioData();
 
@@ -51,7 +51,7 @@ interface CompletedOperation {
 
 export default function CommercialCenterPage() {
   const navigate = useNavigate();
-  const { member, isAuthenticated, isLoading: isAuthLoading } = useMember();
+  const { isAuthenticated, isLoading: isAuthLoading, playerData: authPlayerData } = usePlayerAuth();
   const [comercios, setComercios] = useState<Comercios>(INITIAL_COMERCIOS_DATA);
   const [playerData, setPlayerData] = useState<Players | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,13 +78,13 @@ export default function CommercialCenterPage() {
     }
   }, [isAuthenticated, isAuthLoading, navigate]);
 
-  // Carregar dados do jogador usando playerId único (member._id)
+  // Carregar dados do jogador usando playerId único (do sistema de autenticação de jogador)
   useEffect(() => {
-    if (!isAuthenticated || !member?._id) return;
+    if (!isAuthenticated || !authPlayerData?._id) return;
 
     const loadPlayerData = async () => {
       try {
-        const playerId = member._id; // Usar member._id como playerId único e permanente
+        const playerId = authPlayerData._id; // Usar playerId único e permanente do sistema de autenticação
         let player = await BaseCrudService.getById<Players>('players', playerId);
         
         // Se o jogador não existe, criar um novo
@@ -95,14 +95,14 @@ export default function CommercialCenterPage() {
           const newPlayer: Players = {
             _id: playerId,
             playerId: playerId, // Salvar playerId explicitamente
-            playerName: member.profile?.nickname || 'Jogador',
-            cleanMoney: 0,
-            dirtyMoney: 1000,
-            level: 1,
-            progress: 0,
+            playerName: authPlayerData.playerName || 'Jogador',
+            cleanMoney: authPlayerData.cleanMoney || 0,
+            dirtyMoney: authPlayerData.dirtyMoney || 1000,
+            level: authPlayerData.level || 1,
+            progress: authPlayerData.progress || 0,
             comercios: JSON.stringify(initialComerciosData),
-            isGuest: false,
-            profilePicture: member.profile?.photo?.url,
+            isGuest: authPlayerData.isGuest || false,
+            profilePicture: authPlayerData.profilePicture,
           };
           
           await BaseCrudService.create('players', newPlayer);
@@ -132,18 +132,18 @@ export default function CommercialCenterPage() {
       }
     };
     loadPlayerData();
-  }, [member?._id, isAuthenticated]);
+  }, [authPlayerData?._id, isAuthenticated]);
 
   const handleIniciarLavagem = async (comercioKey: ComercioKey) => {
-    if (!member?._id || !playerData) return;
+    if (!authPlayerData?._id || !playerData) return;
     try {
       const resultado = await comerciosService.iniciarLavagem(
-        member._id,
+        authPlayerData._id,
         comercioKey,
         playerData.dirtyMoney || 0
       );
       if (resultado.sucesso) {
-        const player = await BaseCrudService.getById<Players>('players', member._id);
+        const player = await BaseCrudService.getById<Players>('players', authPlayerData._id);
         if (player) {
           setPlayerData(player);
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
@@ -159,11 +159,11 @@ export default function CommercialCenterPage() {
   };
 
   const handleFinalizarLavagem = async (comercioKey: ComercioKey) => {
-    if (!member?._id) return;
+    if (!authPlayerData?._id) return;
     try {
-      const resultado = await comerciosService.finalizarLavagem(member._id, comercioKey);
+      const resultado = await comerciosService.finalizarLavagem(authPlayerData._id, comercioKey);
       if (resultado.sucesso) {
-        const player = await BaseCrudService.getById<Players>('players', member._id);
+        const player = await BaseCrudService.getById<Players>('players', authPlayerData._id);
         if (player) {
           setPlayerData(player);
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
@@ -210,8 +210,8 @@ export default function CommercialCenterPage() {
   };
 
   const handleStartOperation = async (comercioKey: ComercioKey) => {
-    if (!playerData || !member?._id) {
-      console.error('❌ Dados do jogador não disponíveis:', { playerData, memberId: member?._id });
+    if (!playerData || !authPlayerData?._id) {
+      console.error('❌ Dados do jogador não disponíveis:', { playerData, playerId: authPlayerData?._id });
       throw new Error('Dados do jogador não disponíveis. Por favor, recarregue a página.');
     }
     try {
@@ -220,7 +220,7 @@ export default function CommercialCenterPage() {
       console.log('💵 Dinheiro limpo disponível:', playerData.cleanMoney);
       
       const resultado = await comerciosService.iniciarLavagem(
-        member._id,
+        authPlayerData._id,
         comercioKey,
         playerData.dirtyMoney || 0
       );
@@ -230,7 +230,7 @@ export default function CommercialCenterPage() {
       if (resultado.sucesso) {
         console.log('✅ Lavagem iniciada com sucesso');
         // Atualizar dados do jogador
-        const player = await BaseCrudService.getById<Players>('players', member._id);
+        const player = await BaseCrudService.getById<Players>('players', authPlayerData._id);
         if (player) {
           setPlayerData(player);
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;
@@ -248,20 +248,20 @@ export default function CommercialCenterPage() {
   };
 
   const handleCompleteOperation = async (comercioKey: ComercioKey) => {
-    if (!playerData || !member?._id) {
+    if (!playerData || !authPlayerData?._id) {
       throw new Error('Dados do jogador não disponíveis');
     }
     try {
       console.log('🏁 Finalizando lavagem para:', comercioKey);
       
-      const resultado = await comerciosService.finalizarLavagem(member._id, comercioKey);
+      const resultado = await comerciosService.finalizarLavagem(authPlayerData._id, comercioKey);
       
       console.log('📊 Resultado da finalização:', resultado);
       
       if (resultado.sucesso) {
         console.log('✅ Lavagem finalizada com sucesso. Dinheiro limpo ganho:', resultado.cleanMoneyGanho);
         // Atualizar dados do jogador
-        const player = await BaseCrudService.getById<Players>('players', member._id);
+        const player = await BaseCrudService.getById<Players>('players', authPlayerData._id);
         if (player) {
           setPlayerData(player);
           const comerciosData = player.comercios ? JSON.parse(player.comercios) : null;

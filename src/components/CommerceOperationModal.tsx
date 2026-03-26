@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { X, Clock3, DollarSign, TrendingUp, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useMember } from '@/integrations';
 import {
   ComercioKey,
   COMERCIOS_CONFIG,
@@ -141,14 +140,12 @@ export default function CommerceOperationModal({
   onStartOperation,
   onCompleteOperation,
 }: CommerceOperationModalProps) {
-  const { member } = useMember();
-
   // Use playerData if available, otherwise use props
   const dirtyMoney = playerData?.dirtyMoney ?? propDirtyMoney;
   const cleanMoney = playerData?.cleanMoney ?? propCleanMoney;
 
   // Check if player is authenticated and has valid data
-  const playerNotAuthenticated = !member?._id;
+  const playerNotAuthenticated = !playerData?._id;
   const playerNotFound = playerData !== undefined && (!playerData || !playerData._id);
 
   const [timeLeft, setTimeLeft] = useState<number>(0);
