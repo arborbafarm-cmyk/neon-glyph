@@ -124,6 +124,24 @@ export interface Players {
   _updatedDate?: Date;
   /** @wixFieldType number */
   cleanMoney?: number;
+  /** @wixFieldType datetime */
+  createdAt?: Date | string;
+  /** @wixFieldType datetime */
+  lastLoginAt?: Date | string;
+  /** @wixFieldType text */
+  inventory?: string;
+  /** @wixFieldType text */
+  skillTrees?: string;
+  /** @wixFieldType text */
+  ownedLuxuryItems?: string;
+  /** @wixFieldType text */
+  investments?: string;
+  /** @wixFieldType number */
+  barracoLevel?: number;
+  /** @wixFieldType number */
+  spins?: number;
+  /** @wixFieldType text */
+  email?: string;
   /** @wixFieldType text */
   comercios?: string;
   /** @wixFieldType date */
