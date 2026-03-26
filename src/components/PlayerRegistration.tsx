@@ -9,7 +9,10 @@ interface PlayerRegistrationProps {
   onSuccess: () => void;
 }
 
-export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistrationProps) {
+export default function PlayerRegistration({
+  onClose,
+  onSuccess,
+}: PlayerRegistrationProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,8 +21,9 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const loadPlayerData = usePlayerStore((state) => state.loadPlayerData);
+
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
+  const reset = usePlayerStore((state) => state.reset);
 
   const validateForm = () => {
     setError('');
@@ -54,7 +58,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
       return false;
     }
 
-    if (gamerName.length < 3) {
+    if (gamerName.trim().length < 3) {
       setError('Nome gamer deve ter no mínimo 3 caracteres');
       return false;
     }
@@ -68,29 +72,27 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
     if (!validateForm()) return;
 
     setLoading(true);
+    setError('');
 
     try {
-      // Register player with authentication
-      // Returns player from players collection with unique permanent playerId (_id)
-      const player = await registerLocalPlayer(email, password, gamerName);
+      // Limpa qualquer resquício visual de sessão antiga
+      reset();
 
-      // Load all player data into store from players collection
-      // playerId is the unique permanent identifier (_id from players collection)
-      loadPlayerData({
-        playerId: player._id,
-        playerName: player.playerName || gamerName,
-        level: player.level || 1,
-        progress: player.progress || 0,
-        isGuest: player.isGuest || false,
-        profilePicture: player.profilePicture || null,
-        cleanMoney: player.cleanMoney || 0,
-        dirtyMoney: player.dirtyMoney || 10000000000,
-      });
+      // Cria o jogador e recebe o player persistido da coleção players
+      const player = await registerLocalPlayer(
+        email.trim(),
+        password,
+        gamerName.trim()
+      );
+
+      // Sincroniza a store única da sessão com o player completo
+      setPlayer(player);
 
       setLoading(false);
       onSuccess();
-    } catch (err) {
-      setError('Erro ao criar perfil. Tente novamente.');
+    } catch (err: any) {
+      console.error('Player registration error:', err);
+      setError(err?.message || 'Erro ao criar perfil. Tente novamente.');
       setLoading(false);
     }
   };
@@ -110,7 +112,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md border border-white/10 bg-black/95 shadow-[0_0_100px_rgba(0,0,0,1)]"
       >
-        {/* Header */}
         <div className="border-b border-white/10 bg-red-700 p-6">
           <div className="flex items-center gap-3">
             <AlertTriangle size={32} className="text-black" />
@@ -123,9 +124,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
           </div>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleRegister} className="space-y-4 p-6">
-          {/* Error Message */}
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -136,7 +135,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
             </motion.div>
           )}
 
-          {/* Gamer Name */}
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">
               Nome Gamer
@@ -151,7 +149,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
             />
           </div>
 
-          {/* Email */}
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">
               E-mail
@@ -166,7 +163,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
             />
           </div>
 
-          {/* Password */}
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">
               Senha
@@ -183,7 +179,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-white"
                 disabled={loading}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -191,7 +187,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
             </div>
           </div>
 
-          {/* Confirm Password */}
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400">
               Confirmar Senha
@@ -208,7 +203,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-white"
                 disabled={loading}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -216,7 +211,6 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="grid grid-cols-2 gap-3 pt-4">
             <button
               type="button"
@@ -242,8 +236,7 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
             </button>
           </div>
 
-          {/* Info */}
-          <p className="text-center text-xs text-zinc-500 pt-2">
+          <p className="pt-2 text-center text-xs text-zinc-500">
             Seus dados estão protegidos pelo sistema de segurança central.
           </p>
         </form>
