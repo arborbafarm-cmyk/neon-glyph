@@ -10,14 +10,16 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 export default function GoogleLoginButton() {
   const { member, actions } = useMember();
   const navigate = useNavigate();
-  const { loadPlayerData } = usePlayerStore();
+
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
+  const reset = usePlayerStore((state) => state.reset);
+
   const [isLoading, setIsLoading] = useState(false);
   const [hasRegistered, setHasRegistered] = useState(false);
 
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-      // Trigger Wix login (redirects to Google OAuth)
       await actions.login();
     } catch (error) {
       console.error('Login error:', error);
@@ -25,47 +27,47 @@ export default function GoogleLoginButton() {
     }
   };
 
-  // Register player when member data is available after login
   useEffect(() => {
     const handlePlayerRegistration = async () => {
-      if (member && member.loginEmail && !hasRegistered) {
-        try {
-          setHasRegistered(true);
-          
-          // Reset old session before registering new player
-          console.log('🔄 Resetting session before Google login registration...');
-          await resetPlayerSession();
-          
-          const playerName = member.contact?.firstName || member.profile?.nickname || 'Player';
-          const nickname = member.profile?.nickname || member.contact?.firstName || 'Anonymous';
+      if (!member || !member.loginEmail || hasRegistered) return;
 
-          const player = await registerPlayer(member.loginEmail, playerName, nickname);
-          
-          // Load player data into store for UI synchronization
-          loadPlayerData({
-            playerId: player._id,
-            playerName: player.playerName || 'Player',
-            level: player.level || 1,
-            progress: player.progress || 0,
-            isGuest: player.isGuest || false,
-            profilePicture: player.profilePicture || null,
-            barracoLevel: player.barracoLevel || 1,
-            cleanMoney: player.cleanMoney || 0,
-            dirtyMoney: player.dirtyMoney || 0,
-            hasInitialized: true,
-          });
-          
-          // Redirect to game page after successful registration
-          navigate('/star-map');
-        } catch (error) {
-          console.error('Error registering player:', error);
-          setHasRegistered(false);
-        }
+      try {
+        setHasRegistered(true);
+
+        console.log('🔄 Resetting session before Google login registration...');
+
+        // Limpa stores legadas e sessão persistida
+        await resetPlayerSession();
+
+        // Garante que a store principal também comece limpa
+        reset();
+
+        const playerName =
+          member.contact?.firstName || member.profile?.nickname || 'Player';
+        const nickname =
+          member.profile?.nickname || member.contact?.firstName || 'Anonymous';
+
+        const player = await registerPlayer(
+          member.loginEmail,
+          playerName,
+          nickname
+        );
+
+        // Sincroniza a UI com o player completo retornado do banco
+        setPlayer(player);
+
+        navigate('/star-map');
+      } catch (error) {
+        console.error('Error registering player:', error);
+        reset();
+        setHasRegistered(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     handlePlayerRegistration();
-  }, [member, hasRegistered, navigate, loadPlayerData]);
+  }, [member, hasRegistered, navigate, setPlayer, reset]);
 
   return (
     <Button
