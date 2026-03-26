@@ -38,32 +38,11 @@ export default function ComercioCard({
       className="bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-500/60 transition-all"
     >
       <div className="mb-4">
-        <h3 className="text-xl font-heading text-cyan-400 mb-2">{config.nome}</h3>
-        <div className="flex justify-between text-sm text-gray-300 mb-3">
-          <span>Nível: {data.nivelNegocio}</span>
-          <span>Eficiência: {data.nivelTaxa}</span>
-        </div>
-      </div>
 
+      </div>
       <div className="space-y-2 mb-4 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-400">Valor de Lavagem:</span>
-          <span className="text-green-400 font-semibold">${valorLavagem}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-400">Tempo:</span>
-          <span className="text-blue-400">{Math.floor(tempoLavagem / 60000)}m</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-400">Taxa:</span>
-          <span className="text-orange-400">{taxaAplicada.toFixed(1)}%</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-400">Retorno:</span>
-          <span className="text-yellow-400">${cleanMoneyGanho}</span>
-        </div>
-      </div>
 
+      </div>
       {data.emAndamento && (
         <div className="mb-4 p-3 bg-blue-900/30 border border-blue-500/50 rounded">
           <div className="text-sm text-blue-300 mb-2">
@@ -79,27 +58,9 @@ export default function ComercioCard({
           </div>
         </div>
       )}
-
       <div className="flex gap-2">
-        {!data.emAndamento ? (
-          <Button
-            onClick={onIniciar}
-            disabled={!podeIniciar || isLoading}
-            className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:opacity-50"
-          >
-            {isLoading ? 'Iniciando...' : 'Iniciar'}
-          </Button>
-        ) : (
-          <Button
-            onClick={onFinalizar}
-            disabled={tempoRestante > 0 || isLoading}
-            className="flex-1 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 disabled:opacity-50"
-          >
-            {isLoading ? 'Finalizando...' : tempoRestante > 0 ? 'Aguardando...' : 'Finalizar'}
-          </Button>
-        )}
-      </div>
 
+      </div>
       {!podeIniciar && !data.emAndamento && (
         <div className="mt-3 text-xs text-red-400 text-center">
           {dirtyMoney < valorLavagem ? 'Dinheiro sujo insuficiente' : 'Indisponível'}

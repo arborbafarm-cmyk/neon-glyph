@@ -556,14 +556,12 @@ export default function CommercialCenterPage() {
   return (
     <div className="commercial-grid min-h-screen flex flex-col">
       <Header />
-      
       {/* WELCOME TITLE */}
       <div className="w-full pt-[120px] px-4 relative z-10">
         <div className="max-w-[100rem] mx-auto mb-8">
           <h1 className="neon-sign text-4xl md:text-5xl text-center">Bem-vindo ao Complexo</h1>
         </div>
       </div>
-
       {/* BANNER */}
       <div className="w-full relative z-10">
         <div className="banner-container w-full flex items-center justify-center relative px-4">
@@ -577,23 +575,7 @@ export default function CommercialCenterPage() {
           </div>
         </div>
       </div>
-
       {/* PLAYER INFO */}
-      {playerData && (
-        <div className="w-full px-4 py-6 relative z-10 border-b border-cyan-500/30">
-          <div className="max-w-[100rem] mx-auto flex justify-between items-center">
-            <div className="text-cyan-300">
-              <span className="text-sm text-gray-400">Dinheiro Sujo:</span>
-              <span className="ml-2 font-bold text-green-400">${playerData.dirtyMoney || 0}</span>
-            </div>
-            <div className="text-cyan-300">
-              <span className="text-sm text-gray-400">Dinheiro Limpo:</span>
-              <span className="ml-2 font-bold text-yellow-400">${playerData.cleanMoney || 0}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* OPERATIONS */}
       <div className="w-full px-4 py-12 relative z-10">
         <div className="max-w-[100rem] mx-auto">
@@ -617,7 +599,6 @@ export default function CommercialCenterPage() {
           )}
         </div>
       </div>
-
       {/* HISTORY */}
       {completedOps.length > 0 && (
         <div className="w-full px-4 py-12 relative z-10 border-t border-cyan-500">
@@ -648,7 +629,6 @@ export default function CommercialCenterPage() {
           </div>
         </div>
       )}
-
       {/* Commerce Operation Modal */}
       {activeCommerceModal && playerData && member?._id && (
         <CommerceOperationModal
@@ -670,14 +650,7 @@ export default function CommercialCenterPage() {
           onCompleteOperation={handleCompleteOperation}
         />
       )}
-
       {/* TEMPORARY TEST BUTTON */}
-      <Button
-        onClick={() => setActiveCommerceModal('pizzaria')}
-        className="fixed bottom-10 right-10 z-[9999] bg-orange-500 hover:bg-orange-600 text-white font-bold"
-      >
-        TESTAR MODAL
-      </Button>
 
       <Footer />
     </div>
