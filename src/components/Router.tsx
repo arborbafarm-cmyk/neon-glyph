@@ -28,8 +28,6 @@ const CommercialCenterPage = lazy(() => import('@/components/pages/CommercialCen
 const ProfilePage = lazy(() => import('@/components/pages/ProfilePage'));
 const LoginPage = lazy(() => import('@/components/pages/LoginPage'));
 const FinancialHistoryPage = lazy(() => import('@/components/pages/FinancialHistoryPage'));
-
-// se esses 3 arquivos existirem com esses nomes, deixa assim:
 const ResetBarracoPage = lazy(() => import('@/components/pages/ResetBarracoPage'));
 const MoneyLaunderingPage = lazy(() => import('@/components/pages/MoneyLaunderingPage'));
 const ResetAllPage = lazy(() => import('@/components/pages/ResetAllPage'));
