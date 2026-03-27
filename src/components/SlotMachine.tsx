@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@/store/playerStore';
-import { executeSpinOperation } from '@/services/spinService';
+import { executeSpinOperation } from '@/services/spinsService';
 import { Players } from '@/entities';
 
 // =======================
