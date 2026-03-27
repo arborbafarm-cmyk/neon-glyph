@@ -212,54 +212,31 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
 
     // ... keep existing code (createUrbanSkyline function)
 
-    // TAREFA 3 — ADICIONAR GLOW URBANO DE FUNDO
-    const createUrbanGlow = () => {
-      // Glow azul frio (lado cidade)
-      const coldGlowPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(60, 40),
+    // BLOCO 3 — GLOW URBANO (ATMOSFERA)
+    const createGlow = (color: number, x: number) => {
+      const glow = new THREE.Mesh(
+        new THREE.PlaneGeometry(80, 40),
         new THREE.MeshBasicMaterial({
-          color: 0x0099ff,
+          color,
           transparent: true,
           opacity: 0.12,
           blending: THREE.AdditiveBlending,
           side: THREE.DoubleSide,
         })
       );
-      coldGlowPlane.position.set(-20, 8, -35);
-      coldGlowPlane.rotation.x = -Math.PI / 3;
-      scene.add(coldGlowPlane);
 
-      // Glow laranja quente (lado favela)
-      const warmGlowPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(60, 40),
-        new THREE.MeshBasicMaterial({
-          color: 0xff6600,
-          transparent: true,
-          opacity: 0.1,
-          blending: THREE.AdditiveBlending,
-          side: THREE.DoubleSide,
-        })
-      );
-      warmGlowPlane.position.set(20, 8, -35);
-      warmGlowPlane.rotation.x = -Math.PI / 3;
-      scene.add(warmGlowPlane);
-
-      // Glow central fraco
-      const centralGlowPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(50, 30),
-        new THREE.MeshBasicMaterial({
-          color: 0x00eaff,
-          transparent: true,
-          opacity: 0.08,
-          blending: THREE.AdditiveBlending,
-          side: THREE.DoubleSide,
-        })
-      );
-      centralGlowPlane.position.set(0, 6, -38);
-      centralGlowPlane.rotation.x = -Math.PI / 3.5;
-      scene.add(centralGlowPlane);
+      glow.position.set(x, 20, -30);
+      scene.add(glow);
     };
-    createUrbanGlow();
+
+    // cidade (frio)
+    createGlow(0x00cfff, -10);
+
+    // favela (quente)
+    createGlow(0xff7a2f, 20);
+
+    // central leve
+    createGlow(0x00eaff, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = true;
@@ -370,13 +347,14 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
 
     const tileGeometry = new THREE.BoxGeometry(tileSize * 0.92, tileSize * 0.08, tileSize * 0.92);
 
+    // BLOCO 5 — ASFALTO MAIS VIVO (CIDADE)
     const cityMaterial = new THREE.MeshStandardMaterial({
       map: asphaltTexture,
-      color: 0x3a3f45,
-      roughness: 0.48,
-      metalness: 0.35,
-      emissive: new THREE.Color(0x1a1f25),
-      emissiveIntensity: 0.28,
+      color: 0x3a3f46,
+      roughness: 0.55,
+      metalness: 0.28,
+      emissive: 0x11151a,
+      emissiveIntensity: 0.25,
     });
 
     const favelaMaterial = new THREE.MeshStandardMaterial({
@@ -425,50 +403,22 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     asphaltStrip.receiveShadow = true;
     scene.add(asphaltStrip);
 
-    // TAREFA 5 — CRIAR AVENIDA / RODOVIA DE SEPARAÇÃO
-    const createHighwaySeparator = () => {
-      const highwayWidth = 3 * tileSize;
-      const highwayMaterial = new THREE.MeshStandardMaterial({
-        color: 0x0d0f14,
-        roughness: 0.35,
-        metalness: 0.5,
-        emissive: new THREE.Color(0x1a3a4a),
-        emissiveIntensity: 0.35,
-      });
+    // BLOCO 4 — RODOVIA ENTRE CIDADE E FAVELA
+    const road = new THREE.Mesh(
+      new THREE.PlaneGeometry(4, gridHeight * tileSize),
+      new THREE.MeshStandardMaterial({
+        color: 0x1a1d22,
+        roughness: 0.6,
+        metalness: 0.3,
+        emissive: 0x0a0f14,
+        emissiveIntensity: 0.2,
+      })
+    );
 
-      const highway = new THREE.Mesh(
-        new THREE.PlaneGeometry(highwayWidth, gridTotalHeight),
-        highwayMaterial
-      );
-      highway.rotation.x = -Math.PI / 2;
-      highway.position.set(
-        startX + (CITY_COLUMNS + 1.5) * tileSize,
-        -0.02,
-        startZ + gridTotalHeight / 2
-      );
-      highway.receiveShadow = true;
-      scene.add(highway);
+    road.rotation.x = -Math.PI / 2;
+    road.position.set(0, 0.02, 0);
 
-      // Adicionar glow leve na avenida
-      const highwayGlow = new THREE.Mesh(
-        new THREE.PlaneGeometry(highwayWidth, gridTotalHeight),
-        new THREE.MeshBasicMaterial({
-          color: 0x00ccff,
-          transparent: true,
-          opacity: 0.08,
-          blending: THREE.AdditiveBlending,
-          side: THREE.DoubleSide,
-        })
-      );
-      highwayGlow.rotation.x = -Math.PI / 2;
-      highwayGlow.position.set(
-        startX + (CITY_COLUMNS + 1.5) * tileSize,
-        0.01,
-        startZ + gridTotalHeight / 2
-      );
-      scene.add(highwayGlow);
-    };
-    createHighwaySeparator();
+    scene.add(road);
 
     const cityGlowPlane = new THREE.Mesh(
       new THREE.PlaneGeometry(CITY_COLUMNS * tileSize, gridTotalHeight),
