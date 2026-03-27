@@ -92,6 +92,7 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
   const blockedTilesRef = useRef<Set<string>>(new Set());
   const controlsRef = useRef<OrbitControls | null>(null);
   const aaa3dSystemRef = useRef<AAA3DVisualSystem | null>(null);
+  const asphaltStripRef = useRef<THREE.Mesh | null>(null);
 
   const qgGroupRef = useRef<THREE.Group | null>(null);
   const delegaciaGroupRef = useRef<THREE.Group | null>(null);
@@ -271,11 +272,40 @@ const createGroundCanvas = (mode: 'dirt' | 'asphalt') => {
       return texture;
     };
 
-    const asphaltTexture = makeTexture(createGroundCanvas('asphalt'));
+    let asphaltTexture = makeTexture(createGroundCanvas('asphalt'));
+    
+    // Load asphalt texture from image
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(
+      'https://static.wixstatic.com/media/50f4bf_6974f0cca519423ead92aad76c1c3b4f~mv2.jpg',
+      (loadedTexture) => {
+        loadedTexture.magFilter = THREE.LinearFilter;
+        loadedTexture.minFilter = THREE.LinearMipmapLinearFilter;
+        loadedTexture.wrapS = THREE.RepeatWrapping;
+        loadedTexture.wrapT = THREE.RepeatWrapping;
+        loadedTexture.repeat.set(4, 4);
+        asphaltTexture = loadedTexture;
+        
+        // Update city mesh material
+        if (cityMeshRef.current && cityMeshRef.current.material instanceof THREE.MeshStandardMaterial) {
+          (cityMeshRef.current.material as THREE.MeshStandardMaterial).map = loadedTexture;
+          (cityMeshRef.current.material as THREE.MeshStandardMaterial).needsUpdate = true;
+        }
+        
+        // Update asphalt strip material
+        if (asphaltStrip && asphaltStrip.material instanceof THREE.MeshStandardMaterial) {
+          (asphaltStrip.material as THREE.MeshStandardMaterial).map = loadedTexture;
+          (asphaltStrip.material as THREE.MeshStandardMaterial).needsUpdate = true;
+        }
+      },
+      undefined,
+      (error) => {
+        console.warn('Erro ao carregar textura de asfalto:', error);
+      }
+    );
     
     // Load dirt texture from image
     let dirtTexture = makeTexture(createGroundCanvas('dirt'));
-    const textureLoader = new THREE.TextureLoader();
     textureLoader.load(
       'https://static.wixstatic.com/media/50f4bf_b6cbdd149dc941c49befb54b23abb86a~mv2.jpeg',
       (loadedTexture) => {
@@ -353,6 +383,7 @@ const createGroundCanvas = (mode: 'dirt' | 'asphalt') => {
       startZ + gridTotalHeight / 2
     );
     asphaltStrip.receiveShadow = true;
+    asphaltStripRef.current = asphaltStrip;
     scene.add(asphaltStrip);
 
     const cityGlowPlane = new THREE.Mesh(
