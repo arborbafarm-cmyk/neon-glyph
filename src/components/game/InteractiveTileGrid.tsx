@@ -122,8 +122,15 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     const startX = -gridTotalWidth / 2;
     const startZ = -gridTotalHeight / 2;
 
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.set(6, 18, 20);
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+
+    // NOVA CÂMERA (mais próxima e cinematográfica)
+    camera.position.set(6, 16, 18);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -175,37 +182,35 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     const aaa3dSystem = new AAA3DVisualSystem(scene, camera, renderer);
     aaa3dSystemRef.current = aaa3dSystem;
 
-    // TAREFA 2 — ADICIONAR HORIZONTE URBANO (Skyline)
-    const createUrbanSkyline = () => {
-      const skylineGroup = new THREE.Group();
-      const skylineMaterial = new THREE.MeshStandardMaterial({
-        color: 0x111826,
-        roughness: 1,
-        metalness: 0,
-      });
+    // BLOCO 2 — SKYLINE (ACABA COM O FUNDO PRETO)
+    const skylineGroup = new THREE.Group();
 
-      // Criar 20+ blocos com alturas variadas
-      const buildingHeights = [
-        8, 12, 15, 10, 18, 14, 11, 16, 9, 13,
-        17, 12, 14, 10, 19, 13, 11, 15, 12, 16,
-        14, 10, 18, 12, 15, 11, 13, 16, 9, 14,
-      ];
+    for (let i = 0; i < 25; i++) {
+      const height = 10 + Math.random() * 25;
 
-      buildingHeights.forEach((height, index) => {
-        const building = new THREE.Mesh(
-          new THREE.BoxGeometry(2.5, height, 2),
-          skylineMaterial
-        );
-        const xPos = -45 + index * 3.2;
-        const zPos = -32;
-        building.position.set(xPos, height / 2, zPos);
-        building.castShadow = true;
-        skylineGroup.add(building);
-      });
+      const building = new THREE.Mesh(
+        new THREE.BoxGeometry(2 + Math.random() * 2, height, 2 + Math.random() * 2),
+        new THREE.MeshStandardMaterial({
+          color: 0x111826,
+          roughness: 1,
+          metalness: 0,
+          emissive: 0x05080f,
+          emissiveIntensity: 0.2,
+        })
+      );
 
-      scene.add(skylineGroup);
-    };
-    createUrbanSkyline();
+      building.position.set(
+        -60 + i * 5,
+        height / 2,
+        -40
+      );
+
+      skylineGroup.add(building);
+    }
+
+    scene.add(skylineGroup);
+
+    // ... keep existing code (createUrbanSkyline function)
 
     // TAREFA 3 — ADICIONAR GLOW URBANO DE FUNDO
     const createUrbanGlow = () => {
@@ -261,12 +266,18 @@ const InteractiveTileGrid: React.FC<InteractiveTileGridProps> = ({
     controls.enableZoom = true;
     controls.enableRotate = true;
     controls.target.set(0, 0, 0);
-    controls.minDistance = 12;
-    controls.maxDistance = 42;
-    controls.maxPolarAngle = Math.PI / 2.2;
-    controls.minPolarAngle = Math.PI / 4.8;
+    
+    // BLOCO 1 — CÂMERA CINEMATOGRÁFICA (ESSENCIAL)
     controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
+    controls.dampingFactor = 0.05;
+
+    controls.minDistance = 12;
+    controls.maxDistance = 38;
+
+    controls.minPolarAngle = Math.PI / 4.5;
+    controls.maxPolarAngle = Math.PI / 2.2;
+    
+    // ... keep existing code (zoomSpeed, rotateSpeed, azimuth angles)
     controls.zoomSpeed = 1.15;
     controls.rotateSpeed = 0.75;
     controls.minAzimuthAngle = -Infinity;
