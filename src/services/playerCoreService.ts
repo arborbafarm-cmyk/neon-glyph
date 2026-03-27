@@ -102,9 +102,8 @@ export async function deletePlayer(playerId: string): Promise<void> {
 /**
  * Get all players (for admin/multiplayer features)
  */
-export async function getAllPlayers(): Promise<Players[]> {
-  const result = await BaseCrudService.getAll<Players>(COLLECTION_ID);
-  return result.items || [];
+export async function getAllPlayers() {
+  return await BaseCrudService.getAll<Players>(COLLECTION_ID);
 }
 
 /**

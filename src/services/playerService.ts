@@ -119,15 +119,24 @@ export async function registerLocalPlayer(email: string, password: string, playe
   const tempPlayerId = crypto.randomUUID();
   const newPlayer = buildNewPlayerData(tempPlayerId, normalizedEmail, playerName.trim());
 
+  console.log('📝 Criando novo player:', { email: normalizedEmail, playerName, playerId: tempPlayerId });
+
   const createdPlayer = await createPlayerInDatabase(newPlayer);
 
   if (!createdPlayer?._id) {
+    console.error('❌ Falha ao criar jogador no banco de dados');
     throw new Error('Falha ao criar jogador no banco de dados');
   }
 
+  console.log('✅ Player criado com sucesso:', createdPlayer._id);
+
+  console.log('🔐 Registrando credenciais...');
   await registerCredentials(normalizedEmail, password, createdPlayer._id);
+
+  console.log('🎮 Criando sessão...');
   await createSession(createdPlayer._id, normalizedEmail);
 
+  console.log('✅ Registro concluído com sucesso');
   return createdPlayer;
 }
 
@@ -144,25 +153,42 @@ export async function registerLocalPlayer(email: string, password: string, playe
 export async function loginLocalPlayer(email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
 
+  console.log('🔐 Iniciando login para:', normalizedEmail);
+
   await resetPlayerSession();
 
   const playerId = await validateCredentials(normalizedEmail, password);
+  console.log('✅ Credenciais validadas. PlayerId:', playerId);
+
   let player = await getPlayerFromDatabase(playerId);
+  console.log('🔍 Player encontrado por ID?', !!player);
 
   // Fallback: se não encontrar por playerId, buscar por email normalizado
   if (!player) {
-    const allPlayers = await getAllPlayers();
-    const playerByEmail = allPlayers.items?.find(
+    console.log('⚠️ Player não encontrado por ID, buscando por email...');
+    const result = await getAllPlayers();
+    const allPlayers = result.items || [];
+    console.log('📊 Total de players no banco:', allPlayers.length);
+
+    const playerByEmail = allPlayers.find(
       (p) => p.email?.toLowerCase() === normalizedEmail
     );
 
     if (playerByEmail) {
+      console.log('✅ Player encontrado por email:', playerByEmail._id);
       player = playerByEmail;
     } else {
+      console.error('❌ Player não encontrado por email nem por ID');
       throw new Error('Jogador não encontrado no banco de dados');
     }
   }
 
+  // Validar que temos um player válido
+  if (!player || !player._id) {
+    throw new Error('Dados do jogador inválidos');
+  }
+
+  console.log('🎮 Criando sessão para player:', player._id);
   // Usar o _id real do player encontrado
   await createSession(player._id, normalizedEmail);
 
@@ -172,6 +198,7 @@ export async function loginLocalPlayer(email: string, password: string) {
     lastLoginAt: now,
   });
 
+  console.log('✅ Login concluído com sucesso para:', updatedPlayer.playerName);
   return updatedPlayer;
 }
 

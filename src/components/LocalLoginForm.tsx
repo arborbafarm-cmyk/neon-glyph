@@ -58,11 +58,15 @@ export default function LocalLoginForm() {
     try {
       setIsLoading(true);
 
+      console.log('📝 Iniciando registro para:', email);
+
       // Limpa qualquer resquício de sessão anterior antes de registrar
       reset();
 
       // Cria o jogador, registra credenciais e já devolve o player persistido
       const player = await registerLocalPlayer(email, password, playerName);
+
+      console.log('✅ Registro bem-sucedido, player:', player.playerName);
 
       // Sincroniza a store única da sessão
       setPlayer(player);
@@ -73,7 +77,7 @@ export default function LocalLoginForm() {
         navigate('/star-map');
       }, 1500);
     } catch (err: any) {
-      console.error('Register error:', err);
+      console.error('❌ Register error:', err);
       setError(err?.message || 'Erro ao criar conta');
     } finally {
       setIsLoading(false);
@@ -97,12 +101,16 @@ export default function LocalLoginForm() {
     try {
       setIsLoading(true);
 
+      console.log('🔐 Iniciando login para:', email);
+
       // Garante limpeza da sessão visual antes do novo login
       reset();
 
       // loginLocalPlayer deve validar credenciais, resetar stores internas,
       // carregar o player do banco e devolver o player final autenticado
       const player = await loginLocalPlayer(email, password);
+
+      console.log('✅ Login bem-sucedido, player:', player.playerName);
 
       // Sincroniza a UI com o player carregado do banco
       setPlayer(player);
@@ -113,7 +121,7 @@ export default function LocalLoginForm() {
         navigate('/star-map');
       }, 1500);
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('❌ Login error:', err);
       setError(err?.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);
