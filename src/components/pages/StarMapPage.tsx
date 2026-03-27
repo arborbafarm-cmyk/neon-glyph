@@ -91,7 +91,14 @@ export default function StarMapPage() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    const stars: any[] = [];
+    const stars: Array<{
+      x: number;
+      y: number;
+      radius: number;
+      opacity: number;
+      pulseSpeed: number;
+      pulsePhase: number;
+    }> = [];
     const starCount = 200;
 
     for (let i = 0; i < starCount; i++) {

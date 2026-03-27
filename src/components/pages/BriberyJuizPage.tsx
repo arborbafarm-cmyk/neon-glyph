@@ -5,7 +5,7 @@ import { useBriberyStore, type BriberyConsequence } from '@/store/briberyStore';
 import { useGameScreenStore } from '@/store/gameScreenStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
-
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 const CHARACTER_IMAGE = 'https://static.wixstatic.com/media/50f4bf_194b3b554589406491e716042e788035~mv2.png';
@@ -27,13 +27,13 @@ export default function BriberyJuizPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    setNivelBarraco(playerLevel);
-  }, [playerLevel]);
+    setNivelBarraco(level);
+  }, [level]);
 
   const podeSubornarAgora = nivelBarraco > subornosRealizados;
 
-  const briberyAmount = getBriberyAmount(playerLevel);
-  const nextBriberyAmount = getNextBriberyAmount(playerLevel);
+  const briberyAmount = getBriberyAmount(level);
+  const nextBriberyAmount = getNextBriberyAmount(level);
 
   const getRandomConsequence = (): BriberyConsequence => {
     const consequences: BriberyConsequence[] = [
@@ -75,12 +75,12 @@ export default function BriberyJuizPage() {
     removeDirtyMoney(briberyAmount);
     setSubornosRealizados(prev => prev + 1);
 
-    if (playerLevel < 9) {
-      setPlayerLevel(playerLevel + 1);
-    } else if (playerLevel === 9) {
-      setPlayerLevel(10);
-    } else if (playerLevel < 100) {
-      setPlayerLevel(playerLevel + 1);
+    if (level < 9) {
+      setLevel(level + 1);
+    } else if (level === 9) {
+      setLevel(10);
+    } else if (level < 100) {
+      setLevel(level + 1);
     }
 
     setDialogState('accepting');
@@ -118,7 +118,7 @@ export default function BriberyJuizPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f1419] to-[#1a1f2e] flex flex-col">
-
+      <Header />
       
       <div className="w-full h-96 md:h-[500px] overflow-hidden relative">
         <Image
@@ -175,7 +175,7 @@ export default function BriberyJuizPage() {
 
                       <div className="mb-8 p-4 bg-[#FF4500]/10 border border-[#FF4500]/50 rounded-lg">
                         <p className="font-paragraph text-sm text-white/80 mb-2">
-                          <span className="text-[#00eaff] font-bold">Nível {playerLevel}</span> (60 a 69)
+                          <span className="text-[#00eaff] font-bold">Nível {level}</span> (60 a 69)
                         </p>
                         <p className="font-paragraph text-lg text-white/90">
                           Valor do Suborno: <span className="text-[#FF4500] font-bold">R$ {briberyAmount.toLocaleString('pt-BR')}</span>
@@ -284,7 +284,7 @@ export default function BriberyJuizPage() {
                         </p>
                       </motion.div>
 
-                      {playerLevel < 100 && (
+                      {level < 100 && (
                         <motion.div
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
@@ -292,7 +292,7 @@ export default function BriberyJuizPage() {
                           className="p-4 bg-[#00eaff]/10 border border-[#00eaff]/50 rounded-lg"
                         >
                           <p className="font-paragraph text-white/90">
-                            <span className="text-[#00eaff] font-bold">Nível Aumentado</span> para {playerLevel + 1}/100
+                            <span className="text-[#00eaff] font-bold">Nível Aumentado</span> para {level + 1}/100
                           </p>
                         </motion.div>
                       )}

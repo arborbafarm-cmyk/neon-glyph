@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useGameStore } from '@/store/gameStore';
+import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
 
 export default function CharacterDialog() {
   const navigate = useNavigate();
-  const { playerLevel } = useGameStore();
+  const playerLevel = usePlayerStore((state) => state.level);
   const [isOpen, setIsOpen] = useState(false);
   const [customPlayerName, setCustomPlayerName] = useState('');
   const [isMounted, setIsMounted] = useState(false);

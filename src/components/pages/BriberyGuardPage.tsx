@@ -7,7 +7,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { Image } from '@/components/ui/image';
 import { BaseCrudService } from '@/integrations';
 import { Players } from '@/entities';
-
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getBackgroundByLevel } from '@/data/luxoItems';
 import { removeDirtyMoney } from '@/services/playerEconomyService';
@@ -318,7 +318,7 @@ export default function BriberyGuardPage() {
 
   return (
     <div style={{ background: dynamicBackground }} className="min-h-screen flex flex-col">
-
+      <Header />
       
       {/* Cinematic Background Scene */}
       <div className="w-full h-96 md:h-[500px] overflow-hidden relative">

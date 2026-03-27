@@ -6,17 +6,38 @@ import {
   verifyPlayerBalanceConsistency,
   getAllFinancialHistory,
 } from '@/services/financialHistoryService';
+import { FinancialHistory } from '@/entities';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
+interface FinancialSummary {
+  totalTransactions: number;
+  totalIncome: number;
+  totalExpense: number;
+  netChange: number;
+  transactionsByType: Record<string, number>;
+  transactionsByOrigin: Record<string, number>;
+}
+
+interface BalanceConsistency {
+  isConsistent: boolean;
+  totalTransactions: number;
+  inconsistencies: Array<{
+    index: number;
+    expected: number;
+    actual: number;
+    transaction: FinancialHistory;
+  }>;
+}
+
 export default function FinancialHistoryPage() {
   const player = usePlayerStore((state) => state.player);
-  const [history, setHistory] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any>(null);
-  const [consistency, setConsistency] = useState<any>(null);
+  const [history, setHistory] = useState<FinancialHistory[]>([]);
+  const [summary, setSummary] = useState<FinancialSummary | null>(null);
+  const [consistency, setConsistency] = useState<BalanceConsistency | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'history' | 'summary' | 'consistency' | 'all'>('history');
 
@@ -253,7 +274,7 @@ export default function FinancialHistoryPage() {
                   Found {consistency.inconsistencies.length} Inconsistencies
                 </h3>
                 <div className="space-y-3">
-                  {consistency.inconsistencies.map((inc: any, idx: number) => (
+                  {consistency.inconsistencies.map((inc, idx: number) => (
                     <div key={idx} className="p-3 bg-red-500/20 rounded">
                       <p className="text-red-400 text-sm">
                         Transaction #{inc.index}: Expected balance {inc.expected}, got{' '}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Image } from '@/components/ui/image';
 import { useNavigate } from 'react-router-dom';
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '@/store/playerStore';
@@ -195,19 +196,24 @@ export default function BarracoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-foreground">Carregando Barraco...</p>
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-foreground">Carregando Barraco...</p>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950">
-        <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-foreground text-xl mb-4">{error || 'Jogador não encontrado'}</p>
             <button
@@ -231,7 +237,8 @@ export default function BarracoPage() {
   const dynamicBackground = getBackgroundByLevel(currentLevel);
 
   return (
-    <div style={{ background: dynamicBackground }} className="min-h-screen">
+    <div style={{ background: dynamicBackground }} className="min-h-screen flex flex-col">
+      <Header />
       {showGreeting && (
         <RoyalGreeting
           playerName={player?.playerName || 'Rei do Comando'}
@@ -239,7 +246,7 @@ export default function BarracoPage() {
         />
       )}
 
-      <main className="max-w-[100rem] mx-auto px-4 py-12">
+      <main className="flex-1 max-w-[100rem] mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
