@@ -28,10 +28,12 @@ const CommercialCenterPage = lazy(() => import('@/components/pages/CommercialCen
 const ProfilePage = lazy(() => import('@/components/pages/ProfilePage'));
 const LoginPage = lazy(() => import('@/components/pages/LoginPage'));
 const FinancialHistoryPage = lazy(() => import('@/components/pages/FinancialHistoryPage'));
-{/* ... keep existing code (other lazy imports) ... */}
 
+// se esses 3 arquivos existirem com esses nomes, deixa assim:
+const ResetBarracoPage = lazy(() => import('@/components/pages/ResetBarracoPage'));
+const MoneyLaunderingPage = lazy(() => import('@/components/pages/MoneyLaunderingPage'));
+const ResetAllPage = lazy(() => import('@/components/pages/ResetAllPage'));
 
-// Layout component that includes ScrollToTop
 function Layout() {
   return (
     <>
@@ -43,183 +45,214 @@ function Layout() {
   );
 }
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <Layout />,
+      errorElement: <ErrorPage />,
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+          routeMetadata: {
+            pageIdentifier: 'home',
+          },
+        },
+        {
+          path: 'game',
+          element: <Navigate to="/star-map" replace />,
+        },
+        {
+          path: 'star-map',
+          element: <StarMapPage />,
+          routeMetadata: {
+            pageIdentifier: 'star-map',
+          },
+        },
+        {
+          path: 'giro-no-asfalto',
+          element: <GiroNoAsfaltoPage />,
+          routeMetadata: {
+            pageIdentifier: 'giro-no-asfalto',
+          },
+        },
+        {
+          path: 'luxury-showroom',
+          element: <LuxuryShowroomPage />,
+          routeMetadata: {
+            pageIdentifier: 'luxury-showroom',
+          },
+        },
+        {
+          path: 'barraco',
+          element: <BarracoPage />,
+          routeMetadata: {
+            pageIdentifier: 'barraco',
+          },
+        },
+        {
+          path: 'bribery-guard',
+          element: <BriberyGuardPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-guard',
+          },
+        },
+        {
+          path: 'bribery-investigador',
+          element: <BriberyInvestigadorPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-investigador',
+          },
+        },
+        {
+          path: 'bribery-delegado',
+          element: <BriberyDelegadoPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-delegado',
+          },
+        },
+        {
+          path: 'bribery-vereador',
+          element: <BriberyVereadorPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-vereador',
+          },
+        },
+        {
+          path: 'bribery-prefeito',
+          element: <BriberyPrefeitoPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-prefeito',
+          },
+        },
+        {
+          path: 'bribery-promotor',
+          element: <BriberyPromotorPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-promotor',
+          },
+        },
+        {
+          path: 'bribery-juiz',
+          element: <BriberyJuizPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-juiz',
+          },
+        },
+        {
+          path: 'bribery-secretario',
+          element: <BriberySecretarioPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-secretario',
+          },
+        },
+        {
+          path: 'bribery-governador',
+          element: <BriberyGovernadorPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-governador',
+          },
+        },
+        {
+          path: 'bribery-ministro',
+          element: <BriberyMinistroPage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-ministro',
+          },
+        },
+        {
+          path: 'bribery-presidente',
+          element: <BriberyPresidentePage />,
+          routeMetadata: {
+            pageIdentifier: 'bribery-presidente',
+          },
+        },
+        {
+          path: 'reset-luxury',
+          element: <ResetLuxuryPage />,
+          routeMetadata: {
+            pageIdentifier: 'reset-luxury',
+          },
+        },
+        {
+          path: 'investment-center',
+          element: <InvestmentSkillTreePage />,
+          routeMetadata: {
+            pageIdentifier: 'investment-center',
+          },
+        },
+        {
+          path: 'respeit-center',
+          element: <Navigate to="/investment-center" replace />,
+        },
+        {
+          path: 'reset-investment',
+          element: <ResetInvestmentPage />,
+          routeMetadata: {
+            pageIdentifier: 'reset-investment',
+          },
+        },
+        {
+          path: 'reset-barraco',
+          element: <ResetBarracoPage />,
+          routeMetadata: {
+            pageIdentifier: 'reset-barraco',
+          },
+        },
+        {
+          path: 'money-laundering',
+          element: <MoneyLaunderingPage />,
+          routeMetadata: {
+            pageIdentifier: 'money-laundering',
+          },
+        },
+        {
+          path: 'reset-all',
+          element: <ResetAllPage />,
+          routeMetadata: {
+            pageIdentifier: 'reset-all',
+          },
+        },
+        {
+          path: 'centro-comercial',
+          element: <CommercialCenterPage />,
+          routeMetadata: {
+            pageIdentifier: 'centro-comercial',
+          },
+        },
+        {
+          path: 'profile',
+          element: <ProfilePage />,
+          routeMetadata: {
+            pageIdentifier: 'profile',
+          },
+        },
+        {
+          path: 'login',
+          element: <LoginPage />,
+          routeMetadata: {
+            pageIdentifier: 'login',
+          },
+        },
+        {
+          path: 'financial-history',
+          element: <FinancialHistoryPage />,
+          routeMetadata: {
+            pageIdentifier: 'financial-history',
+          },
+        },
+        {
+          path: '*',
+          element: <Navigate to="/" replace />,
+        },
+      ],
+    },
+  ],
   {
-    path: "/",
-    element: <Layout />,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        index: true,
-        element: <HomePage />,
-        routeMetadata: {
-          pageIdentifier: 'home',
-        },
-      },
-      {
-        path: "star-map",
-        element: <StarMapPage />,
-        routeMetadata: {
-          pageIdentifier: 'star-map',
-        },
-      },
-      {
-        path: "giro-no-asfalto",
-        element: <GiroNoAsfaltoPage />,
-        routeMetadata: {
-          pageIdentifier: 'giro-no-asfalto',
-        },
-      },
-      {
-        path: "luxury-showroom",
-        element: <LuxuryShowroomPage />,
-        routeMetadata: {
-          pageIdentifier: 'luxury-showroom',
-        },
-      },
-      {
-        path: "barraco",
-        element: <BarracoPage />,
-        routeMetadata: {
-          pageIdentifier: 'barraco',
-        },
-      },
-      {
-        path: "bribery-guard",
-        element: <BriberyGuardPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-guard',
-        },
-      },
-      {
-        path: "bribery-investigador",
-        element: <BriberyInvestigadorPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-investigador',
-        },
-      },
-      {
-        path: "bribery-delegado",
-        element: <BriberyDelegadoPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-delegado',
-        },
-      },
-      {
-        path: "bribery-vereador",
-        element: <BriberyVereadorPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-vereador',
-        },
-      },
-      {
-        path: "bribery-prefeito",
-        element: <BriberyPrefeitoPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-prefeito',
-        },
-      },
-      {
-        path: "bribery-promotor",
-        element: <BriberyPromotorPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-promotor',
-        },
-      },
-      {
-        path: "bribery-juiz",
-        element: <BriberyJuizPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-juiz',
-        },
-      },
-      {
-        path: "bribery-secretario",
-        element: <BriberySecretarioPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-secretario',
-        },
-      },
-      {
-        path: "bribery-governador",
-        element: <BriberyGovernadorPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-governador',
-        },
-      },
-      {
-        path: "bribery-ministro",
-        element: <BriberyMinistroPage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-ministro',
-        },
-      },
-      {
-        path: "bribery-presidente",
-        element: <BriberyPresidentePage />,
-        routeMetadata: {
-          pageIdentifier: 'bribery-presidente',
-        },
-      },
-      {
-        path: "reset-luxury",
-        element: <ResetLuxuryPage />,
-        routeMetadata: {
-          pageIdentifier: 'reset-luxury',
-        },
-      },
-      {
-        path: "investment-center",
-        element: <InvestmentSkillTreePage />,
-        routeMetadata: {
-          pageIdentifier: 'investment-center',
-        },
-      },
-      {
-        path: "reset-investment",
-        element: <ResetInvestmentPage />,
-        routeMetadata: {
-          pageIdentifier: 'reset-investment',
-        },
-      },
-      {
-        path: "centro-comercial",
-        element: <CommercialCenterPage />,
-        routeMetadata: {
-          pageIdentifier: 'centro-comercial',
-        },
-      },
-      {
-        path: "profile",
-        element: <ProfilePage />,
-        routeMetadata: {
-          pageIdentifier: 'profile',
-        },
-      },
-      {
-        path: "login",
-        element: <LoginPage />,
-        routeMetadata: {
-          pageIdentifier: 'login',
-        },
-      },
-      {
-        path: "financial-history",
-        element: <FinancialHistoryPage />,
-        routeMetadata: {
-          pageIdentifier: 'financial-history',
-        },
-      },
-
-      {
-        path: "*",
-        element: <Navigate to="/" replace />,
-      },
-    ],
-  },
-], {
-  basename: import.meta.env.BASE_NAME,
-});
+    basename: import.meta.env.BASE_NAME,
+  }
+);
 
 export default function AppRouter() {
   return (
