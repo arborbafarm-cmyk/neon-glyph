@@ -6,7 +6,6 @@ import { useEnsurePlayerLot } from '@/hooks/useEnsurePlayerLot';
 import { usePlayerLot } from '@/hooks/usePlayerLot';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@/store/playerStore';
-import { usePlayerAuth } from '@/hooks/usePlayerAuth';
 import { loadPlayerFromDatabase } from '@/services/playerDataService';
 
 export default function StarMapPage() {
@@ -14,7 +13,6 @@ export default function StarMapPage() {
   const navigate = useNavigate();
 
   const player = usePlayerStore((state) => state.player);
-  const { isAuthenticated, isLoading: isAuthLoading } = usePlayerAuth();
 
   // 🔥 Garante lote automático
   useEnsurePlayerLot(40, 20);
@@ -25,7 +23,6 @@ export default function StarMapPage() {
   const [showLuxuryNotification, setShowLuxuryNotification] = useState(false);
   const [showQGNotification, setShowQGNotification] = useState(false);
   const [showGiroNotification, setShowGiroNotification] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
 
   const hasLoadedPlayerRef = useRef(false);
 
@@ -50,17 +47,12 @@ export default function StarMapPage() {
     }, 1500);
   };
 
-  // 🔐 Auth
+  // 🔐 Auth gate baseado em playerStore
   useEffect(() => {
-    if (isAuthLoading) return;
-
-    if (!isAuthenticated) {
+    if (!player?._id) {
       navigate('/login');
-      return;
     }
-
-    setIsPageLoading(false);
-  }, [isAuthLoading, isAuthenticated, navigate]);
+  }, [player?._id, navigate]);
 
   // 🔄 Rehidrata player
   useEffect(() => {
@@ -142,7 +134,7 @@ export default function StarMapPage() {
     };
   }, []);
 
-  if (isAuthLoading || isPageLoading) {
+  if (!player?._id) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-white text-lg font-heading">Carregando mapa...</div>
