@@ -379,10 +379,11 @@ const createGroundCanvas = (mode: 'dirt' | 'asphalt') => {
     asphaltStrip.rotation.x = -Math.PI / 2;
     asphaltStrip.position.set(
       startX + (CITY_COLUMNS * tileSize) / 2,
-      -0.03,
+      0.05,
       startZ + gridTotalHeight / 2
     );
     asphaltStrip.receiveShadow = true;
+    asphaltStrip.renderOrder = 10;
     asphaltStripRef.current = asphaltStrip;
     scene.add(asphaltStrip);
 
@@ -399,9 +400,10 @@ const createGroundCanvas = (mode: 'dirt' | 'asphalt') => {
     cityGlowPlane.rotation.x = -Math.PI / 2;
     cityGlowPlane.position.set(
       startX + (CITY_COLUMNS * tileSize) / 2,
-      0.02,
+      0.06,
       startZ + gridTotalHeight / 2
     );
+    cityGlowPlane.renderOrder = 11;
     scene.add(cityGlowPlane);
 
     const favelaBase = new THREE.Mesh(
@@ -416,11 +418,12 @@ const createGroundCanvas = (mode: 'dirt' | 'asphalt') => {
     favelaBase.rotation.x = -Math.PI / 2;
     favelaBase.position.set(
       startX + CITY_COLUMNS * tileSize + ((gridWidth - CITY_COLUMNS) * tileSize) / 2,
-      -0.04,
+      0.05,
       startZ + gridTotalHeight / 2
     );
     favelaBase.receiveShadow = true;
     favelaBase.userData.isFavelaBase = true;
+    favelaBase.renderOrder = 10;
     scene.add(favelaBase);
 
     const centerDisc = new THREE.Mesh(
