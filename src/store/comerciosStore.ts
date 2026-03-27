@@ -8,7 +8,7 @@ interface ComerciosState {
   resetComercios: () => void;
 }
 
-export const useComercios = create<ComerciosState>((set) => ({
+export const useComerciosStore = create<ComerciosState>((set) => ({
   comercios: null,
   setComercios: (comercios) => set({ comercios }),
   updateComercio: (key, data) =>
