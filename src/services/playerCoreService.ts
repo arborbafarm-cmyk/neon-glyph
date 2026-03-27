@@ -106,3 +106,19 @@ export async function getAllPlayers(): Promise<Players[]> {
   const result = await BaseCrudService.getAll<Players>(COLLECTION_ID);
   return result.items || [];
 }
+
+/**
+ * 🔥 CRÍTICO: Salvar player no banco de dados (para persistência)
+ * Atualiza dados do player mantendo histórico
+ */
+export async function savePlayerData(player: Players): Promise<Players> {
+  const now = new Date().toISOString();
+  
+  const updated: Players = {
+    ...player,
+    updatedAt: now,
+    lastUpdated: now,
+  };
+
+  return BaseCrudService.update<Players>(COLLECTION_ID, updated);
+}

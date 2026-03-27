@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Chrome, ShieldCheck, Eye, Play, AlertTriangle, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { usePlayerAuth } from '@/hooks/usePlayerAuth';
+import { usePlayerAuth, checkAndRestoreSession } from '@/hooks/usePlayerAuth';
+import { usePlayerStore } from '@/store/playerStore';
 import PlayerRegistration from '@/components/PlayerRegistration';
 import QuickLoginForm from '@/components/QuickLoginForm';
 
@@ -15,8 +16,10 @@ export default function HomePage() {
   const [textIndex, setTextIndex] = useState(0);
   const [showRegistration, setShowRegistration] = useState(false);
   const [autoAdvance, setAutoAdvance] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   const { isAuthenticated, isLoading } = usePlayerAuth();
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
 
   const phrases = [
     'COORDENADAS: 22.9068° S, 43.1729° W',
@@ -25,14 +28,40 @@ export default function HomePage() {
     'BEM-VINDO AO COMPLEXO',
   ];
 
+  // 🔥 CRÍTICO: Verificar e restaurar sessão persistida ao carregar a página
+  // Isso permite que o usuário não precise fazer login novamente
   useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        console.log('🔄 Verificando sessão persistida...');
+        const restoredPlayer = await checkAndRestoreSession();
+        if (restoredPlayer) {
+          console.log('✅ Sessão restaurada! Carregando dados do jogador:', restoredPlayer.playerName);
+          setPlayer(restoredPlayer);
+          // Auto-redirect para o mapa do jogo
+          navigate('/star-map');
+        } else {
+          console.log('ℹ️ Nenhuma sessão anterior encontrada. Mostrando tela de login.');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao restaurar sessão:', error);
+      } finally {
+        setIsCheckingSession(false);
+      }
+    };
+
+    restoreSession();
+  }, [navigate, setPlayer]);
+
+  useEffect(() => {
+    if (isCheckingSession) return;
     if (!isLoading && isAuthenticated) {
       navigate('/star-map');
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate, isCheckingSession]);
 
   useEffect(() => {
-    if (stage !== 'intro') return;
+    if (stage !== 'intro' || isCheckingSession) return;
 
     const interval = setInterval(() => {
       setTextIndex((prev) => {
@@ -46,7 +75,7 @@ export default function HomePage() {
     }, 1200);
 
     return () => clearInterval(interval);
-  }, [stage, phrases.length]);
+  }, [stage, phrases.length, isCheckingSession]);
 
   useEffect(() => {
     if (!autoAdvance) return;
@@ -58,6 +87,26 @@ export default function HomePage() {
 
     return () => clearTimeout(timer);
   }, [autoAdvance]);
+
+  // 🔥 Mostrar loading enquanto verifica sessão
+  if (isCheckingSession) {
+    return (
+      <div className="relative h-screen w-screen overflow-hidden bg-black font-sans text-white select-none flex items-center justify-center">
+        <motion.div
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="text-center"
+        >
+          <div className="text-4xl font-black uppercase tracking-widest mb-4">
+            INICIANDO SISTEMA
+          </div>
+          <div className="text-sm text-cyan-400 font-mono">
+            Verificando credenciais...
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black font-sans text-white select-none">

@@ -43,14 +43,22 @@ export default function PlayerRegistration({ onClose, onSuccess }: PlayerRegistr
     setError('');
 
     try {
+      console.log('📝 Criando novo perfil para:', email);
       await resetPlayerSession();
 
+      // 🔥 CRÍTICO: Registrar novo player com persistência de sessão
+      // 1. Cria player no banco de dados
+      // 2. Registra credenciais no IndexedDB
+      // 3. Cria sessão persistida
       const player = await registerLocalPlayer(email.trim(), password, gamerName.trim());
+
+      console.log('✅ Perfil criado com sucesso:', player.playerName);
+      console.log('💾 Dados salvos permanentemente. Sessão iniciada.');
 
       setPlayer(player);
       onSuccess();
     } catch (err: any) {
-      console.error('Registration error:', err);
+      console.error('❌ Erro ao criar perfil:', err);
       setError(err?.message || 'Erro ao criar perfil. Tente novamente.');
     } finally {
       setLoading(false);

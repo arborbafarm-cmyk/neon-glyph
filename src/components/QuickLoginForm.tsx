@@ -28,11 +28,18 @@ export default function QuickLoginForm() {
 
     try {
       setIsLoading(true);
-      // Login returns player from players collection with unique permanent playerId (_id)
+      console.log('🔐 Iniciando login para:', email);
+      
+      // 🔥 CRÍTICO: Login com persistência de sessão
+      // 1. Valida credenciais
+      // 2. Carrega dados do player do banco de dados
+      // 3. Cria sessão persistida no IndexedDB
       const player = await loginLocalPlayer(email, password);
       
-      // Load all player data into store from players collection
-      // playerId is the unique permanent identifier (_id from players collection)
+      console.log('✅ Login bem-sucedido! Carregando dados do jogador:', player.playerName);
+      
+      // Carregar todos os dados do player no store
+      // playerId é o identificador único permanente (_id da coleção players)
       loadPlayerData({
         playerId: player._id,
         playerName: player.playerName || 'COMANDANTE',
@@ -45,11 +52,13 @@ export default function QuickLoginForm() {
       });
       
       setSuccess('Login realizado com sucesso!');
+      console.log('💾 Dados salvos. Redirecionando para o mapa do jogo...');
       
       setTimeout(() => {
         navigate('/star-map');
       }, 1500);
     } catch (err: any) {
+      console.error('❌ Erro no login:', err);
       setError(err.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);

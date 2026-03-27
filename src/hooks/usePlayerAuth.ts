@@ -63,3 +63,39 @@ export function usePlayerAuth() {
     isLoading,
   };
 }
+
+/**
+ * Hook para verificar e restaurar sessão persistida
+ * Usado na HomePage para auto-login
+ * 🔥 CRÍTICO: Restaura dados de login e progresso do jogo
+ */
+export async function checkAndRestoreSession() {
+  try {
+    // 1️⃣ Verificar se há sessão válida no IndexedDB
+    const isAuth = await isPlayerAuthenticated();
+    if (!isAuth) {
+      console.log('❌ Nenhuma sessão válida encontrada');
+      return null;
+    }
+
+    // 2️⃣ Carregar dados do player do banco de dados
+    const player = await getCurrentLocalPlayer();
+    if (!player?._id) {
+      console.log('❌ Player não encontrado na sessão');
+      return null;
+    }
+
+    // 3️⃣ Buscar dados completos do player (source of truth)
+    const fullPlayer = await getPlayer(player._id);
+    if (!fullPlayer) {
+      console.log('❌ Dados completos do player não encontrados');
+      return null;
+    }
+
+    console.log('✅ Sessão restaurada com sucesso:', fullPlayer.playerName);
+    return fullPlayer;
+  } catch (error) {
+    console.error('❌ Erro ao restaurar sessão:', error);
+    return null;
+  }
+}
